@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import { clientsClaim } from 'workbox-core'
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 
@@ -9,9 +10,9 @@ cleanupOutdatedCaches()
 // Every app route serves index.html, so the app opens offline on any tab.
 registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')))
 
-self.addEventListener('message', (e) => {
-  if (e.data?.type === 'SKIP_WAITING') void self.skipWaiting()
-})
+// A new version takes over right away; the page reloads itself when it does (see main.tsx).
+void self.skipWaiting()
+clientsClaim()
 
 // Tapping a reminder focuses the open app, or opens it on Today.
 self.addEventListener('notificationclick', (e) => {

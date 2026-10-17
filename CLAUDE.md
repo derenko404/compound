@@ -48,6 +48,10 @@ To add a new kind of data: add the `Op` variant and `State` field in `types.ts`,
 - Push to `main` → Cloudflare Workers Builds runs `npm run build` and `npx wrangler deploy`. `wrangler.jsonc` serves `dist/` with SPA fallback. Node 22 (`.node-version`).
 - Without the env vars the app still builds and runs in device-only mode.
 
+## PWA updates
+
+`src/sw.ts` calls `skipWaiting()` + `clientsClaim()`, and `registerSW` (autoUpdate) reloads the page when a new worker activates. `main.tsx` also calls `reg.update()` on every return to the foreground and hourly, because iOS resumes installed PWAs without reloading. Don't remove these, or phones stay on old versions.
+
 ## Notifications
 
 `src/fx/notify.ts` fires a daily reminder from the open or installed app (checked each minute). True background push would need a sender (e.g. a Cloudflare cron with VAPID keys); `src/sw.ts` already handles `push` and `notificationclick`.
