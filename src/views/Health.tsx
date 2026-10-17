@@ -9,6 +9,9 @@ import type { State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { toast } from '@/fx/fx'
 import { ConfirmButton, Header, Section, cvar } from '@/components/kit'
+import { Bullets, Checklists, Linkify, ResourceGroups } from '@/components/guide'
+import { GUIDES } from '@/data/guides'
+import type { ChapterId } from '@/lib/types'
 
 function Sparkline({ pts }: { pts: { w: number }[] }) {
   const W = 600, H = 90, padX = 34, padY = 14
@@ -150,13 +153,27 @@ function Gym({ state }: { state: State }) {
   )
 }
 
+function Guide({ ch }: { ch: ChapterId }) {
+  const g = GUIDES[ch]
+  if (!g) return null
+  return (
+    <div className="mt-4 grid gap-3">
+      {g.why && <p className="lead mt-0"><Linkify text={g.why} /></p>}
+      {g.outcomes && <div className="panel"><Bullets items={g.outcomes} /></div>}
+      {g.checklists && <Checklists ch={ch} lists={g.checklists} />}
+      {g.groups.length > 0 && <ResourceGroups ch={ch} groups={g.groups} />}
+      {g.tips && g.tips.length > 0 && <div className="panel"><Bullets items={g.tips} /></div>}
+    </div>
+  )
+}
+
 export function Health() {
   const { state } = useStore()
   return (
     <>
       <Header title="Health" lead="Two plans for later. Start each one whenever you're ready." />
-      <Section title="Quit smoking" style={cvar('smoke')}><div className="panel"><Smoking state={state} /></div></Section>
-      <Section title="Gym and diet" style={cvar('gym')}><div className="panel"><Gym state={state} /></div></Section>
+      <Section title="Quit smoking" style={cvar('smoke')}><div className="panel"><Smoking state={state} /></div><Guide ch="smoke" /></Section>
+      <Section title="Gym and diet" style={cvar('gym')}><div className="panel"><Gym state={state} /></div><Guide ch="gym" /></Section>
     </>
   )
 }

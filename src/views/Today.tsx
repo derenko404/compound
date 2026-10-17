@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CH, QUARTERS, TASKS } from '@/data/plan'
@@ -7,6 +8,7 @@ import { bestStreak, programPos, startDate, streak, todayItems } from '@/lib/der
 import { useStore } from '@/store/StoreProvider'
 import { celebrate, praise, toast } from '@/fx/fx'
 import { usePlanToggle } from './Plan'
+import { ChapterTag, Linkify } from '@/components/guide'
 import { Check, Dial, Row, Section, cvar, empty, useDebounced } from '@/components/kit'
 
 export function Today() {
@@ -54,7 +56,7 @@ export function Today() {
           <div className="day-meta">
             <span className="chip">{dayLine}</span>
             <span className="chip">Q{pos.q}, {Q.months}</span>
-            <span className="chip" style={cvar(Q.focus)}><span className="dot" />Focus: {CH[Q.focus].name}</span>
+            <Link to="/chapters/$ch" params={{ ch: Q.focus }} className="chip text-foreground no-underline" style={cvar(Q.focus)}><span className="dot" />Focus: {CH[Q.focus].name}</Link>
           </div>
         </div>
         <Dial n={n} total={items.length} sub="done today" pulse={pulse} />
@@ -72,13 +74,13 @@ export function Today() {
       <div className="stats">
         <div className="stat"><b>{streak(state, today)}</b><span>day streak</span></div>
         <div className="stat"><b>{bestStreak(state)}</b><span>best streak</span></div>
-        <div className="stat"><b>{Object.keys(state.plan).length}/{TASKS.length}</b><span>plan tasks done</span></div>
+        <div className="stat"><b>{TASKS.filter((t) => state.plan[t.id]).length}/{TASKS.length}</b><span>plan tasks done</span></div>
       </div>
 
       <Section title="Today" aside={left === 0 ? 'All done. Great work.' : `${left} left`}>
         <div className="list">
           {items.map((it) => (
-            <Row key={it.id} ch={it.ch} done={done.has(it.id)} title={it.title} sub={it.sub} tag={CH[it.ch]?.short}
+            <Row key={it.id} ch={it.ch} done={done.has(it.id)} title={it.title} sub={it.sub ? <Linkify text={it.sub} /> : undefined} tag={<ChapterTag ch={it.ch} />}
               check={<Check on={done.has(it.id)} label={it.title} onToggle={(on) => toggleDay(it.id, on)} />}>
               {it.log && (
                 <Input className="mt-2 h-8 bg-background" defaultValue={day.log ?? ''} placeholder="Today I learned…" aria-label="Learning log for today"
@@ -92,7 +94,7 @@ export function Today() {
       <Section title="This month's goals" aside={`Q${pos.q}, month ${pos.mi + 1} of 3`}>
         <div className="list">
           {monthTasks.length ? monthTasks.map((t) => (
-            <Row key={t.id} ch={t.ch} done={!!state.plan[t.id]} title={t.text} tag={CH[t.ch].short}
+            <Row key={t.id} ch={t.ch} done={!!state.plan[t.id]} title={<Linkify text={t.text} />} tag={<ChapterTag ch={t.ch} />}
               check={<Check on={!!state.plan[t.id]} label={t.text} onToggle={(on) => togglePlan(t.id, on)} />} />
           )) : empty('No goals for this month.')}
         </div>

@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CH, CH_ORDER, DEFAULT_START, DOC_URL, QUARTERS, TASKS } from '@/data/plan'
+import { CH, CH_ORDER, DEFAULT_START, QUARTERS, TASKS } from '@/data/plan'
 import { programPos, quarterTasks } from '@/lib/derive'
 import { useStore } from '@/store/StoreProvider'
 import { celebrate, praise, toast } from '@/fx/fx'
+import { Bullets, ChapterTag, Linkify } from '@/components/guide'
+import { OVERVIEW } from '@/data/guides'
+import { Link } from '@tanstack/react-router'
 import { Check, Header, Row, Section, cvar, empty } from '@/components/kit'
 
 export function usePlanToggle() {
@@ -37,7 +40,7 @@ export function Plan() {
 
   return (
     <>
-      <Header title="The plan" lead={<>18 months in six quarters. Each quarter has one focus chapter; the others run as light tracks. <a href={DOC_URL} target="_blank" rel="noopener">Open the full roadmap doc</a>.</>} />
+      <Header title="The plan" lead={OVERVIEW.intro} />
       <div className="strip">
         {QUARTERS.map((Q) => {
           const ts = quarterTasks(Q.q)
@@ -54,7 +57,7 @@ export function Plan() {
       <Section title="Next up" aside="Your closest open tasks">
         <div className="list">
           {next.length ? next.map((t) => (
-            <Row key={t.id} ch={t.ch} title={t.text} sub={`Q${t.q}${t.m !== null ? `, month ${t.m + 1}` : ''}`} tag={CH[t.ch].short}
+            <Row key={t.id} ch={t.ch} title={<Linkify text={t.text} />} sub={`Q${t.q}${t.m !== null ? `, month ${t.m + 1}` : ''}`} tag={<ChapterTag ch={t.ch} />}
               check={<Check on={false} label={t.text} onToggle={(on) => toggle(t.id, on)} />} />
           )) : empty('Everything ahead is done.')}
         </div>
@@ -63,11 +66,37 @@ export function Plan() {
       <Section title={`Q${q}, ${Qs.months}`} aside={`Focus: ${CH[Qs.focus].name}. Weekend project: ${Qs.project}`}>
         <div className="list">
           {CH_ORDER.flatMap((ch) => quarterTasks(q, ch)).map((t) => (
-            <Row key={t.id} ch={t.ch} done={!!plan[t.id]} title={t.text}
-              sub={`${CH[t.ch].name}${t.m !== null ? `, month ${t.m + 1}` : ''}`} tag={t.ch === Qs.focus ? 'Focus' : 'Light'}
+            <Row key={t.id} ch={t.ch} done={!!plan[t.id]} title={<Linkify text={t.text} />}
+              sub={`${CH[t.ch].name}${t.m !== null ? `, month ${t.m + 1}` : ''}`} tag={<ChapterTag ch={t.ch} label={t.ch === Qs.focus ? 'Focus' : 'Light'} />}
               check={<Check on={!!plan[t.id]} label={t.text} onToggle={(on) => toggle(t.id, on)} />} />
           ))}
         </div>
+      </Section>
+
+
+      <Section title="Weekly rhythm" aside="About 6–7 hours a week">
+        <div className="list">
+          {OVERVIEW.schedule?.map((r) => (
+            <div key={r.day} className="row" style={{ gridTemplateColumns: '110px 1fr' }}>
+              <b>{r.day}</b><div className="row-sub mt-0"><Linkify text={r.what} /></div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Skills by chapter" aside="Re-score 1 to 5 each month">
+        <div className="skill-grid">
+          {OVERVIEW.skills?.map((s) => (
+            <Link key={s.chapter} to="/chapters/$ch" params={{ ch: s.chapter }} className="skill-card" style={cvar(s.chapter)}>
+              <span className="skill-title"><span className="dot" />{CH[s.chapter].name}</span>
+              <span className="skill-list">{s.skills.join(' · ')}</span>
+            </Link>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="How it works">
+        <div className="panel"><Bullets items={OVERVIEW.principles ?? []} /></div>
       </Section>
 
       <Section title="Program start">
