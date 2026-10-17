@@ -14,9 +14,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" />
+    <style>
+      .splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 16px; background: #eef2ee; color: #5a6670; font: 15px system-ui, sans-serif; }
+      .splash-mark { width: 44px; height: 44px; border-radius: 50%; background: conic-gradient(#2b55e0 0 60deg, #c4501a 0 120deg, #7a3fd6 0 180deg, #12855c 0 240deg, #c93a6f 0 300deg, #a8740f 0 360deg); animation: splash-spin 1.1s linear infinite; -webkit-mask: radial-gradient(circle, transparent 11px, #000 12px); mask: radial-gradient(circle, transparent 11px, #000 12px); }
+      .splash-over { background: color-mix(in srgb, #eef2ee 86%, transparent); backdrop-filter: blur(6px); }
+      .splash[hidden] { display: none; }
+      @keyframes splash-spin { to { transform: rotate(360deg); } }
+      @media (prefers-color-scheme: dark) {
+        .splash { background: #0f151b; color: #93a1ac; }
+        .splash-over { background: color-mix(in srgb, #0f151b 86%, transparent); }
+      }
+      @media (prefers-reduced-motion: reduce) { .splash-mark { animation-duration: 3s; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until React renders (it replaces #root's contents), and while an update installs. -->
+    <div id="root"><div class="splash" role="status"><span class="splash-mark"></span><span class="splash-text">Loading…</span></div></div>
+    <div id="updating" class="splash splash-over" role="status" aria-live="polite" hidden><span class="splash-mark"></span><span class="splash-text">Updating the app…</span></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -13,6 +13,13 @@ registerSW({
   // version whenever the app comes back to the foreground, and hourly while it's open.
   onRegisteredSW(_url, reg) {
     if (!reg) return
+    // A new version is downloading (and an old one is running): show the overlay until the reload.
+    reg.addEventListener('updatefound', () => {
+      if (!navigator.serviceWorker.controller) return
+      document.getElementById('updating')!.hidden = false
+      // The plugin reloads the page once the new worker activates; the shell then says so.
+      sessionStorage.setItem('roadmap-just-updated', '1')
+    })
     const check = () => { if (navigator.onLine) void reg.update() }
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check() })
     setInterval(check, 60 * 60 * 1000)

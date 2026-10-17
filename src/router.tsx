@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, Outlet, createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { Settings as SettingsIcon } from 'lucide-react'
+import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { mountFx } from '@/fx/fx'
 import { startReminderLoop } from '@/fx/notify'
@@ -29,6 +30,16 @@ function Shell() {
   stateRef.current = state
 
   useEffect(() => (fx.current ? mountFx(fx.current) : undefined), [])
+  useEffect(() => {
+    if (!sessionStorage.getItem('roadmap-just-updated')) return
+    // Shown once the shell has settled. The flag is cleared
+    // inside the timer so StrictMode's mount-unmount-mount doesn't drop the toast.
+    const t = setTimeout(() => {
+      sessionStorage.removeItem('roadmap-just-updated')
+      toast.success('App updated.')
+    }, 500)
+    return () => clearTimeout(t)
+  }, [])
   useEffect(
     () =>
       startReminderLoop(() => {
