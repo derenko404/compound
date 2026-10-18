@@ -205,7 +205,7 @@
   --control-sm: 36px; /* icon buttons, small buttons */
   --control-md: 44px; /* buttons, icon buttons: comfortable tap target */
   --control-field: 52px; /* form fields: inputs, selects, list lines */
-  --control-lg: 56px; /* the floating add button */
+  --control-lg: 56px; /* big buttons: the ⋯ drawer's actions */
   --menu-w: 200px; /* dropdown menus */
   --dial-lg: 248px; /* the timer's ring */
   --setting-text: 192px; /* SettingRow: the narrowest its text gets before the controls wrap below */
@@ -416,17 +416,6 @@ details > summary::-webkit-details-marker { display: none; }
 .link-btn { padding: 0; background: none; border: 0; cursor: pointer; color: var(--muted-foreground); font-size: var(--text-caption); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
 .link-btn:hover { color: var(--foreground); text-decoration-color: currentColor; }
 
-/* The page's main add action. */
-.fab {
-  position: fixed; right: max(var(--gutter), env(safe-area-inset-right, 0px)); bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-nav);
-  display: grid; place-items: center; width: var(--control-lg); height: var(--control-lg); border-radius: 50%; border: 0; cursor: pointer;
-  background: var(--primary); color: var(--primary-foreground); box-shadow: var(--shadow-card), 0 6px 18px -6px color-mix(in srgb, var(--primary) 60%, transparent);
-  transition: transform var(--dur-fast) var(--ease-out);
-}
-.fab svg { width: var(--icon-lg); height: var(--icon-lg); }
-.fab:hover { transform: scale(1.05); }
-.fab:active { transform: scale(0.96); }
-@media (max-width: 720px) { .fab { bottom: calc(var(--nav-h) + var(--space-3) + env(safe-area-inset-bottom, 0px)); } }
 
 
 /* Slim progress bar (Meter in kit.tsx). */

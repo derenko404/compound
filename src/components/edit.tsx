@@ -309,11 +309,6 @@ export function PlusButton({ label, onClick }: { label: string; onClick: () => v
   return <button type="button" className="plus-btn" aria-label={label} title={label} onClick={onClick}><Plus /></button>
 }
 
-// The page's main add action, floating bottom right (above the bottom nav on phones).
-export function Fab({ label, onClick }: { label: string; onClick: () => void }) {
-  return <button type="button" className="fab" aria-label={label} title={label} onClick={onClick}><Plus /></button>
-}
-
 export const moveTo = <T,>(xs: T[], from: number, to: number) => {
   const ys = [...xs]
   ys.splice(to, 0, ...ys.splice(from, 1))

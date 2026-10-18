@@ -1,6 +1,6 @@
 import { usePageBar } from '@/components/bar'
 import {
-  TopicField, Fab, FormSheet, RemoveButton, SelectField, SwitchField, TextField, WeekdaysField, fail, moveTo, useSheet,
+  TopicField, FormSheet, RemoveButton, SelectField, SwitchField, TextField, WeekdaysField, fail, moveTo, useSheet,
 } from '@/components/edit'
 import { TopicTag, Linkify } from '@/components/guide'
 import { HABIT_UI } from '@/components/habits'
@@ -80,7 +80,7 @@ function RoutineSheet({ routine, open, onOpenChange }: { routine: Routine; open:
 export function Today() {
   const { state, dispatch } = useStore()
   const [edit, setEdit] = useState(false)
-  usePageBar({ edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
+  usePageBar({ add: { label: t.today.addTask, onClick: () => addTask() }, edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
   const sheet = useSheet<Routine>()
   const today = new Date()
   const k = keyOf(today)
@@ -188,7 +188,6 @@ export function Today() {
 
 
 
-      <Fab label={t.today.addTask} onClick={addTask} />
       {sheet.value && <RoutineSheet key={sheet.value.id} {...sheet.props} routine={sheet.value} />}
     </>
   )
