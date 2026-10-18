@@ -75,7 +75,6 @@ async function handle(msg: TgMessage, env: Env) {
 
   const text = msg.text ?? msg.caption ?? ''
   const cmd = text.match(/^\/(\w+)(?:@\w+)?\s*([\s\S]*)$/)
-  if (cmd?.[1].toLowerCase() === 'note') return say(await saveNote(env, cmd[2].trim()))
   const isAi = cmd?.[1].toLowerCase() === 'ai'
   if (cmd && !isAi) return say(HELP)
   const rest = isAi ? cmd[2] : text
@@ -84,7 +83,7 @@ async function handle(msg: TgMessage, env: Env) {
   const urls = [...new Set([...findUrls(rest), ...linked])]
   if (!urls.length) {
     if (isAi) return say(rest.trim() ? await ask(env, rest.trim()) : HELP)
-    // Plain text with no link is a note, same as /note.
+    // Plain text with no link is a note.
     return say(text.trim() ? await saveNote(env, text.trim()) : HELP)
   }
 
@@ -112,16 +111,15 @@ async function handle(msg: TgMessage, env: Env) {
   await say(lines.join('\n\n'))
 }
 
-/* ---------- /note: a note for the Notes tab ---------- */
+/* ---------- Notes: plain text for the Notes tab ---------- */
 
-// "/note english text": the first word picks the chapter when it names one (id or short name).
+// "english text": the first word picks the chapter when it names one (id or short name).
 function chapterWord(word: string): ChapterId | null {
   const w = word.toLowerCase()
   return ALL_CHAPTERS.find((c) => c === w || CH[c].short.toLowerCase() === w) ?? null
 }
 
 async function saveNote(env: Env, text: string) {
-  if (!text) return 'Write the note after /note, e.g. /note english practise th sounds before the call'
   const [first, ...rest] = text.split(/\s+/)
   const named = rest.length ? chapterWord(first) : null
   const body = named ? text.slice(first.length).trim() : text
