@@ -1,4 +1,4 @@
-import type { ListDef, ListItem } from '../../../src/core/domain/types'
+import type { ListDef, ListItem } from '../../../core/domain/types'
 
 /** What an AI reads back about lists. */
 export const present = {

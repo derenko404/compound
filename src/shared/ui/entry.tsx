@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
-import type { TopicId } from '@/core/domain/types'
+import type { TopicId } from '@core/domain/types'
 import { t } from '@/shared/i18n'
 import { cvar } from './lib/cvar'
 

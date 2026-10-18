@@ -1,4 +1,4 @@
-import type { Topic } from '@/core/domain/types'
+import type { Topic } from '@core/domain/types'
 
 // Maps every topic id to its palette colour, for light and dark themes alike.
 export function TopicColors({ topics }: { topics: Topic[] }) {

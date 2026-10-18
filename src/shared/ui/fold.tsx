@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
-import type { TopicId } from '@/core/domain/types'
+import type { TopicId } from '@core/domain/types'
 import { cvar } from './lib/cvar'
 
 // A collapsible card: title, an optional counter or controls on the right, and its body.

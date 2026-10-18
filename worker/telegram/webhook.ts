@@ -1,6 +1,6 @@
-import { findUrls } from '../../src/core/domain/finds'
-import type { MessengerPort } from '../../src/core/ports/messenger'
-import type { BotMessage, TelegramBotService } from '../../src/core/services/telegram-bot.service'
+import { findUrls } from '../../core/domain/finds'
+import type { MessengerPort } from '../../core/ports/messenger'
+import type { BotMessage, TelegramBotService } from '../../core/services/telegram-bot.service'
 import type { ExecutionContext } from '../env'
 
 interface TgEntity { type: string; url?: string }

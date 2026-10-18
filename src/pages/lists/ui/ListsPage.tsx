@@ -4,9 +4,9 @@ import { MessageSquarePlus, MessageSquareText, Pencil, Share2, Trash2 } from 'lu
 import {
   usePageBar, Check, Chip, ChipsList, Header, LinkCard, List, Progress, Row, SortList, SearchField, AreaField, ConfirmSheet, FormSheet, RemoveButton, TextField, fail, moveTo, useSheet,
 } from '@/shared/ui'
-import { byPosition, freshId, listSnapshot, nextPosition, uid } from '@/core/domain/content'
+import { byPosition, freshId, listSnapshot, nextPosition, uid } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
-import type { ListDef, ListDefItem, State } from '@/core/domain/types'
+import type { ListDef, ListDefItem, State } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { celebrate } from '@/shared/fx/fx'
 import { t } from '@/shared/i18n'

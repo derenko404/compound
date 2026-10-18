@@ -2,7 +2,7 @@
  * The MCP server (streamable HTTP, JSON responses): the endpoints marked asTool, called through `invoke` with the
  * same validation and services as REST. One token check per request, from the header or the path (/mcp/<token>).
  */
-import { AppError } from '../../src/core/domain/errors'
+import { AppError } from '../../core/domain/errors'
 import { CORS, HttpStatuses, json, type BuiltEndpoint } from '../lib/http'
 import type { ApiContext } from './context'
 import { bearer } from './guards'

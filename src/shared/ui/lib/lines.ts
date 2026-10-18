@@ -1,4 +1,4 @@
-import { uid } from '@/core/domain/content'
+import { uid } from '@core/domain/content'
 
 export const cleanLines = (xs: string[]) => xs.map((x) => x.trim()).filter(Boolean)
 

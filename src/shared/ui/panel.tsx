@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { TopicId } from '@/core/domain/types'
+import type { TopicId } from '@core/domain/types'
 import { cvar } from './lib/cvar'
 
 export const Panel = ({ children, ch, className }: { children: ReactNode; ch?: TopicId | null; className?: string }) => (

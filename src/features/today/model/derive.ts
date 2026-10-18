@@ -1,7 +1,7 @@
 // Pure functions that turn stored state into what the views show.
-import type { Topic, TopicId, Habit, Routine, State, When } from '@/core/domain/types'
+import type { Topic, TopicId, Habit, Routine, State, When } from '@core/domain/types'
 import { habitRows } from '@/features/habits'
-import { topicOf, topics, matchesWhen, program } from '@/core/domain/content'
+import { topicOf, topics, matchesWhen, program } from '@core/domain/content'
 import { addDays, dayDiff, fmtShort, keyOf, parseKey } from '@/shared/lib/dates'
 import { currentLocale, t } from '@/shared/i18n'
 

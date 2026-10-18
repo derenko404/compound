@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { ChevronRight, Menu } from 'lucide-react'
-import type { TopicId } from '@/core/domain/types'
+import type { TopicId } from '@core/domain/types'
 import { t } from '@/shared/i18n'
 import { cvar } from './lib/cvar'
 import { List } from './list'

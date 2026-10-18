@@ -1,4 +1,4 @@
-import { PALETTE } from '@/core/domain/content'
+import { PALETTE } from '@core/domain/content'
 import { t } from '@/shared/i18n'
 import { Label } from '../primitives/label'
 

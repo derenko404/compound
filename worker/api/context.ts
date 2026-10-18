@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { SupabaseRepositories } from '../../src/adapters/supabase'
-import { SupabaseApiTokenRepository } from '../../src/adapters/supabase/api-token.repository'
-import { fail } from '../../src/core/domain/errors'
-import { ApiTokenService, Services } from '../../src/core/services'
+import { SupabaseRepositories } from '../../adapters/supabase'
+import { SupabaseApiTokenRepository } from '../../adapters/supabase/api-token.repository'
+import { fail } from '../../core/domain/errors'
+import { ApiTokenService, Services } from '../../core/services'
 
 /**
  * What every API and MCP call carries: the service-key client and the site's origin, and once the token is

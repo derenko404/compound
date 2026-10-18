@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { TopicId } from '@/core/domain/types'
+import type { TopicId } from '@core/domain/types'
 import { cvar } from './lib/cvar'
 
 export const Stats = ({ items, ch }: { items: { value: ReactNode; label: ReactNode }[]; ch?: TopicId | null }) => (

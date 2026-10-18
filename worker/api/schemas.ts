@@ -3,8 +3,8 @@
  * or size outside the list) instead of failing, and carry the descriptions shown in MCP tools and OpenAPI.
  */
 import { z } from 'zod'
-import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS } from '../../src/core/domain/content'
-import type { ProjectSize, ResourceKind } from '../../src/core/domain/types'
+import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS } from '../../core/domain/content'
+import type { ProjectSize, ResourceKind } from '../../core/domain/types'
 
 export const text = (max = 2000) => z.string().transform((s) => s.trim().slice(0, max))
 const texts = (max = 400) => z.array(text(max)).transform((xs) => xs.filter(Boolean))

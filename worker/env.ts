@@ -1,4 +1,4 @@
-import type { WorkersAiBinding } from '../src/adapters/cloudflare/workers-ai.client'
+import type { WorkersAiBinding } from '../adapters/cloudflare/workers-ai.client'
 
 /** The worker's bindings, vars and secrets (wrangler.jsonc, and wrangler secret put / the dashboard). */
 export interface Env {

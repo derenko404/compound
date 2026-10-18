@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link, type LinkProps } from '@tanstack/react-router'
-import type { TopicId } from '@/core/domain/types'
+import type { TopicId } from '@core/domain/types'
 import { cvar } from './lib/cvar'
 import { Dot } from './dot'
 

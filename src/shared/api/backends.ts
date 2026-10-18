@@ -1,13 +1,13 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import type { Topic, ListDef, Note, Op, State } from '@/core/domain/types'
-import type { NotesFilter, Repositories } from '@/core/ports/repositories'
-import { ApiTokenService, BackupService, ShareService, StateService, TelegramConnectService } from '@/core/services'
-import type { ShareKind } from '@/core/ports/shares'
-import { SupabaseApiTokenRepository } from '@/adapters/supabase/api-token.repository'
-import { SupabaseShareRepository } from '@/adapters/supabase/share.repository'
-import { SupabaseTelegramAccountRepository } from '@/adapters/supabase/telegram-account.repository'
-import { SupabaseRepositories } from '@/adapters/supabase'
-import { LocalRepositories, LocalStore } from '@/adapters/local'
+import type { Topic, ListDef, Note, Op, State } from '@core/domain/types'
+import type { NotesFilter, Repositories } from '@core/ports/repositories'
+import { ApiTokenService, BackupService, ShareService, StateService, TelegramConnectService } from '@core/services'
+import type { ShareKind } from '@core/ports/shares'
+import { SupabaseApiTokenRepository } from '@adapters/supabase/api-token.repository'
+import { SupabaseShareRepository } from '@adapters/supabase/share.repository'
+import { SupabaseTelegramAccountRepository } from '@adapters/supabase/telegram-account.repository'
+import { SupabaseRepositories } from '@adapters/supabase'
+import { LocalRepositories, LocalStore } from '@adapters/local'
 
 export type { NotesFilter }
 
@@ -63,7 +63,7 @@ export const telegramLink = (db: SupabaseClient) => telegram(db).linked()
 export const telegramCode = (db: SupabaseClient) => telegram(db).newCode()
 export const disconnectTelegram = (db: SupabaseClient) => telegram(db).unlink()
 
-export type { Share, ShareKind, SharedContent } from '@/core/ports/shares'
+export type { Share, ShareKind, SharedContent } from '@core/ports/shares'
 export const SHARE_DAYS = ShareService.DAYS
 const shares = (db: SupabaseClient) => new ShareService(new SupabaseShareRepository(db))
 export const createShare = (db: SupabaseClient, kind: ShareKind, name: string, data: Topic | ListDef) => shares(db).create(kind, name, data)
@@ -71,7 +71,7 @@ export const myShares = (db: SupabaseClient) => shares(db).mine()
 export const deleteShare = (db: SupabaseClient, id: string) => shares(db).remove(id)
 export const getShare = (db: SupabaseClient, id: string) => shares(db).get(id)
 
-export type { ApiToken } from '@/core/ports/api-tokens'
+export type { ApiToken } from '@core/ports/api-tokens'
 const tokens = (db: SupabaseClient) => new ApiTokenService(new SupabaseApiTokenRepository(db))
 export const apiTokens = (db: SupabaseClient) => tokens(db).list()
 export const createApiToken = (db: SupabaseClient, name: string) => tokens(db).create(name)

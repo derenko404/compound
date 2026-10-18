@@ -1,4 +1,4 @@
-import type { Topic } from '../../../src/core/domain/types'
+import type { Topic } from '../../../core/domain/types'
 
 /** What an AI reads back about topics: ticks as `done` flags, the app's names mapped to the API's. */
 export const present = {

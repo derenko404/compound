@@ -9,7 +9,7 @@ import { toast } from '@/shared/fx/fx'
 import { SHARE_DAYS, createShare, supabase, type ShareKind } from '@/shared/api/backends'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
-import type { Topic, ListDef } from '@/core/domain/types'
+import type { Topic, ListDef } from '@core/domain/types'
 import { FormSheet, CopyButton } from '@/shared/ui'
 
 // Makes the link on the first tap (a snapshot: editing later doesn't change it), then offers Copy.

@@ -5,10 +5,10 @@ import {
   usePageBar, Chip, ChipsList, Header, List, Meter, Row, SearchField, Section, SortList, Tabs, cvar, empty, ConfirmSheet, RemoveButton, moveTo, useSheet,
 } from '@/shared/ui'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/primitives/dialog'
-import { RESOURCE_KINDS, topicOf, topics, program, topicSnapshot } from '@/core/domain/content'
+import { RESOURCE_KINDS, topicOf, topics, program, topicSnapshot } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
 import { focusOf, monthName, targetFinish, nextUp, pace, topicProgress } from '@/features/today'
-import type { Topic, Note, Project, Resource, ResourceKind, Skill } from '@/core/domain/types'
+import type { Topic, Note, Project, Resource, ResourceKind, Skill } from '@core/domain/types'
 import { useNoteCount, useNotes, useStore } from '@/shared/store/StoreProvider'
 import { lockOn } from '@/shared/fx/fx'
 import { playFocus } from '@/shared/fx/sound'

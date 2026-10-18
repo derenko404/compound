@@ -1,5 +1,5 @@
-import { topics } from '@/core/domain/content'
-import type { TopicId, State } from '@/core/domain/types'
+import { topics } from '@core/domain/content'
+import type { TopicId, State } from '@core/domain/types'
 import { t } from '@/shared/i18n'
 import { useStore } from '@/shared/store/StoreProvider'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '../primitives/select'

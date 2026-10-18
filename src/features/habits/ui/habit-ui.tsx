@@ -1,7 +1,7 @@
 // The look of each habit type (its skin): icon, name, one-line pitch and colour token.
 // Shared by Today's habit rows and the Wellbeing widgets.
 import { Ban, CigaretteOff, Dumbbell, GlassWater, Sprout, type LucideIcon } from 'lucide-react'
-import type { HabitType } from '@/core/domain/types'
+import type { HabitType } from '@core/domain/types'
 import { t } from '@/shared/i18n'
 
 const T = t.wellbeing.types

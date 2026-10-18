@@ -2,12 +2,12 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { ChevronDown, GlassWater } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
 import { Label } from '@/shared/ui/primitives/label'
-import { nextPosition, uid } from '@/core/domain/content'
+import { nextPosition, uid } from '@core/domain/content'
 import { addDays, dayDiff, fmtShort, keyOf, parseKey } from '@/shared/lib/dates'
 import {
   DONE, HABIT_DEFAULTS, SLIP, chain, cleanStats, dueOn, gymMakeUp, gymStats, habitsOf, smokingStats, started, valueOn, waterStats,
 } from '@/features/habits'
-import type { Habit, HabitType, State } from '@/core/domain/types'
+import type { Habit, HabitType, State } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import {
   Chip, CountRow, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, SortList, Section, Stats, FormSheet, RemoveButton, TextField, WeekdaysField, fail, moveTo, useSheet, usePageBar,

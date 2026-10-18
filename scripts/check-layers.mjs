@@ -1,6 +1,7 @@
 /**
  * Enforces the app's Feature-Sliced Design (the lighter variant) in src/, run by `npm run lint`:
- * - layers only import from layers below them: core < shared < features < pages < app;
+ * - layers only import from layers below them: core < adapters < shared < features < pages < app (core and
+ *   adapters live next to src/ and are imported as @core/… and @adapters/…);
  * - a page never imports another page;
  * - from another slice, import its public API (`@/features/topics`), not a file inside it. Features may use
  *   each other this way;
@@ -14,9 +15,10 @@ const ROOT = resolve(new URL('..', import.meta.url).pathname)
 const LAYERS = ['core', 'adapters', 'shared', 'features', 'pages', 'app']
 const SLICED = new Set(['features', 'pages'])
 
-// Where a file sits: its layer and (for sliced layers) its slice.
+// Where a file sits: its layer and (for sliced layers) its slice. core/ and adapters/ live next to src/.
 const place = (file) => {
-  const [layer, slice] = relative(join(ROOT, 'src'), file).split('/')
+  const parts = relative(ROOT, file).split('/')
+  const [layer, slice] = parts[0] === 'src' ? parts.slice(1) : parts
   return { layer, slice: SLICED.has(layer) ? slice : null }
 }
 
@@ -28,7 +30,7 @@ const walk = (dir) => {
     else if (/\.tsx?$/.test(name)) files.push(path)
   }
 }
-walk(join(ROOT, 'src'))
+for (const dir of ['src', 'core', 'adapters']) walk(join(ROOT, dir))
 
 const problems = []
 for (const file of files) {
@@ -38,7 +40,9 @@ for (const file of files) {
     if (line.includes('layers-ok')) return
     for (const m of line.matchAll(/(?:from\s+|import\s*\(\s*|import\s+)['"]([^'"]+)['"]/g)) {
       const spec = m[1]
-      const target = spec.startsWith('@/') ? join(ROOT, 'src', spec.slice(2)) : spec.startsWith('.') ? resolve(dirname(file), spec) : null
+      const target = spec.startsWith('@/') ? join(ROOT, 'src', spec.slice(2))
+        : /^@(core|adapters)\//.test(spec) ? join(ROOT, spec.slice(1))
+          : spec.startsWith('.') ? resolve(dirname(file), spec) : null
       if (!target) continue
       const to = place(target)
       if (!LAYERS.includes(to.layer)) continue

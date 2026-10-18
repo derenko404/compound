@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { AppError } from '../../../src/core/domain/errors'
+import { AppError } from '../../../core/domain/errors'
 import { HttpStatuses } from './http-statuses'
 
 export const CORS = {

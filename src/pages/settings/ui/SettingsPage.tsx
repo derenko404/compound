@@ -15,7 +15,7 @@ import {
   telegramCode, telegramLink, apiTokens, createApiToken, revokeApiToken, myShares, deleteShare, SHARE_DAYS, type ApiToken, type Share,
 } from '@/shared/api/backends'
 import { useStore } from '@/shared/store/StoreProvider'
-import type { State } from '@/core/domain/types'
+import type { State } from '@core/domain/types'
 import { keyOf } from '@/shared/lib/dates'
 import { CopyButton, Header, Panel, Section, SettingRow, SettingSelect, ConfirmSheet, FormSheet, TextField, fail } from '@/shared/ui'
 import { t, currentLocale, getLangPref, setLangPref, type LangPref } from '@/shared/i18n'

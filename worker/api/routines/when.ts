@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { When } from '../../../src/core/domain/types'
+import type { When } from '../../../core/domain/types'
 
 const DAY = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
