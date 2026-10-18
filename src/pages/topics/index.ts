@@ -1,1 +1,2 @@
-export * from './ui/TopicsPage'
+export * from './ui/TopicIndexPage'
+export * from './ui/TopicPage'

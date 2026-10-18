@@ -1,5 +1,5 @@
 // /share/<id>: someone's shared topic or list. Readable without an account; adding a copy needs one (or this device).
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
@@ -8,40 +8,14 @@ import { getShare, supabase } from '@/shared/api/backends'
 import { useStore } from '@/shared/store/StoreProvider'
 import { listFromShare, topicFromShare } from '@core/domain/content'
 import type { Topic, ListDef } from '@core/domain/types'
-import { Header, List, MoreText, Row, Section } from '@/shared/ui'
-import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/features/topics'
-import { SignIn } from '@/features/auth'
+import { Header, List } from '@/shared/ui'
+import { PENDING_SHARE, SignIn } from '@/features/auth'
 import { t } from '@/shared/i18n'
+import { TopicPreview } from './TopicPreview'
+import { ListPreview } from './ListPreview'
 
 const route = getRouteApi('/share/$id')
 
-// After signing in (Google comes back on /today), the app returns here to finish adding.
-export const PENDING_SHARE = 'roadmap-pending-share'
-
-// The shared topic's own colour, since it isn't one of the visitor's topics.
-function TopicPreview({ c }: { c: Topic }) {
-  return (
-    <div style={{ '--c': `var(--p-${c.color})` } as CSSProperties}>
-      {c.description && <div className="mb-6"><div className="lead"><MoreText lines={6}><Linkify text={c.description} /></MoreText></div></div>}
-      {c.outcomes.length > 0 && <Section title={t.topics.goals}><Bullets items={c.outcomes} /></Section>}
-      {c.skills.length > 0 && <Section title={t.topics.tabs.skills}><SkillFolds skills={c.skills} readOnly /></Section>}
-      {c.resources.length > 0 && <Section title={t.topics.tabs.resources}><ResourceGroups resources={c.resources} readOnly /></Section>}
-      {c.projects.length > 0 && (
-        <Section title={t.topics.tabs.projects}>
-          <List>{c.projects.map((p) => <ProjectCard key={p.id} p={p} readOnly />)}</List>
-        </Section>
-      )}
-    </div>
-  )
-}
-
-function ListPreview({ l }: { l: ListDef }) {
-  return (
-    <Section title={t.topics.shared.items(l.items.length)}>
-      <List>{l.items.map((it, i) => <Row key={it.id} title={<><span className="font-normal tabular-nums text-muted-foreground">{i + 1}.</span> {it.title}</>} sub={it.sub} />)}</List>
-    </Section>
-  )
-}
 
 export function SharePage() {
   const { id } = route.useParams()

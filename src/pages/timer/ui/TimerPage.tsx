@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Pause, Play, RotateCcw, Settings2 } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
-import { usePageBar, Dial, Header, Segmented, Stepper, FormSheet, TextField, fail } from '@/shared/ui'
+import { usePageBar, Dial, Header, Segmented, Stepper } from '@/shared/ui'
 import { requestPermission, supported } from '@/shared/fx/notify'
 import type { Ambient } from '@/shared/fx/sound'
 import {
-  CUSTOM_MAX, LENGTH_LABEL, customStep, TIMER_DEFAULTS, clock, lengthOf, remaining, timer, useTimer, type Length, type TimerSettings,
+  CUSTOM_MAX, LENGTH_LABEL, TimerSettingsSheet, customStep, clock, lengthOf, remaining, timer, useTimer, type Length,
 } from '@/features/timer'
 import { t } from '@/shared/i18n'
 
@@ -58,27 +58,7 @@ export function Timer() {
           <Segmented label={t.timer.sound} value={settings.sound} onChange={(sound) => timer.settings({ ...settings, sound })} options={SOUNDS} />
         </div>
       </div>
-      {editing && <TimerSheet open onOpenChange={setEditing} settings={settings} />}
+      {editing && <TimerSettingsSheet open onOpenChange={setEditing} settings={settings} />}
     </>
-  )
-}
-
-// The minutes behind Short and Long.
-function TimerSheet({ settings, open, onOpenChange }: { settings: TimerSettings; open: boolean; onOpenChange: (o: boolean) => void }) {
-  const [text, setText] = useState({ short: String(settings.short), long: String(settings.long) })
-  return (
-    <FormSheet open={open} onOpenChange={onOpenChange} title={t.timer.settings}
-      onSubmit={() => {
-        const [short, long] = [Math.round(Number(text.short)), Math.round(Number(text.long))]
-        if (![short, long].every((m) => m >= 1 && m <= CUSTOM_MAX)) return fail(t.timer.range(CUSTOM_MAX))
-        timer.settings({ ...settings, short, long })
-      }}>
-      <TextField label={t.timer.shortMinutes} type="number" value={text.short} onChange={(short) => setText({ ...text, short })} />
-      <TextField label={t.timer.longMinutes} type="number" value={text.long} onChange={(long) => setText({ ...text, long })} />
-      <button type="button" className="link-btn span-all justify-self-start"
-        onClick={() => setText({ short: String(TIMER_DEFAULTS.short), long: String(TIMER_DEFAULTS.long) })}>
-        {t.timer.backTo(TIMER_DEFAULTS.short, TIMER_DEFAULTS.long)}
-      </button>
-    </FormSheet>
   )
 }

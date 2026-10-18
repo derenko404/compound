@@ -36,6 +36,11 @@ export const valueOn = (s: State, h: Habit, k: string) => logOf(s, h)[k]
 export const started = (h: Habit, today: Date) => !!h.start_date && parseKey(h.start_date) <= today
 export const dueOn = (h: Habit, d: Date) => started(h, d) && (!h.days.length || h.days.includes(d.getDay()))
 
+export const weekOf = (today: Date) => {
+  const monday = addDays(today, -((today.getDay() + 6) % 7))
+  return Array.from({ length: 7 }, (_, i) => addDays(monday, i))
+}
+
 /* ---------- Break a habit, quit smoking: clean days since the start, minus slips ---------- */
 
 export function cleanStats(s: State, h: Habit, today: Date) {

@@ -1,113 +1,28 @@
 import { useRef, useState } from 'react'
-import { Link, getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
+import { getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
 import { Crosshair, Info, Pencil, Share2, Trash2 } from 'lucide-react'
 import {
   usePageBar, Chip, ChipsList, Header, List, Meter, Row, SearchField, Section, SortList, Tabs, cvar, empty, ConfirmSheet, RemoveButton, moveTo, useSheet,
 } from '@/shared/ui'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/primitives/dialog'
-import { RESOURCE_KINDS, topicOf, topics, program, topicSnapshot } from '@core/domain/content'
+import { RESOURCE_KINDS, topicOf, program, topicSnapshot } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
-import { focusOf, monthName, targetFinish, nextUp, pace, topicProgress } from '@/features/today'
+import { focusOf, nextUp, topicProgress } from '@/features/today'
 import type { Topic, Note, Project, Resource, ResourceKind, Skill } from '@core/domain/types'
-import { useNoteCount, useNotes, useStore } from '@/shared/store/StoreProvider'
+import { useNoteCount, useStore } from '@/shared/store/StoreProvider'
 import { lockOn } from '@/shared/fx/fx'
 import { playFocus } from '@/shared/fx/sound'
-import { currentLocale, t } from '@/shared/i18n'
-import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/features/topics'
-import { NoteCard } from '@/features/notes'
+import { t } from '@/shared/i18n'
+import { ProjectCard, ResourceGroups, SkillFolds } from '@/features/topics'
 import { NoteSheet } from '@/features/notes'
-import { useLoadMore } from '@/shared/lib/useLoadMore'
 import {
   TopicSheet, SkillSheet, ProjectSheet, ResourceSheet,
-  blankSkill, blankProject, blankResource, newTopic, useTopicSave,
+  blankSkill, blankProject, blankResource, useTopicSave,
 } from '@/features/topics'
+import { AboutSheet } from './AboutSheet'
+import { TopicNotes } from './TopicNotes'
+import { DELETE_TOPIC } from './delete-topic'
 
 const route = getRouteApi('/topics/$ch')
-
-/* ---------- All topics ---------- */
-
-// One topic on the index: steps done, its focus quarters, and what's next.
-function TopicCard({ c }: { c: Topic }) {
-  const { state } = useStore()
-  const { done, total } = topicProgress(state, c)
-  const focus = focusOf(state) === c.id
-  const next = nextUp(state, c)
-  // Pace only when there is some: steps a week over the last 4 weeks, and when that finishes the topic.
-  const { perWeek, left, finish } = pace(state, c, new Date())
-  const end = targetFinish(c)
-  const late = !!finish && !!end && finish > end
-  const paceLine = perWeek && left && finish
-    ? `${t.topics.card.pace(String(perWeek % 1 ? perWeek.toFixed(1) : perWeek), finish.toLocaleDateString(currentLocale(), { month: 'short', year: 'numeric' }))}${late ? t.topics.card.late(monthName(end!)) : ''}`
-    : null
-  return (
-    <Link to="/topics/$ch" params={{ ch: c.id }} className={`topic-card${focus ? ' is-focus' : ''}`} style={cvar(c.id)}>
-      <div className="topic-card-head">
-        <span className="focus-name"><span className="dot" />{c.name}</span>
-        {/* One topic is the focus (heavy): it gets the study sessions and the weekend project. Set from the topic's ⋯ menu. */}
-        {focus && <span className="focus-badge"><Crosshair aria-hidden="true" />{t.topics.focus}</span>}
-      </div>
-      {total > 0 ? (
-        <>
-          <div className="topic-card-progress"><Meter value={done / total} label={t.topics.card.stepsOf(done, total)} /><span>{t.topics.card.doneOf(done, total)}</span></div>
-          {next?.step && <div className="topic-card-now"><span className="focus-label">{t.topics.card.nextIn(next.skill.name)}</span>{next.step.text}</div>}
-          {paceLine && <div className={`topic-row-pace${late ? ' late' : ''}`}>{paceLine}</div>}
-        </>
-      ) : (
-        <div className="muted text-small">{t.topics.card.counts(c.skills.length, c.resources.length)}</div>
-      )}
-    </Link>
-  )
-}
-
-const DELETE_TOPIC = t.topics.index.deleteTopic
-const skillCount = (c: Topic) => t.common.skills(c.skills.length)
-
-export function TopicIndex() {
-  const { state, dispatch } = useStore()
-  const sheet = useSheet<Topic>()
-  const nav = useNavigate()
-  const [edit, setEdit] = useState(false)
-  usePageBar({ add: { label: t.topics.index.newTopic, onClick: () => sheet.open(newTopic('learn', state.topics)) }, edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
-  // The focus topic when the page opened leads. Switching focus during the visit moves nothing,
-  // like ticks with useDoneLastOnOpen; the next visit shows the new order. Edit mode shows the saved order.
-  const [lead] = useState(() => focusOf(state))
-  const learn = topics(state, 'learn')
-  const roadmap = [...learn].sort((a, b) => Number(b.id === lead) - Number(a.id === lead))
-  // Personal, the default topic, sits apart under Other. It can't be deleted.
-  const other = topics(state, 'general')
-  const reorder = (from: number, to: number) => {
-    const ys = moveTo(learn, from, to)
-    dispatch({ type: 'batch', ops: ys.flatMap((x, j) => (x.position === j ? [] : [{ type: 'putTopic' as const, topic: { ...x, position: j } }])) })
-  }
-
-  return (
-    <>
-      <Header title={t.topics.index.title} lead={t.topics.index.lead} />
-      <Section title={t.topics.index.yours}>
-        {edit ? (
-          <SortList empty={t.topics.index.empty} onMove={reorder}>
-            {learn.map((c) => (
-              <Row key={c.id} ch={c.id} title={c.name} sub={skillCount(c)}
-                check={<RemoveButton label={t.common.deleteNamed(c.name)} title={t.common.deleteAsk(c.name)} description={DELETE_TOPIC} onConfirm={() => dispatch({ type: 'deleteTopic', id: c.id })} />}
-                onOpen={() => sheet.open(c)} sort />
-            ))}
-          </SortList>
-        ) : <div className="card-grid">{roadmap.map((c) => <TopicCard key={c.id} c={c} />)}</div>}
-      </Section>
-      {other.length > 0 && (
-        <Section title={t.topics.index.other}>
-          {edit
-            ? <List>{other.map((c) => <Row key={c.id} ch={c.id} title={c.name} sub={skillCount(c)} onOpen={() => sheet.open(c)} />)}</List>
-            : <div className="card-grid">{other.map((c) => <TopicCard key={c.id} c={c} />)}</div>}
-        </Section>
-      )}
-      {sheet.value && <TopicSheet key={sheet.value.id} {...sheet.props} topic={sheet.value}
-        onSaved={sheet.value.id ? undefined : (c) => nav({ to: '/topics/$ch', params: { ch: c.id } })} />}
-    </>
-  )
-}
-
-/* ---------- One topic ---------- */
 
 export function Topics() {
   const { ch } = route.useParams()
@@ -120,44 +35,6 @@ export function Topics() {
 type Editing =
   | { kind: 'topic' }
   | { kind: 'project'; v: Project } | { kind: 'resource'; v: Resource } | { kind: 'skill'; v: Skill }
-
-// Read-only: what the topic is about, where it leads, and the skills it builds.
-function AboutSheet({ c, open, onOpenChange }: { c: Topic; open: boolean; onOpenChange: (o: boolean) => void }) {
-  const target = targetFinish(c)
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sheet-wide" style={cvar(c.id)}>
-        <DialogTitle>{c.name}</DialogTitle>
-        <DialogDescription className="sr-only">{t.topics.page.about(c.name)}</DialogDescription>
-        <div className="grid gap-5 pb-2">
-          {c.description && <div className="about-text"><Linkify text={c.description} /></div>}
-          {c.outcomes.length > 0 && (
-            <div className="grid gap-2">
-              <h3 className="text-title font-bold">{target ? t.topics.goalsBy(monthName(target)) : t.topics.goals}</h3>
-              <Bullets items={c.outcomes} />
-            </div>
-          )}
-          {!c.description && !c.outcomes.length && <p className="muted">{t.topics.page.aboutEmpty}</p>}
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-// The topic's notebook entries, loaded 10 at a time like the Notebook page.
-function TopicNotes({ ch, onOpen, edit }: { ch: string; onOpen: (n: Note) => void; edit?: boolean }) {
-  const notes = useNotes({ topic: ch })
-  const items = notes.data?.pages.flat() ?? []
-  const more = useLoadMore(notes)
-  return (
-    <>
-      <List empty={notes.isPending ? t.common.loading : t.topics.page.notesEmpty}>
-        {items.map((n) => <NoteCard key={n.id} n={n} showTopic={false} onOpen={() => onOpen(n)} removable={edit} />)}
-      </List>
-      {notes.hasNextPage && <div ref={more} className="empty">{notes.isFetchingNextPage ? t.common.loadingMore : ''}</div>}
-    </>
-  )
-}
 
 type Tab = 'learn' | 'resources' | 'projects' | 'notes'
 
@@ -185,8 +62,10 @@ function TopicPage({ c }: { c: Topic }) {
   const resources = c.resources.filter((r) => (!kind || r.kind === kind) && (!q || `${r.title} ${r.note ?? ''}`.toLowerCase().includes(q)))
   const kindCount = (k: ResourceKind) => c.resources.filter((r) => r.kind === k).length
   const kinds = RESOURCE_KINDS.filter((k) => kindCount(k.id)).sort((a, b) => kindCount(b.id) - kindCount(a.id))
-  // In edit mode every list shows its + and the rows show their controls.
-  // The top bar's + adds to the open tab.
+  /**
+   * In edit mode every list shows its + and the rows show their controls.
+   * The top bar's + adds to the open tab.
+   */
   const add: Record<Tab, { label: string; onClick: () => void }> = {
     learn: { label: t.topics.add.skill, onClick: () => sheet.open({ kind: 'skill', v: blankSkill() }) },
     resources: { label: t.topics.add.resource, onClick: () => sheet.open({ kind: 'resource', v: blankResource() }) },
