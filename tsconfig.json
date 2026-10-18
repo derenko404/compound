@@ -18,6 +18,9 @@
       ],
       "@core/*": [
         "./core/*"
+      ],
+      "@adapters/*": [
+        "./adapters/*"
       ]
     }
   }

@@ -1,13 +1,11 @@
 // Helpers over the editable content in State. Shared with the Telegram worker, so keep it free of DOM and app imports.
-import type { Topic, TopicId, TopicKind, ListDef, Note, Program, ProjectSize, ResourceKind, State, When } from './types'
+import type { ListDef, Note, Program, ProjectSize, ResourceKind, State, Topic, TopicId, TopicKind, When } from './types'
 
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // Topic colours: each key has a light and a dark value in index.css (--p-<key>).
 export const PALETTE = ['blue', 'orange', 'purple', 'green', 'pink', 'amber', 'slate', 'teal', 'gray', 'red', 'indigo', 'lime'] as const
-
-
 
 export const RESOURCE_KINDS: { id: ResourceKind; label: string }[] = [
   { id: 'book', label: 'Books' },

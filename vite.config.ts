@@ -45,5 +45,5 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
-  resolve: { alias: { '@core': path.resolve(import.meta.dirname, 'core'), '@': path.resolve(import.meta.dirname, 'src') } },
+  resolve: { alias: { '@core': path.resolve(import.meta.dirname, 'core'), '@adapters': path.resolve(import.meta.dirname, 'adapters'), '@': path.resolve(import.meta.dirname, 'src') } },
 })

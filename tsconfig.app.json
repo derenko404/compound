@@ -29,11 +29,15 @@
       ],
       "@core/*": [
         "./core/*"
+      ],
+      "@adapters/*": [
+        "./adapters/*"
       ]
     }
   },
   "include": [
     "src",
-    "core"
+    "core",
+    "adapters"
   ]
 }
