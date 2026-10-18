@@ -65,6 +65,7 @@ export interface Bookmark {
   description: string
   tags: string[]
   note: string
+  chapter: ChapterId | null
   source: 'app' | 'telegram'
   created_at: string
 }

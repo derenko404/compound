@@ -3,16 +3,17 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { ALL_CHAPTERS, CH } from '@/data/plan'
 import { addDays, fmtLong, keyOf, parseKey } from '@/lib/dates'
-import { KINDS, findUrls, hostOf, kindFromUrl } from '@/lib/finds'
-import type { Bookmark, BookmarkKind } from '@/lib/types'
+import { KINDS, findUrls, hostOf, kindFromUrl, kindName } from '@/lib/finds'
+import type { Bookmark, BookmarkKind, ChapterId } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { burst, toast } from '@/fx/fx'
-import { ConfirmButton, Header, Section, empty } from '@/components/kit'
+import { ConfirmButton, Header, Section, cvar, empty } from '@/components/kit'
 
 const KIND_ORDER: Record<BookmarkKind, number> = { video: 0, post: 1, site: 2 }
-const kindName = (k: BookmarkKind) => KINDS.find((x) => x.id === k)!.label.slice(0, -1)
 const hay = (b: Bookmark) => [b.title, b.description, b.note, b.url, b.tags.join(' ')].join(' ').toLowerCase()
 
 function dayTitle(key: string) {
@@ -27,8 +28,9 @@ const PAGE = 20
 function FindCard({ b, onTag }: { b: Bookmark; onTag: (t: string) => void }) {
   const { dispatch } = useStore()
   return (
-    <div className="note" style={{ '--c': 'var(--primary)' } as React.CSSProperties}>
+    <div className="note" style={b.chapter ? cvar(b.chapter) : ({ '--c': 'var(--primary)' } as React.CSSProperties)}>
       <div className="note-meta">
+        {b.chapter && <><span className="dot" /><span>{CH[b.chapter].short}</span></>}
         <span>{kindName(b.kind)}</span>
         <span>{hostOf(b.url)}</span>
         {b.source === 'telegram' && <span>via Telegram</span>}
@@ -57,7 +59,9 @@ export function Finds() {
   const [note, setNote] = useState('')
   const [tagText, setTagText] = useState('')
   const [pick, setPick] = useState<BookmarkKind | null>(null)
+  const [formCh, setFormCh] = useState<ChapterId | 'none'>('none')
   const [kind, setKind] = useState<BookmarkKind | null>(null)
+  const [chapter, setChapter] = useState<ChapterId | null>(null)
   const [tag, setTag] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [page, setPage] = useState({ key: '', n: PAGE })
@@ -67,25 +71,30 @@ export function Finds() {
   const guess = link ? kindFromUrl(link) ?? 'site' : null
   const formKind = pick ?? guess
 
-  const [counts, tagCounts] = useMemo(() => {
+  const [counts, tagCounts, chCounts] = useMemo(() => {
     const c: Record<string, number> = {}
     const t: Record<string, number> = {}
+    const h: Record<string, number> = {}
     for (const b of state.bookmarks) {
       c[b.kind] = (c[b.kind] || 0) + 1
       for (const x of b.tags) t[x] = (t[x] || 0) + 1
+      if (b.chapter) h[b.chapter] = (h[b.chapter] || 0) + 1
     }
-    return [c, t]
+    return [c, t, h]
   }, [state.bookmarks])
+  const chapters = ALL_CHAPTERS.filter((c) => chCounts[c])
+  const activeCh = chapter && chCounts[chapter] ? chapter : null
   const tags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a] || a.localeCompare(b))
   const activeTag = tag && tagCounts[tag] ? tag : null
 
   const q = query.toLowerCase()
   const shown = useMemo(
-    () => state.bookmarks.filter((b) => (!kind || b.kind === kind) && (!activeTag || b.tags.includes(activeTag)) && (!q || hay(b).includes(q))),
-    [state.bookmarks, kind, activeTag, q],
+    () => state.bookmarks.filter((b) =>
+      (!kind || b.kind === kind) && (!activeCh || b.chapter === activeCh) && (!activeTag || b.tags.includes(activeTag)) && (!q || hay(b).includes(q))),
+    [state.bookmarks, kind, activeCh, activeTag, q],
   )
   // Changing a filter starts again from the first page.
-  const fkey = `${kind}|${activeTag}|${q}`
+  const fkey = `${kind}|${activeCh}|${activeTag}|${q}`
   const limit = page.key === fkey ? page.n : PAGE
   useEffect(() => {
     const el = more.current
@@ -128,6 +137,18 @@ export function Finds() {
             <Input id="find-tags" className="bg-background" list="find-tag-options" value={tagText} onChange={(e) => setTagText(e.target.value)} placeholder="ai, design, english" />
             <datalist id="find-tag-options">{tags.map((t) => <option key={t} value={t} />)}</datalist>
           </div>
+          <div className="field">
+            <Label htmlFor="find-chapter">Chapter</Label>
+            <Select value={formCh} onValueChange={(v) => setFormCh(v as ChapterId | 'none')}>
+              <SelectTrigger id="find-chapter" className="w-full bg-background"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No chapter</SelectItem>
+                {ALL_CHAPTERS.map((c) => (
+                  <SelectItem key={c} value={c}><span className="dot" style={cvar(c)} />{CH[c].name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="chips" role="group" aria-label="Type">
             {KINDS.map((k) => (
               <button key={k.id} className="chbtn" aria-pressed={formKind === k.id} onClick={() => setPick(k.id)}>{kindName(k.id)}</button>
@@ -142,11 +163,11 @@ export function Finds() {
                 bookmark: {
                   id: crypto.randomUUID(), url: link, kind: formKind ?? 'site', title: title.trim(), description: '',
                   tags: [...new Set(tagText.split(',').map((t) => t.trim().toLowerCase().replace(/^#/, '').replace(/\s+/g, '-')).filter(Boolean))],
-                  note: note.trim(), source: 'app', created_at: new Date().toISOString(),
+                  note: note.trim(), chapter: formCh === 'none' ? null : formCh, source: 'app', created_at: new Date().toISOString(),
                 },
               })
               burst(e.currentTarget, 16)
-              setUrl(''); setTitle(''); setNote(''); setTagText(''); setPick(null)
+              setUrl(''); setTitle(''); setNote(''); setTagText(''); setPick(null); setFormCh('none')
               toast('Saved.')
             }}>Save</Button>
           </div>
@@ -164,6 +185,16 @@ export function Finds() {
             {KINDS.filter((k) => counts[k.id]).map((k) => (
               <button key={k.id} className="chbtn" aria-pressed={kind === k.id} onClick={() => setKind(k.id)}>
                 {k.label} <span className="font-normal text-muted-foreground">{counts[k.id]}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {chapters.length > 0 && (
+          <div className="chips">
+            {activeCh && <button className="chbtn" onClick={() => setChapter(null)}>All chapters</button>}
+            {chapters.map((c) => (
+              <button key={c} className="chbtn" style={cvar(c)} aria-pressed={activeCh === c} onClick={() => setChapter(activeCh === c ? null : c)}>
+                <span className="dot" />{CH[c].short} <span className="font-normal text-muted-foreground">{chCounts[c]}</span>
               </button>
             ))}
           </div>

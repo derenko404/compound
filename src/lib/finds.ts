@@ -7,6 +7,8 @@ export const KINDS: { id: BookmarkKind; label: string }[] = [
   { id: 'site', label: 'Sites' },
 ]
 
+export const kindName = (k: BookmarkKind) => KINDS.find((x) => x.id === k)!.label.slice(0, -1)
+
 const VIDEO = ['youtube.com', 'youtu.be', 'vimeo.com', 'tiktok.com', 'twitch.tv', 'loom.com', 'ted.com', 'dailymotion.com']
 const POST = [
   'x.com', 'twitter.com', 'linkedin.com', 'reddit.com', 't.me', 'threads.net', 'instagram.com', 'facebook.com',

@@ -55,6 +55,7 @@ const CHAPTER_HINTS: Record<ChapterId, string> = {
   gym: 'workouts, food, weight, sleep',
   own: 'anything personal that fits nothing above',
 }
+const chapterList = ALL_CHAPTERS.map((c) => `${c} = ${CH[c].name}: ${CHAPTER_HINTS[c]}`).join('\n')
 const UA = 'Mozilla/5.0 (compatible; RoadmapFinds/1.0)'
 const HELP = [
   'Send me a link, with a note if you like, and I\'ll save it to Finds. Reply to a link later to add a note to it.',
@@ -111,13 +112,13 @@ async function handle(msg: TgMessage, env: Env) {
     // With /ai the summary replaces the page's own description, and the text after the link is the question.
     const summary = isAi ? await analyze(env, url, meta, note) : ''
     const { error } = await db.from('bookmarks').upsert(
-      { user_id: env.OWNER_USER_ID, url, kind, title: meta.title, description: summary || meta.description, tags: ai.tags, ...(note && { note }), source: 'telegram' },
+      { user_id: env.OWNER_USER_ID, url, kind, title: meta.title, description: summary || meta.description, tags: ai.tags, chapter: ai.chapter, ...(note && { note }), source: 'telegram' },
       { onConflict: 'user_id,url' },
     )
     if (error) {
       console.error('save', error)
       lines.push(`Couldn't save ${url}: ${error.message}`)
-    } else lines.push(`Saved as ${kind}: ${meta.title || url}\n${url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
+    } else lines.push(`Saved as ${kind}${ai.chapter ? ` in ${CH[ai.chapter].short}` : ''}: ${meta.title || url}\n${url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
   }
   await say(lines.join('\n\n'))
 }
@@ -165,7 +166,7 @@ async function pickChapter(env: Env, body: string): Promise<ChapterId | null> {
       messages: [
         {
           role: 'system',
-          content: `File a personal note under one chapter of a self-development roadmap. Chapters:\n${ALL_CHAPTERS.map((c) => `${c} = ${CH[c].name}: ${CHAPTER_HINTS[c]}`).join('\n')}\nReply with JSON: {"chapter": "<id>"}.`,
+          content: `File a personal note under one chapter of a self-development roadmap. Chapters:\n${chapterList}\nReply with JSON: {"chapter": "<id>"}.`,
         },
         { role: 'user', content: body },
       ],
@@ -289,32 +290,41 @@ const clip = (s: string, n: number) => {
 
 /* ---------- Kind and tags from Workers AI ---------- */
 
-async function classify(env: Env, url: string, meta: Meta): Promise<{ kind: BookmarkKind | null; tags: string[] }> {
+async function classify(env: Env, url: string, meta: Meta): Promise<{ kind: BookmarkKind | null; tags: string[]; chapter: ChapterId | null }> {
   try {
     const response = await run(env, {
       max_tokens: 120,
       response_format: {
         type: 'json_schema',
-        json_schema: { type: 'object', properties: { kind: { type: 'string', enum: ['video', 'post', 'site'] }, tags: { type: 'array', items: { type: 'string' }, maxItems: 3 } }, required: ['kind', 'tags'] },
+        json_schema: {
+          type: 'object',
+          properties: {
+            kind: { type: 'string', enum: ['video', 'post', 'site'] },
+            tags: { type: 'array', items: { type: 'string' }, maxItems: 3 },
+            chapter: { type: 'string', enum: ALL_CHAPTERS },
+          },
+          required: ['kind', 'tags', 'chapter'],
+        },
       },
       messages: [
         {
           role: 'system',
           content:
-            'You file links into a personal bookmark list. Reply with JSON only: {"kind": "video" | "post" | "site", "tags": [1 to 3 short lowercase topic words]}. ' +
-            'video = a video or talk to watch; post = one article, blog post, thread or social post; site = a whole site, tool, product, course or docs.',
+            'You file links into a personal bookmark list. Reply with JSON: {"kind": "video" | "post" | "site", "tags": [1 to 3 short lowercase topic words], "chapter": "<id>"}. ' +
+            'video = a video or talk to watch; post = one article, blog post, thread or social post; site = a whole site, tool, product, course or docs. ' +
+            `chapter = the part of the owner's self-development roadmap it helps with:\n${chapterList}`,
         },
         { role: 'user', content: `URL: ${url}\nTitle: ${meta.title}\nDescription: ${meta.description}` },
       ],
     })
-    const j = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { kind?: string; tags?: unknown }
+    const j = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { kind?: string; tags?: unknown; chapter?: string }
     const kind = j.kind === 'video' || j.kind === 'post' || j.kind === 'site' ? j.kind : null
     const tags = Array.isArray(j.tags)
       ? [...new Set(j.tags.filter((t): t is string => typeof t === 'string').map((t) => t.toLowerCase().replace(/^#/, '').trim().replace(/\s+/g, '-')).filter(Boolean))].slice(0, 3)
       : []
-    return { kind, tags }
+    return { kind, tags, chapter: ALL_CHAPTERS.find((c) => c === j.chapter) ?? null }
   } catch (e) {
     console.error('ai', e)
-    return { kind: null, tags: [] }
+    return { kind: null, tags: [], chapter: null }
   }
 }

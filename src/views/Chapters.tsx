@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { CH, CH_ORDER, PROJECTS, QUARTERS, TASKS } from '@/data/plan'
 import { GUIDES } from '@/data/guides'
+import { hostOf, kindName } from '@/lib/finds'
 import type { ChapterId } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { Check, Header, Row, Section, cvar, useDebounced } from '@/components/kit'
@@ -30,6 +31,7 @@ function ChapterPage({ ch }: { ch: ChapterId }) {
   const focusQs = QUARTERS.filter((q) => q.focus === ch).map((q) => `Q${q.q}`)
   // The doc's "Plan: 18 months" checklist is the same as the plan tasks above, so it's not repeated.
   const lists = guide?.checklists?.filter((l) => !l.title.startsWith('Plan')) ?? []
+  const finds = state.bookmarks.filter((b) => b.chapter === ch)
   const saveNote = useDebounced((body: string) => {
     dispatch({ type: 'chapterNote', chapter: ch, body })
     setNoteState('Saved')
@@ -76,6 +78,17 @@ function ChapterPage({ ch }: { ch: ChapterId }) {
       {guide && guide.groups.length > 0 && (
         <Section title="Resources" aside="Tick what you've finished">
           <ResourceGroups ch={ch} groups={guide.groups} />
+        </Section>
+      )}
+
+      {finds.length > 0 && (
+        <Section title="Your finds" aside={<Link to="/finds">All finds</Link>}>
+          <div className="list">
+            {finds.map((b) => (
+              <Row key={b.id} ch={ch} title={<a href={b.url} target="_blank" rel="noreferrer" className="text-foreground">{b.title || hostOf(b.url)}</a>}
+                sub={b.note || b.tags.map((t) => `#${t}`).join(' ') || undefined} tag={`${kindName(b.kind)} · ${hostOf(b.url)}`} />
+            ))}
+          </div>
         </Section>
       )}
 

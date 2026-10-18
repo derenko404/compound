@@ -85,7 +85,7 @@ export function cloudBackend(db: SupabaseClient): Backend {
       }))
       for (const l of (lists ?? []) as Row[]) s.lists[l.list as ListKey][l.idx] = { done_at: l.done_at, note: l.note }
       s.bookmarks = (bookmarks ?? []).map((b: Row) => ({
-        id: b.id, url: b.url, kind: b.kind, title: b.title, description: b.description, tags: b.tags, note: b.note, source: b.source, created_at: b.created_at,
+        id: b.id, url: b.url, kind: b.kind, title: b.title, description: b.description, tags: b.tags, note: b.note, chapter: b.chapter ?? null, source: b.source, created_at: b.created_at,
       }))
       return s
     },
