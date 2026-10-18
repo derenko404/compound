@@ -1,4 +1,4 @@
-import { toast } from '@/shared/fx/fx'
+import { toast } from '@/shared/lib/toast'
 
 // Shows why a form can't be saved and keeps its sheet open.
 export const fail = (msg: string) => {

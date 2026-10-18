@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getTheme, setTheme, type Theme } from '@/shared/fx/theme'
+import { getTheme, setTheme, type Theme } from '@/shared/lib/theme'
 import { SettingRow, SettingSelect } from '@/shared/ui'
 import { t, getLangPref, setLangPref, type LangPref } from '@/shared/i18n'
 

@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
-import { burst } from '@/shared/fx/fx'
-import { playTick, playUntick } from '@/shared/fx/sound'
+import { burst } from '@/shared/lib/celebrate'
+import { playTick, playUntick } from '@/shared/lib/sound'
 import { t } from '@/shared/i18n'
 import { Stepper } from './stepper'
 

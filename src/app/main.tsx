@@ -5,7 +5,7 @@ import { RouterProvider } from '@tanstack/react-router'
 import { registerSW } from 'virtual:pwa-register'
 import { router } from '@/app/router'
 import { StoreProvider } from '@/shared/store/StoreProvider'
-import { applyTheme } from '@/shared/fx/theme'
+import { applyTheme } from '@/shared/lib/theme'
 import { t } from '@/shared/i18n'
 import '@/app/styles/index.css'
 

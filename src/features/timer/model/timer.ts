@@ -4,9 +4,9 @@
  * components read it with useTimer(). Nothing is saved to the account.
  */
 import { useSyncExternalStore } from 'react'
-import { celebrate } from '@/shared/fx/fx'
-import { playAmbient, playFanfare, type Ambient } from '@/shared/fx/sound'
-import { show } from '@/shared/fx/notify'
+import { celebrate } from '@/shared/lib/celebrate'
+import { playAmbient, playFanfare, type Ambient } from '@/shared/lib/sound'
+import { show } from '@/shared/lib/reminders'
 import { t } from '@/shared/i18n'
 
 export type Length = 'short' | 'long' | 'custom'

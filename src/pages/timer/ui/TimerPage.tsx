@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Pause, Play, RotateCcw, Settings2 } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
 import { usePageBar, Dial, Header, Segmented, Stepper } from '@/shared/ui'
-import { requestPermission, supported } from '@/shared/fx/notify'
-import type { Ambient } from '@/shared/fx/sound'
+import { requestPermission, supported } from '@/shared/lib/reminders'
+import type { Ambient } from '@/shared/lib/sound'
 import {
   CUSTOM_MAX, LENGTH_LABEL, TimerSettingsSheet, customStep, clock, lengthOf, remaining, timer, useTimer, type Length,
 } from '@/features/timer'

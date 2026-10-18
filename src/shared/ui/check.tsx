@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { burst } from '@/shared/fx/fx'
-import { playTick, playUntick } from '@/shared/fx/sound'
+import { burst } from '@/shared/lib/celebrate'
+import { playTick, playUntick } from '@/shared/lib/sound'
 
 // Round tick button. Plays the bounce, row pop and particle burst when turned on.
 export function Check({ on, label, onToggle }: { on: boolean; label: string; onToggle: (on: boolean) => void }) {

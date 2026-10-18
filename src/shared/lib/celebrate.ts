@@ -1,4 +1,4 @@
-import { playFanfare } from '@/shared/fx/sound'
+import { playFanfare } from './sound'
 
 // Confetti on a fixed canvas. Module-level so any view can call it.
 interface Particle {
@@ -113,5 +113,4 @@ export function celebrate() {
   if (!raf) raf = requestAnimationFrame(tick)
 }
 
-export { toast } from 'sonner'
 

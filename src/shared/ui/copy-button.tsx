@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check as CheckIcon, Copy } from 'lucide-react'
-import { toast } from '@/shared/fx/fx'
+import { toast } from '@/shared/lib/toast'
 import { t } from '@/shared/i18n'
 import { Button } from './primitives/button'
 

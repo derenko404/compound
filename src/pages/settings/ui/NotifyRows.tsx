@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Switch } from '@/shared/ui/primitives/switch'
-import { getReminder, requestPermission, setReminder, supported } from '@/shared/fx/notify'
-import { playTick, setSoundOn, soundOn } from '@/shared/fx/sound'
-import { toast } from '@/shared/fx/fx'
+import { getReminder, requestPermission, setReminder, supported } from '@/shared/lib/reminders'
+import { playTick, setSoundOn, soundOn } from '@/shared/lib/sound'
+import { toast } from '@/shared/lib/toast'
 import { SettingRow } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
