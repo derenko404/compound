@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@/shared/ui/primitives/button'
 import { Input } from '@/shared/ui/primitives/input'
@@ -90,6 +91,10 @@ export function SignIn() {
         </Button>
       </div>
       <Button variant="link" className="mt-4 px-0" onClick={useLocal}>{t.settings.signIn.local}</Button>
+      <footer className="landing-foot">
+        <Link to="/privacy">{t.landing.privacy}</Link>
+        <Link to="/terms">{t.landing.terms}</Link>
+      </footer>
     </div>
   )
 }

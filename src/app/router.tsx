@@ -1,4 +1,4 @@
-import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
 import { BarProvider } from '@/shared/ui'
 import { TopicIndex, Topics } from '@/pages/topics'
 import { Wellbeing } from '@/pages/wellbeing'
@@ -6,16 +6,20 @@ import { ListPage, Lists } from '@/pages/lists'
 import { Notebook } from '@/pages/notebook'
 import { Settings } from '@/pages/settings'
 import { SharePage } from '@/pages/share'
+import { Landing } from '@/pages/landing'
+import { Privacy, Terms } from '@/pages/legal'
 import { Today } from '@/pages/today'
 import { Timer } from '@/pages/timer'
 import { t } from '@/shared/i18n'
 import { Shell } from '@/app/ui/Shell'
 
 const root = createRootRoute({ component: () => <BarProvider><Shell /></BarProvider> })
-const page = (path: string, component: () => React.ReactNode) => createRoute({ getParentRoute: () => root, path, component })
+const page = <P extends string>(path: P, component: () => React.ReactNode) => createRoute({ getParentRoute: () => root, path, component })
 
 const routeTree = root.addChildren([
-  createRoute({ getParentRoute: () => root, path: '/', beforeLoad: () => { throw redirect({ to: '/today' }) } }),
+  page('/', Landing),
+  page('/privacy', Privacy),
+  page('/terms', Terms),
   page('/today', Today),
   page('/topics', TopicIndex),
   page('/topics/$ch', Topics),

@@ -2,6 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "roadmap",
   "main": "worker/index.ts",
+  // The app's address. The workers.dev one keeps working for installs made before.
+  "routes": [{ "pattern": "derenko.online", "custom_domain": true }],
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./dist",
@@ -18,6 +20,6 @@
   "vars": {
     "VITE_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_H8AJ7Aci8k0bMdfUAunhLQ_LnpMn8d8",
     "VITE_SUPABASE_URL": "https://sbdmiijoahyodmfnpqan.supabase.co",
-    "VAPID_SUBJECT": "https://roadmap.vasya-derenko.workers.dev",
+    "VAPID_SUBJECT": "mailto:hello@derenko.online",
   },
 }

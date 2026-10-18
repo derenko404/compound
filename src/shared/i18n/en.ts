@@ -11,6 +11,8 @@ import { timer } from '@/shared/i18n/en/timer'
 import { search } from '@/shared/i18n/en/search'
 import { onboarding } from '@/shared/i18n/en/onboarding'
 import { push } from '@/shared/i18n/en/push'
+import { landing } from '@/shared/i18n/en/landing'
+import { legal } from '@/shared/i18n/en/legal'
 
-export const en = { common, nav, today, topics, lists, notebook, wellbeing, settings, timer, search, onboarding, push }
+export const en = { common, nav, today, topics, lists, notebook, wellbeing, settings, timer, search, onboarding, push, landing, legal }
 export type Dict = typeof en

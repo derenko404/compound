@@ -23,8 +23,11 @@ export function Shell() {
   const { mode, sync, ready, state } = useStore()
   const { pathname } = useLocation()
   const nav = useNavigate()
-  // A shared link opens without an account. Signing in from it (Google lands on /today) comes back to finish adding.
-  const sharing = pathname.startsWith('/share/')
+  /**
+   * Pages that open without an account: the landing page, the legal pages and shared links. Signing in from a
+   * shared link (Google lands on /today) comes back to finish adding.
+   */
+  const open = pathname === '/' || pathname === '/privacy' || pathname === '/terms' || pathname.startsWith('/share/')
   useEffect(() => {
     if (mode === 'signin' || !ready) return
     const id = localStorage.getItem(PENDING_SHARE)
@@ -71,7 +74,7 @@ export function Shell() {
     <>
       <canvas id="fx" ref={fx} aria-hidden="true" />
       <div className="wrap">
-        {mode === 'signin' ? (sharing ? <main><Outlet /></main> : <SignIn />) : (
+        {mode === 'signin' || (mode === 'loading' && pathname === '/') ? (open ? <main><Outlet /></main> : <SignIn />) : (
           <>
             <TopBar sync={sync} />
             <nav className="tabs" aria-label={t.nav.views}>

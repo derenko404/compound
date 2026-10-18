@@ -207,6 +207,8 @@
   --control-field: 52px; /* form fields: inputs, selects, list lines */
   --control-lg: 56px; /* big buttons: the ⋯ drawer's actions */
   --tour-width: 340px; /* the first-run tour's popover */
+  --feature-min: 240px; /* the narrowest card in a feature grid */
+  --reading: 68ch; /* long text: legal pages */
   --menu-w: 200px; /* dropdown menus */
   --dial-lg: 248px; /* the timer's ring */
   --setting-text: 192px; /* SettingRow: the narrowest its text gets before the controls wrap below */
@@ -723,6 +725,27 @@ a.qbtn { color: inherit; text-decoration: none; }
 .banner { background: var(--card); border: 1px solid var(--border); border-left: var(--space-1) solid var(--c, var(--primary)); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); align-items: center; justify-content: space-between; }
 .banner p { margin: 0; min-width: 0; flex: 1 1 260px; }
 .banner-title { display: block; }
+
+/* The public landing page (/), and the legal pages. */
+.landing-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding-block: var(--space-4); }
+.landing-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--space-8); align-items: center; padding-block: var(--space-10) var(--space-12); }
+.landing-title { font-family: var(--font-display); font-weight: var(--weight-black); font-size: var(--text-hero); line-height: 1; letter-spacing: -0.02em; margin: 0 0 var(--space-4); }
+.landing-sub { font-size: var(--text-title); color: var(--muted-foreground); max-width: 46ch; margin: 0 0 var(--space-5); }
+.landing-note { font-size: var(--text-small); color: var(--muted-foreground); margin: var(--space-3) 0 0; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--feature-min)), 1fr)); gap: var(--space-3); }
+.feature { display: grid; align-content: start; justify-items: start; gap: var(--space-2); padding: var(--space-4) var(--space-5); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.feature h3 { margin: 0; font-size: var(--text-title); }
+.feature p { margin: 0; color: var(--muted-foreground); }
+.landing-foot { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-top: var(--space-6); padding-block: var(--space-5); border-top: 1px solid var(--border); font-size: var(--text-small); color: var(--muted-foreground); }
+.landing-foot a { color: inherit; }
+.legal { max-width: var(--reading); padding-block: var(--space-4) var(--space-8); }
+.legal > .bar-back { margin-bottom: var(--space-4); }
+.legal > h1 { margin-bottom: var(--space-2); }
+.legal p { margin: 0 0 var(--space-3); }
+.legal ul { margin: 0; padding-left: var(--space-5); list-style: disc; display: grid; gap: var(--space-2); }
+@media (max-width: 720px) {
+  .landing-hero { grid-template-columns: minmax(0, 1fr); padding-block: var(--space-6) var(--space-8); }
+}
 
 /* Numbered how-to steps, each with the icon to look for. */
 .howto { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; counter-reset: howto; }
