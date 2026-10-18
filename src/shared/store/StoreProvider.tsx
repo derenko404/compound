@@ -131,12 +131,12 @@ export function useStore() {
 
 export const NOTES_PAGE = 10
 
-// Notebook entries for a filter, newest first, 10 at a time; fetchNextPage loads the next 10.
-export function useNotes(f: NotesFilter) {
+// Notebook entries for a filter, newest first, 10 at a time; fetchNextPage loads the next 10. `on: false` skips loading.
+export function useNotes(f: NotesFilter, on = true) {
   const { backend, session } = useAuth()
   return useInfiniteQuery({
     queryKey: ['notes', backend?.kind ?? 'none', session?.user.id ?? 'device', f],
-    enabled: !!backend,
+    enabled: !!backend && on,
     initialPageParam: 0,
     queryFn: ({ pageParam }) => backend!.notes(f, pageParam, NOTES_PAGE),
     getNextPageParam: (last, all) => (last.length === NOTES_PAGE ? all.length * NOTES_PAGE : undefined),

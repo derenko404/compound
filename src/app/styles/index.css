@@ -482,7 +482,7 @@ a.seg-tab { text-decoration: none; }
 a.qbtn { color: inherit; text-decoration: none; }
 .focus-badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: 999px; background: var(--c); color: var(--background); font-family: var(--font-body); font-size: var(--text-caption); font-weight: var(--weight-bold); letter-spacing: 0; flex: none; }
 .focus-badge svg { width: var(--icon-sm); height: var(--icon-sm); }
-.focus-set { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: 999px; background: none; color: var(--muted-foreground); font-size: var(--text-caption); font-weight: var(--weight-bold); cursor: pointer; flex: none; }
+.focus-set { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border: 1px dashed var(--muted-foreground); border-radius: 999px; background: none; color: var(--muted-foreground); font-size: var(--text-caption); font-weight: var(--weight-bold); cursor: pointer; flex: none; }
 .focus-set svg { width: var(--icon-sm); height: var(--icon-sm); }
 @media (hover: hover) { .focus-set:hover { color: var(--foreground); border-color: var(--foreground); } }
 
@@ -542,6 +542,11 @@ a.qbtn { color: inherit; text-decoration: none; }
 /* TimerPill: the time left in the top bar while the timer runs on another page. */
 .bar-timer { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); font-weight: var(--weight-bold); font-size: var(--text-small); font-variant-numeric: tabular-nums; text-decoration: none; }
 .bar-timer svg { width: var(--icon-sm); height: var(--icon-sm); }
+/* The top bar's search icon: wider screens only (phones have it in More). */
+@media (max-width: 720px) { .bar-search { display: none; } }
+/* The search sheet keeps its field on top and scrolls the results. */
+.search-sheet { display: grid; grid-template-rows: auto auto minmax(0, 1fr); align-content: start; }
+.search-results { display: grid; gap: var(--space-4); align-content: start; overflow-y: auto; min-height: 0; }
 .bar-text { min-height: var(--control-md); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: none; color: var(--primary); font: inherit; font-size: var(--text-body); cursor: pointer; }
 .bar-text:hover { background: var(--accent); }
 .bar-text { margin-right: calc(-1 * var(--space-2)); }
@@ -862,6 +867,7 @@ a.res-title:hover .res-ext { color: var(--c); }
 .project-body dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); margin: 0; }
 .project-body dt { color: var(--muted-foreground); font-size: var(--text-caption); font-weight: var(--weight-bold); padding-top: var(--space-half); }
 .project-body dd { margin: 0; }
+.row.flash { animation: flash 1.6s ease; }
 .project.flash { animation: flash 1.6s ease; }
 @keyframes flash { 0%, 40% { background: color-mix(in srgb, var(--c) 16%, transparent); } 100% { background: transparent; } }
 

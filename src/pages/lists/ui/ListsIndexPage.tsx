@@ -1,6 +1,8 @@
 import { useState, type CSSProperties } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { usePageBar, Header, LinkCard, List, Progress, Row, SortList, RemoveButton, moveTo, useSheet } from '@/shared/ui'
+import { usePageBar, Header, LinkCard, List, Progress, Row, SearchField, SortList, RemoveButton, empty, moveTo, useSheet } from '@/shared/ui'
+import { search } from '@core/domain/search'
+import { SearchResults, useOpenHit } from '@/features/search'
 import { byPosition, nextPosition } from '@core/domain/content'
 import type { ListDef } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
@@ -16,6 +18,10 @@ export function Lists() {
   const lists = byPosition(state.lists)
   const listSheet = useSheet<ListDef>()
   const [edit, setEdit] = useState(false)
+  const [query, setQuery] = useState('')
+  const openHit = useOpenHit()
+  // Typing searches every list and its items (and your reviews of them) instead of showing the cards.
+  const hits = search.inState(state, query, ['list', 'listItem'])
   usePageBar({ add: { label: t.lists.newList, onClick: () => listSheet.open(blankList(lists)) }, edit: lists.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
   const reorder = (from: number, to: number) => {
     const ys = moveTo(lists, from, to)
@@ -24,7 +30,10 @@ export function Lists() {
   return (
     <>
       <Header title={t.lists.title} lead={t.lists.lead} />
-      {edit ? (
+      {!edit && lists.length > 0 && <SearchField value={query} onChange={setQuery} placeholder={t.search.listsPlaceholder} />}
+      {!edit && query.trim() ? (
+        hits.length ? <SearchResults hits={hits} onPick={(h) => void openHit(h)} /> : empty(t.search.nothing)
+      ) : edit ? (
         <SortList empty={t.lists.empty} onMove={reorder}>
           {lists.map((l) => (
             <Row key={l.id} title={l.name} sub={l.title} style={{ '--c': 'var(--primary)' } as CSSProperties}

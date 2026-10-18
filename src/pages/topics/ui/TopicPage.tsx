@@ -47,9 +47,9 @@ function TopicPage({ c }: { c: Topic }) {
   const [sharing, setSharing] = useState(false)
   const { hash } = useLocation()
   const empty0 = !c.projects.length && !c.resources.length && !c.skills.length
-  // A fresh topic opens in edit mode, ready to fill. A link to a project (#T1) opens the Projects tab.
+  // A fresh topic opens in edit mode, ready to fill. A link to a project (#T1) opens the Projects tab, #resources the Resources tab.
   const [edit, setEdit] = useState(empty0)
-  const [tab, setTab] = useState<Tab>(c.projects.some((p) => p.code && p.code === hash) ? 'projects' : 'learn')
+  const [tab, setTab] = useState<Tab>(hash === 'resources' ? 'resources' : c.projects.some((p) => p.code && p.code === hash) ? 'projects' : 'learn')
   const sheet = useSheet<Editing>()
   const [noting, setNoting] = useState<{ note?: Note } | null>(null)
   const [about, setAbout] = useState(false)

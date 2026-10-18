@@ -11,7 +11,9 @@ import { List } from './list'
  * Edit mode, as on iOS: onOpen makes the whole row open its form (with › on the right), and sort adds a ≡ handle
  * to drag it to a new place inside a SortList. Leave out check while editing: ticks are off.
  */
-export function Row({ ch, done, check, title, sub, note, tag, tagInline, onOpen, chevron = true, sort, children, style }: {
+export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onOpen, chevron = true, sort, children, style }: {
+  // An anchor for links to this row (a search result scrolls to it).
+  id?: string
   ch?: TopicId | null
   done?: boolean
   check?: ReactNode
@@ -39,7 +41,7 @@ export function Row({ ch, done, check, title, sub, note, tag, tagInline, onOpen,
     was.current = done
   }, [done])
   return (
-    <div ref={ref} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}${onOpen ? ' is-openable' : ''}`}
+    <div ref={ref} id={id} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}${onOpen ? ' is-openable' : ''}`}
       style={{ ...(ch ? cvar(ch) : {}), ...style }}
       {...(onOpen && { role: 'button', tabIndex: 0, onClick: (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('button, a')) onOpen() }, onKeyDown: (e: KeyboardEvent) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen() } } })}>
       {check}

@@ -11,6 +11,7 @@ import { useStore } from '@/shared/store/StoreProvider'
 import { PENDING_SHARE, SignIn } from '@/features/auth'
 import { t } from '@/shared/i18n'
 import { useSeed } from '@/app/seed/use-seed'
+import { SearchSheet } from '@/features/search'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
 import { TABS } from './tabs'
@@ -69,6 +70,7 @@ export function Shell() {
             <TopicColors topics={state.topics} />
             <main>{ready && !seeding ? <Outlet /> : <div className="empty">{t.nav.loadingProgress}</div>}</main>
             <BottomNav />
+            <SearchSheet />
           </>
         )}
       </div>

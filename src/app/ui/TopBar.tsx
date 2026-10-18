@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
-import { CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, Timer as TimerIcon } from 'lucide-react'
+import { CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, Search, Timer as TimerIcon } from 'lucide-react'
 import { BarBack, BarMenu, useBar } from '@/shared/ui'
 import { type SyncState } from '@/shared/store/StoreProvider'
 import { clock, remaining, useTimer } from '@/features/timer'
 import { t } from '@/shared/i18n'
+import { searchSheet } from '@/features/search'
 
 function SyncIcon({ sync }: { sync: SyncState }) {
   const state = sync === 'loadError' || sync === 'saveError' ? 'error' : sync
@@ -48,6 +49,8 @@ export function TopBar({ sync }: { sync: SyncState }) {
       {/* Keeps the bar the same height on pages without a ⋯. */}
       <div className="flex min-h-(--control-md) min-w-0 items-center gap-1">
         <TimerPill />
+        {/* Wider screens only: phones open search from More. ⌘K works everywhere. */}
+        <button type="button" className="icon-btn bar-search" aria-label={t.search.open} title={`${t.search.open} (⌘K)`} onClick={searchSheet.open}><Search aria-hidden="true" /></button>
         <BarMenu bar={bar} />
       </div>
     </header>

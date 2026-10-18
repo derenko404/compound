@@ -35,7 +35,7 @@ worker/        index.ts is the composition root; lib/http (Endpoint builder, Rou
 src/           the app, lighter Feature-Sliced Design: app → pages → features → shared
   app/         entry (main.tsx), router, ui/ (Shell, TopBar, BottomNav, tabs), seed/, styles/, sw.ts
   pages/       one slice per route; page-local components live in the page's ui/
-  features/    topics, notes, habits, today, timer, share-link, auth, ai-access, telegram-connect, backup
+  features/    topics, notes, habits, today, timer, search, share-link, auth, ai-access, telegram-connect, backup
   shared/      ui/ (one component per file + primitives/ from shadcn), store/, api/, lib/, i18n/
 ```
 
@@ -81,6 +81,7 @@ A topic is a `Topic` everywhere (UI, code, API, table `topics`); the old "track"
 - Wellbeing habits are skins over one shape (`Habit`): `type` gym / water / smoking (ready-made, one each) or build (21-day chain) / break (clean days), shared columns plus `custom_data` for what one type needs. In `src/features/habits`: the maths and Today rows (`model/habits.ts`), icons, labels and colours (`HABIT_UI` in `ui/habit-ui.tsx`), each type's card content (`ui/habit-skin.tsx`), the card and logging (`habit-card.tsx`, `habit-log.tsx`). The form and mood widget are page-local in `src/pages/wellbeing/ui`. Gym's goal is per week (a missed day can be caught up). Mood is per day (`day_logs.mood`), kept for charts later.
 - Notebook entries are `Note` (table `notes`): `type` note/idea/link (link when the text holds a URL; idea via the `#idea` tag or the bot's AI), `body`, `url` (unique per user), `kind`, `context` (written by the bot's AI only, read-only in the app), `tags`, `topic`, `source` (app/telegram/api).
 - `Linkify` (`src/features/topics/ui/linkify.tsx`) links project codes to `/topics/<ch>#<code>`, "Topic N" to the Nth learn topic, and resource titles to their URLs. Keep codes verbatim in text so links work.
+- Search (`src/features/search`, matching in `core/domain/search.ts`): one sheet over topics (skills, steps, resources, projects), lists and their items (with reviews), tasks, habits and the Notebook (notes through `useNotes`). Opened by ⌘K / Ctrl K, the top bar's icon on wider screens, or More on phones. Every query word must appear in the item or its parent, at least one in the item itself. A result opens where it lives (`#resources`, `#<code>`, `#item-<id>` scrolls to and flashes the list item). The Lists page searches lists and items with the same pieces.
 - Timer (`src/pages/timer`, logic in `src/features/timer/model/timer.ts`): a Short / Long / Custom countdown (defaults 5 and 30 min, custom 1–180) with an optional generated background sound (`playAmbient` in `src/shared/lib/sound.ts`). It keeps running across pages and reloads (state and settings in localStorage, this device only, only changed settings stored), shows a pill in the top bar elsewhere, and ends with a fanfare, confetti and a notification. Nothing reaches the account.
 
 ## Languages (i18n)

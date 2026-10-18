@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Search } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/primitives/dialog'
 import { t } from '@/shared/i18n'
+import { searchSheet } from '@/features/search'
 import { MAIN, MORE } from './tabs'
 
 export function BottomNav() {
@@ -20,6 +21,7 @@ export function BottomNav() {
           <DialogDescription className="sr-only">{t.nav.otherViews}</DialogDescription>
           <div className="more-grid">
             {MORE.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="more-item"><Icon aria-hidden="true" />{label}</Link>)}
+            <button type="button" className="more-item" onClick={() => { setMore(false); searchSheet.open() }}><Search aria-hidden="true" />{t.search.title}</button>
           </div>
         </DialogContent>
       </Dialog>

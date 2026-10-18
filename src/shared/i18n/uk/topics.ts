@@ -16,7 +16,7 @@ export const topics: typeof en['topics'] = {
     big: { label: 'Великий', means: 'місяць або більше' },
   },
   focus: 'Фокус',
-  setFocus: 'Зробити фокусом',
+  setFocus: 'Сфокусуватись',
   goals: 'Цілі',
   goalsBy: (month) => `Цілі на ${month}`,
 

@@ -1,5 +1,5 @@
-import { useState, type CSSProperties } from 'react'
-import { getRouteApi, useNavigate } from '@tanstack/react-router'
+import { useEffect, useState, type CSSProperties } from 'react'
+import { getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
 import { MessageSquarePlus, MessageSquareText, Pencil, Share2, Trash2 } from 'lucide-react'
 import { usePageBar, Check, Chip, ChipsList, Header, List, Progress, Row, SortList, SearchField, ConfirmSheet, RemoveButton, moveTo, useSheet } from '@/shared/ui'
 import { listSnapshot, uid } from '@core/domain/content'
@@ -24,6 +24,16 @@ export function ListPage() {
   const L = state.lists.find((l) => l.id === id)
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
+  const { hash } = useLocation()
+  // Arriving from search (#item-<id>) scrolls to the item and flashes it.
+  useEffect(() => {
+    const el = hash.startsWith('item-') ? document.getElementById(hash) : null
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.remove('flash')
+    void el.offsetWidth
+    el.classList.add('flash')
+  }, [hash])
   const [edit, setEdit] = useState(false)
   const listSheet = useSheet<ListDef>()
   const itemSheet = useSheet<ListDefItem>()
@@ -63,7 +73,7 @@ export function ListPage() {
     // Search only outside edit mode: dragging needs every row in place.
     if (!edit && q && !`${it.title} ${it.sub ?? ''} ${note}`.toLowerCase().includes(q)) return null
     return (
-      <Row key={it.id} done={on} style={{ '--c': 'var(--primary)' } as CSSProperties}
+      <Row key={it.id} id={`item-${it.id}`} done={on} style={{ '--c': 'var(--primary)' } as CSSProperties}
         title={<><span className="font-normal tabular-nums text-muted-foreground">{idx + 1}.</span> {it.title}</>}
         sub={it.sub} note={note} tagInline={!edit}
         check={edit
