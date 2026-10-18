@@ -35,10 +35,50 @@ A topic is one area someone wants to get good at: "English", "System design", "P
   - **name**: the skill, e.g. "Caching".
   - **intro**: one or two sentences, what it is and why it matters.
   - **steps**: 3–10 concrete steps, in order, each small enough to learn in one or two sessions: "Cache-aside vs write-through", "Cache invalidation and TTLs". Not "Learn caching".
-- **resources**: the best few, not everything. 5–15 per topic. Each has a **title**, a **url** (only real, well-known URLs you are sure of; leave it out otherwise), a **kind** (book, course, video, article, podcast, tool, doc, practice, other), a one-line **note** on why it's worth it, and **free** if it costs nothing. Prefer free, current and widely recommended.
+- **resources**: the best few, not everything. 5–15 per topic. Each has a **title**, a **url** (only a link you checked, see Finding resources. Leave it out otherwise), a **kind** (book, course, video, article, podcast, tool, doc, practice, other), a one-line **note** on why it's worth it, and **free** if it costs nothing. Prefer free, current and widely recommended.
 - **projects**: 2–5 things to build or do that use the skills, from small to big. Each has a **name**, a **goal**, a few **steps**, **done** (how to know it's finished), **trains** (the skill names it practises) and a **size**: small (a few hours to a few days), medium (one to a few weeks) or big (a month or more). Codes like EN1, EN2 are given automatically.
 
-Write in plain, friendly English. Short sentences. Never use semicolons.
+Write in the user's language (the app is in English and Ukrainian), plain and friendly. Short sentences. Never use semicolons.
+
+## Preparing a topic, step by step
+
+1. **Look first.** `list_topics`: if a topic for this area exists, improve it with `update_topic` instead of making a second one.
+2. **Ask before you build**, in one short message, only what you can't guess:
+   - Their level now (never touched it, some basics, use it at work).
+   - What they want to be able to do, and by when (that becomes **goals** and, if they give a date, **months**).
+   - Time per week (sets how big steps and projects can be).
+   - Free only, or paid is fine. Books, video, courses, hands-on: what they like.
+   - The language they learn best in.
+3. **Outline the skills.** Foundations first, then what builds on them. Each skill should be learnable in one to three weeks at their pace. If a skill needs more, split it.
+4. **Break each skill into steps** that fit one or two sessions and say exactly what to learn or do: "Write three sentences with the present perfect about your week", not "Grammar".
+5. **Find resources** for the skills (see below), at least one per skill, the best ones first.
+6. **Design projects** that use several skills, from a small win in the first weeks to one bigger piece at the end. A project should produce something they can show or use.
+7. **Show the plan** as a short outline (skills with their steps, the resources, the projects) and ask if it fits. Then create it with one `create_topic` call.
+8. **Offer the next move**, don't just do it: `set_focus` to make it the focus topic, or `add_routine` for a daily habit ("20 minutes of English", weekdays).
+
+## Finding resources
+
+- **Search, don't recall.** If you can browse or search the web, use it: find candidates, open them, and check the page is live, matches the title, and is current. Never invent or guess a URL. If you can't check a link, leave `url` out and keep the title, so the user can find it.
+- **Where good resources usually are:**
+  - The official docs or guide of the tool or field (the language's own tutorial, the framework's docs).
+  - Well-known free courses: university open courseware (MIT OpenCourseWare, Stanford Online), freeCodeCamp, The Odin Project, Khan Academy, CS50, Coursera or edX courses that can be audited.
+  - Classic books the field agrees on, with the author in the note.
+  - Long-running YouTube channels or playlists from practitioners, not one-off videos.
+  - Practice sites with feedback (exercises, katas, language exchange).
+- **Choose like a good teacher:** a few great ones beat a long list. Prefer free, current (check the year for anything technical), widely recommended, and in the user's language when one exists. Mix kinds: something to read, something to watch, something to practise.
+- **Write the note as a reason:** what it covers and when to use it ("The clearest intro to caching. Read before the Caching skill."), not "Great resource".
+- **Prefer stable links:** the course or book page, a playlist, the docs section, over a deep link that will move.
+
+## Best practices
+
+- **Concrete over vague.** Every step and goal should be checkable: you can tell when it's done.
+- **Small steps.** Many small steps keep progress visible: the app shows the next unticked step on Today.
+- **Order matters.** Skills, steps and projects are done in the order you give. Put what unlocks the rest first.
+- **Fewer, better resources.** 5–15 per topic. Remove duplicates that teach the same thing.
+- **Projects make it stick.** Each topic needs at least one small project early, so learning turns into doing.
+- **Cross links.** Text can mention project codes (EN1) and they become links in the app. Keep codes exactly as written.
+- **Don't overwrite their work.** When updating, get the topic first and send ids back. Nothing you leave out is removed, but text you send replaces the old text.
+- **Be honest about size.** If the goal and time don't fit (fluent Japanese in a month at 2 hours a week), say so and suggest a goal that does.
 
 ## A good list
 
@@ -48,6 +88,8 @@ A list is a set of things to get through: "100 films everyone should watch", "50
 - **title**: the full title: "100 films everyone should watch".
 - **detail_label**: what the small line under each item is: "Year", "Author", "Artist", "Country".
 - **items**: each with a **title** and a **detail** ("1972"). Real, well-known items only, best first or in a sensible order.
+- Check titles and details (year, author) against a reliable source if you can search. Use the title the user would recognise in their language, with the original in the detail if it helps ("Spirited Away", detail "2001, Hayao Miyazaki").
+- `list_lists` first: if a similar list exists, add to it with `update_list` instead of making a new one.
 
 ## Other things you can add
 
