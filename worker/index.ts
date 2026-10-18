@@ -1,8 +1,9 @@
 // Cloudflare Worker: serves the app from dist/ and takes links from the Telegram bot at /tg.
 // Only /tg reaches this code (run_worker_first in wrangler.jsonc); everything else goes straight to assets.
 import { createClient } from '@supabase/supabase-js'
+import { ALL_CHAPTERS, CH } from '../src/data/plan'
 import { findUrls, kindFromUrl } from '../src/lib/finds'
-import type { BookmarkKind } from '../src/lib/types'
+import type { BookmarkKind, ChapterId } from '../src/lib/types'
 
 interface Env {
   ASSETS: { fetch(req: Request): Promise<Response> }
@@ -31,6 +32,13 @@ interface TgMessage {
 
 const MODEL = '@cf/meta/llama-3.1-8b-instruct'
 const UA = 'Mozilla/5.0 (compatible; RoadmapFinds/1.0)'
+const HELP = [
+  'Send me a link, with a note if you like, and I\'ll save it to Finds.',
+  '/note <text> saves a note to Notes. Start with a chapter to pick it, e.g. /note english …',
+  '/ai <link> [question] reads the page, sums it up and saves it to Finds. /ai <question> just asks the AI.',
+].join('\n\n')
+
+const dbFor = (env: Env) => createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
 
 export default {
   async fetch(req: Request, env: Env, ctx: Ctx): Promise<Response> {
@@ -51,30 +59,113 @@ async function handle(msg: TgMessage, env: Env) {
   if (String(chat) !== env.TELEGRAM_CHAT_ID) return say(`This bot is private. Your chat id is ${chat}.`)
 
   const text = msg.text ?? msg.caption ?? ''
-  const linked = [...(msg.entities ?? []), ...(msg.caption_entities ?? [])].flatMap((e) => (e.type === 'text_link' && e.url ? [e.url] : []))
-  const urls = [...new Set([...findUrls(text), ...linked])]
-  if (!urls.length) return say('Send me a link, with a note if you like, and I\'ll save it to Finds.')
+  const cmd = text.match(/^\/(\w+)(?:@\w+)?\s*([\s\S]*)$/)
+  if (cmd?.[1].toLowerCase() === 'note') return say(await saveNote(env, cmd[2].trim()))
+  const isAi = cmd?.[1].toLowerCase() === 'ai'
+  if (cmd && !isAi) return say(HELP)
+  const rest = isAi ? cmd[2] : text
 
-  let note = text
-  for (const u of findUrls(text)) note = note.replace(u, '')
+  const linked = [...(msg.entities ?? []), ...(msg.caption_entities ?? [])].flatMap((e) => (e.type === 'text_link' && e.url ? [e.url] : []))
+  const urls = [...new Set([...findUrls(rest), ...linked])]
+  if (!urls.length) return say(isAi && rest.trim() ? await ask(env, rest.trim()) : HELP)
+
+  let note = rest
+  for (const u of findUrls(rest)) note = note.replace(u, '')
   note = note.replace(/\s+/g, ' ').trim()
 
-  const db = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
+  const db = dbFor(env)
   const lines: string[] = []
   for (const url of urls) {
     const meta = await pageMeta(url)
     const ai = await classify(env, url, meta)
     const kind = kindFromUrl(url) ?? ai.kind ?? meta.kind ?? 'site'
+    // With /ai the summary replaces the page's own description, and the text after the link is the question.
+    const summary = isAi ? await analyze(env, url, meta, note) : ''
     const { error } = await db.from('bookmarks').upsert(
-      { user_id: env.OWNER_USER_ID, url, kind, title: meta.title, description: meta.description, tags: ai.tags, note, source: 'telegram' },
+      { user_id: env.OWNER_USER_ID, url, kind, title: meta.title, description: summary || meta.description, tags: ai.tags, note, source: 'telegram' },
       { onConflict: 'user_id,url' },
     )
     if (error) {
       console.error('save', error)
       lines.push(`Couldn't save ${url}: ${error.message}`)
-    } else lines.push(`Saved as ${kind}: ${meta.title || url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}`)
+    } else lines.push(`Saved as ${kind}: ${meta.title || url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
   }
   await say(lines.join('\n\n'))
+}
+
+/* ---------- /note: a note for the Notes tab ---------- */
+
+// "/note english text": the first word picks the chapter when it names one (id or short name).
+function chapterWord(word: string): ChapterId | null {
+  const w = word.toLowerCase()
+  return ALL_CHAPTERS.find((c) => c === w || CH[c].short.toLowerCase() === w) ?? null
+}
+
+async function saveNote(env: Env, text: string) {
+  if (!text) return 'Write the note after /note, e.g. /note english practise th sounds before the call'
+  const [first, ...rest] = text.split(/\s+/)
+  const named = rest.length ? chapterWord(first) : null
+  const body = named ? text.slice(first.length).trim() : text
+  const chapter = named ?? (await pickChapter(env, body)) ?? 'own'
+  const { error } = await dbFor(env).from('notes').insert({ user_id: env.OWNER_USER_ID, chapter, body })
+  if (error) {
+    console.error('note', error)
+    return `Couldn't save the note: ${error.message}`
+  }
+  return `Noted in ${CH[chapter].name}.`
+}
+
+async function pickChapter(env: Env, body: string): Promise<ChapterId | null> {
+  try {
+    const { response = '' } = await env.AI.run(MODEL, {
+      max_tokens: 10,
+      messages: [
+        {
+          role: 'system',
+          content: `File a personal note under one chapter. Reply with the chapter id only.\n${ALL_CHAPTERS.map((c) => `${c}: ${CH[c].name}`).join('\n')}\nUse "own" when nothing else fits.`,
+        },
+        { role: 'user', content: body },
+      ],
+    })
+    return ALL_CHAPTERS.find((c) => new RegExp(`\\b${c}\\b`).test(response.toLowerCase())) ?? null
+  } catch (e) {
+    console.error('ai', e)
+    return null
+  }
+}
+
+/* ---------- /ai: summaries and questions ---------- */
+
+async function analyze(env: Env, url: string, meta: Meta, question: string) {
+  const source = meta.text
+    ? `Page text:\n${meta.text}`
+    : 'Only the title and description are available (no page text or transcript); say so briefly.'
+  return chat(env, 500, [
+    {
+      role: 'system',
+      content:
+        'You help a software engineer decide what to read or watch. Plain text, no markdown. ' +
+        'If they ask a question, answer it first. Then 3 to 5 short points starting with "• " on what it says, ' +
+        'and a last line "Worth it: …" on who it is for and whether it is worth the time.',
+    },
+    { role: 'user', content: `URL: ${url}\nTitle: ${meta.title}\nDescription: ${meta.description}\n${source}${question ? `\n\nMy question: ${question}` : ''}` },
+  ])
+}
+
+const ask = (env: Env, question: string) =>
+  chat(env, 700, [
+    { role: 'system', content: 'You are a concise assistant for a software engineer working on a self-development roadmap. Plain text, no markdown.' },
+    { role: 'user', content: question },
+  ])
+
+async function chat(env: Env, max_tokens: number, messages: { role: string; content: string }[]) {
+  try {
+    const { response = '' } = await env.AI.run(MODEL, { max_tokens, messages })
+    return response.trim().slice(0, 3500) || 'The AI had nothing to say. Try again.'
+  } catch (e) {
+    console.error('ai', e)
+    return "Couldn't reach the AI. Try again in a minute."
+  }
 }
 
 async function reply(env: Env, chat_id: number, text: string) {
@@ -87,7 +178,7 @@ async function reply(env: Env, chat_id: number, text: string) {
 
 /* ---------- Page title and description ---------- */
 
-interface Meta { title: string; description: string; kind: BookmarkKind | null }
+interface Meta { title: string; description: string; kind: BookmarkKind | null; text: string }
 
 const OEMBED: [RegExp, string][] = [
   [/(^|\.)(youtube\.com|youtu\.be)$/, 'https://www.youtube.com/oembed?format=json&url='],
@@ -95,7 +186,7 @@ const OEMBED: [RegExp, string][] = [
 ]
 
 async function pageMeta(url: string): Promise<Meta> {
-  const blank: Meta = { title: '', description: '', kind: null }
+  const blank: Meta = { title: '', description: '', kind: null, text: '' }
   try {
     const host = new URL(url).hostname
     const oembed = OEMBED.find(([re]) => re.test(host))
@@ -103,7 +194,7 @@ async function pageMeta(url: string): Promise<Meta> {
       const r = await fetch(oembed[1] + encodeURIComponent(url), { signal: AbortSignal.timeout(8000) })
       if (r.ok) {
         const j = (await r.json()) as { title?: string; author_name?: string }
-        return { title: j.title ?? '', description: j.author_name ?? '', kind: 'video' }
+        return { title: j.title ?? '', description: j.author_name ?? '', kind: 'video', text: '' }
       }
     }
     const r = await fetch(url, { headers: { 'user-agent': UA, accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(8000) })
@@ -114,12 +205,19 @@ async function pageMeta(url: string): Promise<Meta> {
       title: clip(metaTag(html, 'og:title') || metaTag(html, 'twitter:title') || html.match(/<title[^>]*>([^<]*)/i)?.[1] || '', 200),
       description: clip(metaTag(html, 'og:description') || metaTag(html, 'description'), 300),
       kind: ogType.startsWith('video') ? 'video' : ogType === 'article' ? 'post' : null,
+      text: pageText(html),
     }
   } catch (e) {
     console.error('meta', url, e)
     return blank
   }
 }
+
+// Readable text for /ai: drop scripts, styles and markup, keep about 3k words.
+const pageText = (html: string) =>
+  decode(
+    html.replace(/<(script|style|noscript|svg|nav|footer|header)\b[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' '),
+  ).replace(/\s+/g, ' ').trim().slice(0, 12_000)
 
 function metaTag(html: string, name: string) {
   for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
