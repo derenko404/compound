@@ -6,5 +6,5 @@
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
     "react/jsx-no-literals": ["error", { "noStrings": false, "ignoreProps": true, "allowedStrings": ["Compound", "·", "…", "—", "–", "/", "×", ",", ":", "%", "+", "−", "(", ")", "↗", "→", "?", ".", "#"] }]
   },
-  "overrides": [{ "files": ["src/components/ui/**"], "rules": { "react/jsx-no-literals": "off" } }]
+  "overrides": [{ "files": ["src/shared/ui/primitives/**"], "rules": { "react/jsx-no-literals": "off" } }]
 }

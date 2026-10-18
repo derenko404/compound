@@ -21,10 +21,10 @@ import { TelegramWebhook } from './telegram/webhook'
 
 const api = new ApiServer(endpoints)
 
-const dbFor = (env: Env) => createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
+const getDbFrom = (env: Env) => createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
 
 function telegramWebhook(env: Env) {
-  const db = dbFor(env)
+  const db = getDbFrom(env)
   const messenger = new TelegramClient(env.TELEGRAM_BOT_TOKEN)
   const bot = new TelegramBotService({
     links: new SupabaseTelegramLinkRepository(db),
@@ -37,12 +37,12 @@ function telegramWebhook(env: Env) {
 
 export default {
   async scheduled(_event: unknown, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(new CleanupService(new SupabaseMaintenanceRepository(dbFor(env))).run())
+    ctx.waitUntil(new CleanupService(new SupabaseMaintenanceRepository(getDbFrom(env))).run())
   },
 
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname, origin } = new URL(req.url)
-    if (api.handles(pathname)) return api.handle(req, dbFor(env), origin)
+    if (api.handles(pathname)) return api.handle(req, getDbFrom(env), origin)
     if (pathname === '/tg') return telegramWebhook(env).handle(req, ctx)
     return env.ASSETS.fetch(req)
   },
