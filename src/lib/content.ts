@@ -31,7 +31,6 @@ export const nextPosition = (xs: { position: number }[]) => xs.reduce((m, x) => 
 export const chapters = (s: State, kind?: ChapterKind) => byPosition(s.chapters.filter((c) => !c.archived && (!kind || c.kind === kind)))
 export const chapterOf = (s: State, id: ChapterId | null | undefined): Chapter | undefined => (id ? s.chapters.find((c) => c.id === id) : undefined)
 export const chapterName = (s: State, id: ChapterId | null | undefined) => chapterOf(s, id)?.name ?? 'No chapter'
-export const chapterShort = (s: State, id: ChapterId | null | undefined) => chapterOf(s, id)?.short ?? '—'
 
 // The chapter notes fall back to when nothing else fits.
 export const FALLBACK_CHAPTER = 'own'

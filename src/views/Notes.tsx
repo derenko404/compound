@@ -42,7 +42,7 @@ export function Notes() {
         <Chips>
           <Chip pressed={!filter} onClick={() => setFilter(null)} count={state.notes.length}>All</Chip>
           {used.map((c) => (
-            <Chip key={c.id} ch={c.id} pressed={filter === c.id} onClick={() => setFilter(filter === c.id ? null : c.id)} count={counts[c.id]}>{c.short}</Chip>
+            <Chip key={c.id} ch={c.id} pressed={filter === c.id} onClick={() => setFilter(filter === c.id ? null : c.id)} count={counts[c.id]}>{c.name}</Chip>
           ))}
         </Chips>
       )}

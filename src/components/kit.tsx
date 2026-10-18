@@ -82,7 +82,7 @@ export function Row({ ch, done, check, title, sub, tag, children, style }: {
     was.current = done
   }, [done])
   return (
-    <div ref={ref} className={`row${done ? ' is-done' : ''}`} style={{ ...(ch ? cvar(ch) : {}), ...style }}>
+    <div ref={ref} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}`} style={{ ...(ch ? cvar(ch) : {}), ...style }}>
       {check}
       <div className="row-body">
         <div className="row-title">{title}</div>
@@ -151,7 +151,7 @@ export function MoreText({ children, lines = 2 }: { children: ReactNode; lines?:
     <div className="more-text">
       <div ref={ref} className={open ? undefined : 'clamp'} style={{ WebkitLineClamp: lines }}>{children}</div>
       {(overflows || open) && (
-        <button type="button" className="more-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Show less' : 'Show more'}</button>
+        <LinkButton aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Show less' : 'Show more'}</LinkButton>
       )}
     </div>
   )
@@ -170,7 +170,7 @@ export function Header({ title, lead, children }: { title: ReactNode; lead?: Rea
 }
 
 // Two-tap delete: the first tap arms it for 3 seconds.
-export function ConfirmButton({ label, armed, onConfirm }: { label: string; armed: string; onConfirm: () => void }) {
+export function ConfirmButton({ label, armed, onConfirm, className = 'ml-auto', size = 'sm' }: { label: string; armed: string; onConfirm: () => void; className?: string; size?: 'sm' | 'default' }) {
   const [arm, setArm] = useState(false)
   useEffect(() => {
     if (!arm) return
@@ -178,7 +178,7 @@ export function ConfirmButton({ label, armed, onConfirm }: { label: string; arme
     return () => clearTimeout(t)
   }, [arm])
   return (
-    <Button variant={arm ? 'destructive' : 'outline'} size="sm" className="ml-auto" onClick={() => (arm ? onConfirm() : setArm(true))}>
+    <Button variant={arm ? 'destructive' : 'outline'} size={size} className={className} onClick={() => (arm ? onConfirm() : setArm(true))}>
       {arm ? armed : label}
     </Button>
   )
@@ -197,6 +197,11 @@ export function useDebounced<T>(fn: (v: T) => void, ms = 800) {
 }
 
 export const empty = (text: string) => <div className="empty">{text}</div>
+
+// A quiet text button for secondary actions: "Show more", "Edit routines".
+export const LinkButton = ({ children, onClick, ...rest }: { children: ReactNode; onClick: () => void } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'className'>) => (
+  <button type="button" className="link-btn" onClick={onClick} {...rest}>{children}</button>
+)
 
 /* ---------- Surfaces ---------- */
 
@@ -284,6 +289,35 @@ export const ChipLink = ({ ch, pressed, children, ...link }: { ch?: ChapterId | 
     {ch && <Dot />}{children}
   </Link>
 )
+
+// A static pill for facts: "Day 1 of 548", "Q1", a chapter. With `to` it links somewhere.
+export function Badge({ ch, children, ...link }: { ch?: ChapterId | null; children: ReactNode } & Partial<LinkProps>) {
+  const inner = <>{ch && <Dot />}{children}</>
+  return link.to
+    ? <Link {...(link as LinkProps)} className="chip text-foreground no-underline" style={ch ? cvar(ch) : undefined}>{inner}</Link>
+    : <span className="chip" style={ch ? cvar(ch) : undefined}>{inner}</span>
+}
+
+// A slim progress bar.
+export const Meter = ({ value, label }: { value: number; label: string }) => (
+  <div className="meter" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)}>
+    <i style={{ width: `${Math.min(1, Math.max(0, value)) * 100}%` }} />
+  </div>
+)
+
+// A few labelled facts in a row: a small label over each value.
+export const Facts = ({ items }: { items: { label: string; value: ReactNode }[] }) => (
+  <dl className="facts">
+    {items.map((it) => <div key={it.label}><dt>{it.label}</dt><dd>{it.value}</dd></div>)}
+  </dl>
+)
+
+// Items already done when the page opened sit at the bottom. Ticking during the visit moves nothing,
+// so a row never jumps away from under the finger; the next visit shows the new order.
+export function useDoneLastOnOpen<T>(items: T[], isDone: (t: T) => boolean, key: (t: T) => string) {
+  const [sunk] = useState(() => new Set(items.filter(isDone).map(key)))
+  return [...items].sort((a, b) => Number(sunk.has(key(a))) - Number(sunk.has(key(b))))
+}
 
 /* ---------- Inputs ---------- */
 

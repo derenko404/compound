@@ -141,7 +141,7 @@ function Shell() {
               </div>
             </header>
             <nav className="tabs" aria-label="Views">
-              {TABS.map(({ to, label }) => <Link key={to} to={to} className="tab">{label}</Link>)}
+              {TABS.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="tab"><Icon aria-hidden="true" />{label}</Link>)}
             </nav>
             <ChapterColors chapters={state.chapters} />
             <main>{ready ? <Outlet /> : <div className="empty">Loading your progress…</div>}</main>

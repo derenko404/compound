@@ -73,7 +73,7 @@ export function ChapterTag({ ch, label }: { ch: ChapterId | null | undefined; la
   const { state } = useStore()
   const c = chapterOf(state, ch)
   if (!c) return <>{label ?? ''}</>
-  return <Link to="/chapters/$ch" params={{ ch: c.id }} className="tag-link" style={cvar(c.id)}>{label ?? c.short}</Link>
+  return <Link to="/chapters/$ch" params={{ ch: c.id }} className="tag-link" style={cvar(c.id)}>{label ?? c.name}</Link>
 }
 
 const KIND_ICON: Record<ResourceKind, typeof BookOpen> = {

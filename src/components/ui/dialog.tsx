@@ -29,16 +29,25 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute top-4 right-4 grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Close">
-          <XIcon className="size-4" />
-        </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   )
 }
 
-function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title data-slot="dialog-title" className={cn("pr-8 font-display text-heading font-bold", className)} {...props} />
+// The title and the close button share one row, so they stay aligned whatever sits above them.
+// Forms pass `start` (Cancel) and `end` (the main action): on phones they replace the close button,
+// iOS-style, with the title centred between them.
+function DialogTitle({ className, start, end, ...props }: React.ComponentProps<typeof DialogPrimitive.Title> & { start?: React.ReactNode; end?: React.ReactNode }) {
+  return (
+    <div className={cn("sheet-head", (start || end) && "has-actions")}>
+      {start && <div className="sheet-start">{start}</div>}
+      <DialogPrimitive.Title data-slot="dialog-title" className={cn("font-display text-heading font-bold", className)} {...props} />
+      {end && <div className="sheet-end">{end}</div>}
+      <DialogPrimitive.Close className="icon-btn sheet-close" aria-label="Close">
+        <XIcon />
+      </DialogPrimitive.Close>
+    </div>
+  )
 }
 
 function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {

@@ -17,7 +17,7 @@ export function useChapterSave() {
 
 export function newChapter(kind: ChapterKind, existing: Chapter[], months: number): Chapter {
   return {
-    id: '', kind, position: nextPosition(existing), name: '', short: '', color: PALETTE[existing.length % PALETTE.length],
+    id: '', kind, position: nextPosition(existing), name: '', color: PALETTE[existing.length % PALETTE.length],
     start: 0, months, outcomes: [], skills: [], tasks: [], projects: [], resources: [], checklists: [], tips: [],
   }
 }
@@ -37,9 +37,9 @@ export function ChapterSheet({ chapter, onSaved, ...sheet }: SheetProps & { chap
       onDelete={isNew ? undefined : () => { dispatch({ type: 'deleteChapter', id: chapter.id }); toast('Chapter deleted.') }}
       onSubmit={() => {
         if (!c.name.trim()) return fail('Give the chapter a name first.')
-        const id = c.id || freshId(c.short || c.name, state.chapters.map((x) => x.id))
+        const id = c.id || freshId(c.name, state.chapters.map((x) => x.id))
         const next: Chapter = {
-          ...c, id, name: c.name.trim(), short: (c.short || c.name).trim(),
+          ...c, id, name: c.name.trim(),
           outcomes: cleanLines(c.outcomes), skills: cleanLines(c.skills), tips: cleanLines(c.tips),
           months: Math.max(1, Math.min(c.months, total - c.start)),
         }
@@ -48,8 +48,7 @@ export function ChapterSheet({ chapter, onSaved, ...sheet }: SheetProps & { chap
         onSaved?.(next)
       }}>
       <div className="grid2">
-        <TextField label="Name" value={c.name} onChange={(name) => set({ name })} placeholder="Deep technical" required />
-        <TextField label="Short name" value={c.short} onChange={(short) => set({ short })} placeholder="Technical" hint="Shown on tags and buttons" />
+        <TextField label="Name" value={c.name} onChange={(name) => set({ name })} placeholder="Technical" hint="Keep it short: it shows on tags and buttons" required />
         <SelectField label="Type" value={c.kind} onChange={(kind) => set({ kind })}
           options={(Object.keys(KIND_LABEL) as ChapterKind[]).map((k) => ({ value: k, label: KIND_LABEL[k] }))} />
         <MonthField label="Starts" value={c.start} months={total} onChange={(start) => set({ start })} />
@@ -186,7 +185,7 @@ export function ComponentsSheet({ chapter, ...sheet }: SheetProps & { chapter: C
   const c0 = chapter.components ?? {}
   const [quitOn, setQuitOn] = useState(!!c0.quit)
   const [quit, setQuit] = useState(c0.quit ?? {
-    date: null, per_day: 10, price: 100, unit: 'cigarettes', milestones: [], tips: [], check_id: `${chapter.id}:clean`, check_title: `${chapter.short}-free today`,
+    date: null, per_day: 10, price: 100, unit: 'cigarettes', milestones: [], tips: [], check_id: `${chapter.id}:clean`, check_title: `${chapter.name}-free today`,
   })
   const [workoutOn, setWorkoutOn] = useState(!!c0.workout)
   const [workout, setWorkout] = useState(c0.workout ?? { start: null, days: [1, 3, 5], workouts: [{ name: 'Workout A', text: '' }], check_id: `${chapter.id}:workout` })

@@ -81,7 +81,7 @@ function Timeline({ sel, onSelect }: { sel: number; onSelect: (q: number) => voi
       </div>
       {chapters(state, 'learn').map((c) => (
         <div key={c.id} className="tl-row" style={cvar(c.id)}>
-          <Link to="/chapters/$ch" params={{ ch: c.id }} className="tl-name"><Dot />{c.short}</Link>
+          <Link to="/chapters/$ch" params={{ ch: c.id }} className="tl-name"><Dot />{c.name}</Link>
           <div className="tl-track">
             <div className="tl-bar" style={{ left: pct(c.start), width: pct(Math.min(c.months, len - c.start)) }} />
             {quarters.filter((q) => quarterPlan(state, q).focus === c.id).map((q) => (
@@ -141,7 +141,7 @@ export function Plan() {
           const f = quarterPlan(state, n).focus
           return (
             <button key={n} className={`qbtn${n === pos.q ? ' now' : ''}`} style={cvar(f)} aria-pressed={n === q} onClick={() => setSelQ(n)}>
-              <b>Q{n}</b><span>{monthRange(start, (n - 1) * 3, Math.min(n * 3, p.months) - 1)}</span><span>{chapterOf(state, f)?.short ?? 'No focus'}</span>
+              <b>Q{n}</b><span>{monthRange(start, (n - 1) * 3, Math.min(n * 3, p.months) - 1)}</span><span>{chapterOf(state, f)?.name ?? 'No focus'}</span>
               <div className="qbar"><i style={{ width: `${ts.length ? (d / ts.length) * 100 : 0}%` }} /></div>
             </button>
           )

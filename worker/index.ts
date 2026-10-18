@@ -56,14 +56,14 @@ const CHAPTER_HINTS: Record<string, string> = {
   own: 'anything personal that fits nothing above',
 }
 
-interface Ch { id: ChapterId; name: string; short: string; hint: string }
-const FALLBACK: Ch[] = ALL_CHAPTERS.map((id) => ({ id, name: CH[id].name, short: CH[id].short, hint: CHAPTER_HINTS[id] ?? '' }))
+interface Ch { id: ChapterId; name: string; hint: string }
+const FALLBACK: Ch[] = ALL_CHAPTERS.map((id) => ({ id, name: CH[id].short, hint: CHAPTER_HINTS[id] ?? '' }))
 
 async function loadChapters(env: Env): Promise<Ch[]> {
   const { data, error } = await dbFor(env).from('chapters').select('data').eq('user_id', env.OWNER_USER_ID)
   if (error) console.error('chapters', error)
   const live = ((data ?? []) as { data: Chapter }[]).map((r) => r.data).filter((c) => !c.archived)
-  return live.length ? live.map((c) => ({ id: c.id, name: c.name, short: c.short, hint: c.hint || c.description?.slice(0, 120) || '' })) : FALLBACK
+  return live.length ? live.map((c) => ({ id: c.id, name: c.name, hint: c.hint || c.description?.slice(0, 120) || '' })) : FALLBACK
 }
 
 const chapterList = (chs: Ch[]) => chs.map((c) => `${c.id} = ${c.name}${c.hint ? `: ${c.hint}` : ''}`).join('\n')
@@ -131,7 +131,7 @@ async function handle(msg: TgMessage, env: Env) {
     if (error) {
       console.error('save', error)
       lines.push(`Couldn't save ${url}: ${error.message}`)
-    } else lines.push(`Saved as ${kind}${ai.chapter ? ` in ${chapterIn(chs, ai.chapter)?.short}` : ''}: ${meta.title || url}\n${url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
+    } else lines.push(`Saved as ${kind}${ai.chapter ? ` in ${chapterIn(chs, ai.chapter)?.name}` : ''}: ${meta.title || url}\n${url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
   }
   await say(lines.join('\n\n'))
 }
@@ -152,10 +152,10 @@ async function noteOnLinks(env: Env, urls: string[], text: string) {
 
 /* ---------- Notes: plain text for the Notes tab ---------- */
 
-// "english text": the first word picks the chapter when it names one (id or short name).
+// "english text": the first word picks the chapter when it names one (its id, its name, or its name's first word).
 function chapterWord(chs: Ch[], word: string): Ch | null {
   const w = word.toLowerCase()
-  return chs.find((c) => c.id === w || c.short.toLowerCase() === w) ?? null
+  return chs.find((c) => c.id === w || c.name.toLowerCase() === w || c.name.toLowerCase().split(/\s+/)[0] === w) ?? null
 }
 
 async function saveNote(env: Env, text: string) {

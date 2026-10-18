@@ -67,8 +67,7 @@ export interface Chapter {
   id: ChapterId
   kind: ChapterKind
   position: number
-  name: string
-  short: string
+  name: string // one name everywhere: tags, cards, headers, the bot
   color: string // palette key, see PALETTE in content.ts
   description?: string
   start: number // program month the chapter starts (0-based)
@@ -113,7 +112,6 @@ export interface Routine {
   when: When
   fill?: Fill
   core?: boolean // counts for the streak
-  log?: boolean // shows the learning log input
   created_at: string
 }
 

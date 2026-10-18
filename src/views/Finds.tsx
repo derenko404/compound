@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { chapterShort, chapters as allChapters } from '@/lib/content'
+import { chapterName, chapters as allChapters } from '@/lib/content'
 import { addDays, fmtLong, keyOf, parseKey } from '@/lib/dates'
 import { KINDS, findUrls, hostOf, kindFromUrl, kindName } from '@/lib/finds'
 import type { Bookmark, BookmarkKind, ChapterId } from '@/lib/types'
@@ -68,7 +68,7 @@ function FindCard({ b, onTag }: { b: Bookmark; onTag: (t: string) => void }) {
   const { state, dispatch } = useStore()
   return (
     <Entry ch={b.chapter} meta={<>
-      {b.chapter && <><Dot /><span>{chapterShort(state, b.chapter)}</span></>}
+      {b.chapter && <><Dot /><span>{chapterName(state, b.chapter)}</span></>}
       <span>{kindName(b.kind)}</span>
       <span>{hostOf(b.url)}</span>
       {b.source === 'telegram' && <span>via Telegram</span>}
@@ -163,7 +163,7 @@ export function Finds() {
           <Chips>
             {activeCh && <Chip onClick={() => setChapter(null)}>All chapters</Chip>}
             {chapters.map((c) => (
-              <Chip key={c} ch={c} pressed={activeCh === c} onClick={() => setChapter(activeCh === c ? null : c)} count={chCounts[c]}>{chapterShort(state, c)}</Chip>
+              <Chip key={c} ch={c} pressed={activeCh === c} onClick={() => setChapter(activeCh === c ? null : c)} count={chCounts[c]}>{chapterName(state, c)}</Chip>
             ))}
           </Chips>
         )}

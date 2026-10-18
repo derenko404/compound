@@ -8,7 +8,10 @@ import { GUIDES, OVERVIEW, PROJECT_DETAILS } from './guides'
 import { LISTS } from './lists'
 
 // 3: undoes 2, which had cut the Plan intro to its first sentence; the full text, now called motivation, is shown folded instead.
-export const SEED_VERSION = 3
+// 4: chapters have one name; the seeded ones take their short name ("Technical", not "Deep technical").
+// 5: the catch-all chapter is "Personal", not "Mine".
+// 6: the daily learning log routine is gone.
+export const SEED_VERSION = 6
 const CUT_INTRO = 'AI agents are taking over the step from a clear spec to working code; the skills around that step keep you valuable.'
 
 const COLOR: Record<string, (typeof PALETTE)[number]> = {
@@ -69,7 +72,7 @@ function seedChapter(id: ChapterId, position: number, settings: State['settings'
     }
 
   return {
-    id, kind, position, name: CH[id].name, short: CH[id].short, color: COLOR[id],
+    id, kind, position, name: CH[id].short, color: COLOR[id],
     description: g?.why, start: 0, months: 18,
     outcomes: g?.outcomes ?? [],
     skills: OVERVIEW.skills?.find((s) => s.chapter === id)?.skills ?? [],
@@ -88,7 +91,7 @@ function seedChapter(id: ChapterId, position: number, settings: State['settings'
 function seedRoutines(): Routine[] {
   const at = new Date(0).toISOString()
   const base = DAILY.map((d, i): Routine => ({
-    id: d.id, position: i, title: d.title, sub: d.sub, chapter: d.ch, when: { kind: 'daily' }, core: true, log: d.log, created_at: at,
+    id: d.id, position: i, title: d.title, sub: d.sub, chapter: d.ch, when: { kind: 'daily' }, core: true, created_at: at,
   }))
   const n = base.length
   return [
@@ -123,6 +126,21 @@ export function seedOps(s: State): Op[] {
     for (const l of seedLists()) if (!lists.has(l.id)) ops.push({ type: 'putList', list: l })
     const routines = new Set(s.routines.map((r) => r.id))
     for (const r of seedRoutines()) if (!routines.has(r.id)) ops.push({ type: 'putRoutine', routine: r })
+  }
+  // Version 4: drop the second name. A seeded chapter still named as in the doc takes its short name; one the user renamed keeps it.
+  if (seeded >= 1 && seeded < 4)
+    for (const c of s.chapters as (Chapter & { short?: string })[]) {
+      if (!('short' in c)) continue
+      const { short, ...rest } = c
+      const name = CH[c.id] && c.name === CH[c.id].name && short ? short : c.name
+      ops.push({ type: 'putChapter', chapter: { ...rest, name } })
+    }
+  // Version 6: the learning log routine was dropped. Old log lines stay in the day logs.
+  if (seeded >= 1 && seeded < 6 && s.routines.some((r) => r.id === 'log')) ops.push({ type: 'deleteRoutine', id: 'log' })
+  // Version 5: an untouched catch-all chapter named "Mine" becomes "Personal".
+  if (seeded === 4) {
+    const own = s.chapters.find((c) => c.id === 'own' && c.name === 'Mine')
+    if (own) ops.push({ type: 'putChapter', chapter: { ...own, name: 'Personal' } })
   }
   // Before version 3 the motivation was stored as `intro`.
   const { intro: oldIntro, ...prev } = (s.settings.program ?? {}) as Partial<Program> & { intro?: string }

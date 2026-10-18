@@ -105,7 +105,7 @@ function ChapterPage({ c }: { c: Chapter }) {
       <Chips>
         <ChipLink to="/chapters">All</ChipLink>
         {chapters(state, c.kind).map((x) => (
-          <ChipLink key={x.id} to="/chapters/$ch" params={{ ch: x.id }} ch={x.id} pressed={x.id === c.id}>{x.short}</ChipLink>
+          <ChipLink key={x.id} to="/chapters/$ch" params={{ ch: x.id }} ch={x.id} pressed={x.id === c.id}>{x.name}</ChipLink>
         ))}
       </Chips>
 

@@ -28,12 +28,16 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
   onDelete?: () => void
   wide?: boolean
 }) {
+  const formId = useId()
+  const cancel = <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={wide ? 'sheet-wide' : undefined}>
-        <DialogTitle>{title}</DialogTitle>
+        {/* Phones: Cancel and the action sit in the header, as iOS and Android sheets do. Desktop: in the footer. */}
+        <DialogTitle start={cancel} end={<Button type="submit" form={formId} variant="ghost" className="sheet-action">{submit}</Button>}>{title}</DialogTitle>
         {description ? <DialogDescription>{description}</DialogDescription> : <DialogDescription className="sr-only">{title}</DialogDescription>}
         <form
+          id={formId}
           className="grid gap-3"
           onSubmit={(e) => {
             e.preventDefault()
@@ -41,10 +45,12 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
           }}
         >
           {children}
-          <div className="actions sticky bottom-0 -mx-5 -mb-5 border-t border-border bg-card px-5 py-3">
+          {/* Delete: a full-width row at the end of the form on phones, the footer's far left on desktop. */}
+          {onDelete && <ConfirmButton className="sheet-delete sheet-delete-row" size="default" label="Delete" armed="Tap again to delete" onConfirm={() => { onDelete(); onOpenChange(false) }} />}
+          <div className="actions sheet-foot">
+            {onDelete && <ConfirmButton className="sheet-delete" size="default" label="Delete" armed="Click again to delete" onConfirm={() => { onDelete(); onOpenChange(false) }} />}
+            {cancel}
             <Button type="submit">{submit}</Button>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-            {onDelete && <ConfirmButton label="Delete" armed="Tap again to delete" onConfirm={() => { onDelete(); onOpenChange(false) }} />}
           </div>
         </form>
       </DialogContent>
@@ -203,12 +209,16 @@ export function MonthField({ label, value, onChange, months }: { label: string; 
 
 /* ---------- Edit controls on rows ---------- */
 
-export function RowEdit({ onEdit, onUp, onDown, onDelete, label }: { onEdit?: () => void; onUp?: () => void; onDown?: () => void; onDelete?: () => void; label: string }) {
+// Row controls. Move buttons always take their place (disabled at the ends), so every row's buttons line up.
+export function RowEdit({ onEdit, onUp, onDown, onDelete, label, movable }: {
+  onEdit?: () => void; onUp?: () => void; onDown?: () => void; onDelete?: () => void; label: string; movable?: boolean
+}) {
   const [arm, setArm] = useState(false)
+  const showMove = movable ?? !!(onUp || onDown)
   return (
     <div className="row-edit">
-      {onUp && <button type="button" className="icon-btn" aria-label={`Move ${label} up`} onClick={onUp}><ArrowUp /></button>}
-      {onDown && <button type="button" className="icon-btn" aria-label={`Move ${label} down`} onClick={onDown}><ArrowDown /></button>}
+      {showMove && <button type="button" className="icon-btn" aria-label={`Move ${label} up`} disabled={!onUp} onClick={onUp}><ArrowUp /></button>}
+      {showMove && <button type="button" className="icon-btn" aria-label={`Move ${label} down`} disabled={!onDown} onClick={onDown}><ArrowDown /></button>}
       {onEdit && <button type="button" className="icon-btn" aria-label={`Edit ${label}`} onClick={onEdit}><Pencil /></button>}
       {onDelete && (
         <button type="button" className={`icon-btn${arm ? ' danger' : ''}`} aria-label={arm ? `Tap again to delete ${label}` : `Delete ${label}`}
@@ -227,6 +237,11 @@ export function AddButton({ label, onClick, variant = 'outline' }: { label: stri
 // Round "+" next to a section or page title.
 export function PlusButton({ label, onClick }: { label: string; onClick: () => void }) {
   return <button type="button" className="plus-btn" aria-label={label} title={label} onClick={onClick}><Plus /></button>
+}
+
+// The page's main add action, floating bottom right (above the bottom nav on phones).
+export function Fab({ label, onClick }: { label: string; onClick: () => void }) {
+  return <button type="button" className="fab" aria-label={label} title={label} onClick={onClick}><Plus /></button>
 }
 
 export function EditToggle({ on, onChange }: { on: boolean; onChange: (on: boolean) => void }) {

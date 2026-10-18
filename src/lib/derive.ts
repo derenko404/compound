@@ -33,7 +33,7 @@ export const tasksInQuarter = (s: State, q: number) => allTasks(s).filter((t) =>
 export const chapterActive = (c: Chapter, m: number) => c.start <= m && m < c.start + c.months
 
 // The most specific open task of a chapter for this month.
-function monthTask(s: State, ch: ChapterId, m: number) {
+export function monthTask(s: State, ch: ChapterId, m: number) {
   const c = chapterOf(s, ch)
   const list = (c?.tasks ?? []).filter((t) => isActive(t, m)).sort((a, b) => a.to - a.from - (b.to - b.from))
   return list.find((t) => !s.plan[t.id]) ?? list[0]
@@ -57,7 +57,6 @@ export interface DayItem {
   ch: ChapterId
   title: string
   sub: string
-  log?: boolean
   routine?: Routine // set when the item comes from an editable routine
 }
 
@@ -74,19 +73,19 @@ export function todayItems(s: State, today: Date): DayItem[] {
     let sub = r.sub ?? ''
     if (r.fill === 'focus' && Q.focus) {
       ch = Q.focus
-      title = `${r.title}: ${chapterOf(s, ch)?.short ?? ''}`
+      title = `${r.title}: ${chapterOf(s, ch)?.name ?? ''}`
       sub = monthTask(s, ch, pos.m)?.text ?? sub
     } else if (r.fill === 'light') {
       const lc = lightTrackChapter(s, today, pos.m, Q.focus)
       if (!lc) continue
       ch = lc
-      title = `${r.title}: ${chapterOf(s, ch)?.short ?? ''}`
+      title = `${r.title}: ${chapterOf(s, ch)?.name ?? ''}`
       sub = monthTask(s, ch, pos.m)?.text ?? sub
     } else if (r.fill === 'project') {
       ch = Q.focus ?? ch
       sub = Q.project || sub
     }
-    items.push({ id: r.id, ch, title, sub, log: r.log, routine: r })
+    items.push({ id: r.id, ch, title, sub, routine: r })
   }
 
   // Trackers switched on in chapters (health ones, usually).
@@ -95,7 +94,7 @@ export function todayItems(s: State, today: Date): DayItem[] {
     if (quit?.date && parseKey(quit.date) <= today) {
       const n = dayDiff(parseKey(quit.date), today)
       const tip = quit.tips.length ? quit.tips[n % quit.tips.length] : ''
-      items.push({ id: quit.check_id, ch: c.id, title: quit.check_title || `${c.short}: clean today`, sub: tip })
+      items.push({ id: quit.check_id, ch: c.id, title: quit.check_title || `${c.name}: clean today`, sub: tip })
     }
     if (workout?.start && parseKey(workout.start) <= today && workout.days.includes(today.getDay()) && workout.workouts.length) {
       // Today's tick doesn't move the rotation; only earlier days do.
@@ -105,6 +104,13 @@ export function todayItems(s: State, today: Date): DayItem[] {
     }
   }
   return items
+}
+
+// How much of a day's list was ticked. Past days are measured against today's routines.
+export function dayProgress(s: State, d: Date) {
+  const items = todayItems(s, d)
+  const done = new Set(s.days[keyOf(d)]?.done ?? [])
+  return { done: items.filter((i) => done.has(i.id)).length, total: items.length }
 }
 
 const coreIds = (s: State) => s.routines.filter((r) => r.core).map((r) => r.id)
