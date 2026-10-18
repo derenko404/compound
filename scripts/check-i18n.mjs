@@ -45,4 +45,5 @@ if (problems.length) {
   console.error(`Text that should come from src/i18n (t.…):\n${problems.map((p) => `  ${p}`).join('\n')}`)
   process.exit(1)
 }
+
 console.log('i18n: no raw text in props or toasts.')

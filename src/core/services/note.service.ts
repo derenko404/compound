@@ -38,4 +38,27 @@ export class NoteService {
     await this.repos.notes.put(note)
     return note
   }
+
+  /**
+   * Saves a link with what the bot learned about it. Resending a link updates its details and keeps its old text
+   * unless new text came with it.
+   */
+  async saveLink(link: { url: string; kind: Note['kind']; context: string; tags: string[]; topic: string | null; body?: string }, source: Note['source']): Promise<Note> {
+    const old = await this.repos.notes.byUrl(link.url)
+    const note: Note = {
+      id: old?.id ?? crypto.randomUUID(), created_at: old?.created_at ?? new Date().toISOString(),
+      type: 'link', url: link.url, kind: link.kind, context: link.context, tags: link.tags,
+      topic: link.topic ?? FALLBACK_TOPIC, body: link.body || old?.body || '', source,
+    }
+    await this.repos.notes.put(note)
+    return note
+  }
+
+  // Adds text to a saved link's note, on a new line. False when the link isn't in the notebook.
+  async appendToLink(url: string, text: string): Promise<boolean> {
+    const old = await this.repos.notes.byUrl(url)
+    if (!old) return false
+    await this.repos.notes.put({ ...old, body: old.body ? `${old.body}\n${text}` : text })
+    return true
+  }
 }
