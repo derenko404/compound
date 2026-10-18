@@ -7,4 +7,6 @@ export const push = {
   lastTitle: 'Last call for today 🌙',
   last: (list: string) => `${list}. A few minutes and the day is done.`,
   more: (n: number) => `+${n} more`,
+  helloTitle: 'Reminders are on ✅',
+  hello: 'See you in the morning and evening. Change the hours in Settings.',
 }

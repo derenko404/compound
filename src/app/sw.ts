@@ -35,11 +35,12 @@ self.addEventListener('push', (e) => {
   const tx = data.lang === 'uk' ? ukPush : enPush
   const items = data.items ?? []
   const list = items.length > 4 ? `${items.slice(0, 3).join(', ')}, ${tx.more(items.length - 3)}` : items.join(', ')
-  const [title, body] = data.kind === 'morning' ? [tx.morningTitle, tx.morning(list)]
+  const [title, body] = data.kind === 'hello' ? [tx.helloTitle, tx.hello]
+    : data.kind === 'morning' ? [tx.morningTitle, tx.morning(list)]
     : data.kind === 'last' ? [tx.lastTitle, tx.last(list)]
     : [tx.eveningTitle(data.done ?? 0, data.total ?? items.length), tx.evening(list)]
   e.waitUntil(self.registration.showNotification(title, {
-    body: items.length ? body : '',
+    body: items.length || data.kind === 'hello' ? body : '',
     icon: '/pwa-192x192.png', badge: '/pwa-64x64.png', tag: 'roadmap-daily',
 }))
 })

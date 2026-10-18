@@ -7,8 +7,8 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // Only the Telegram webhook and AI access (API, MCP) run the worker; the app is served as static assets.
-    "run_worker_first": ["/tg", "/api/*", "/mcp", "/mcp/*"],
+    // Only the Telegram webhook, AI access (API, MCP) and the push confirmation run the worker; the app is served as static assets.
+    "run_worker_first": ["/tg", "/api/*", "/mcp", "/mcp/*", "/push/*"],
   },
   "ai": { "binding": "AI" },
   // Daily cleanup at 03:00 UTC (shared links older than 7 days, unused Telegram codes) and hourly push reminders (worker scheduled()).

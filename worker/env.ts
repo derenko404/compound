@@ -5,6 +5,7 @@ export interface Env {
   ASSETS: { fetch(req: Request): Promise<Response> }
   AI: WorkersAiBinding
   VITE_SUPABASE_URL: string
+  VITE_SUPABASE_PUBLISHABLE_KEY: string
   // Service-role / secret key: bypasses RLS, so every repository is scoped to a user id.
   SUPABASE_SECRET_KEY: string
   TELEGRAM_BOT_TOKEN: string

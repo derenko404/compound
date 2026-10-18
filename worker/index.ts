@@ -3,6 +3,7 @@
  * reach it (run_worker_first in wrangler.jsonc), the rest is the app from dist/:
  * - /api/v1 and /mcp: AI access (./api), with a token from Settings → AI access;
  * - /tg: the Telegram bot's webhook (./telegram);
+ * - /push/hello: a confirmation push when a device turns reminders on (./push);
  * - the crons: daily cleanup, hourly push reminders.
  */
 import { createClient } from '@supabase/supabase-js'
@@ -22,6 +23,7 @@ import { TelegramBotService } from '../core/services/telegram-bot.service'
 import { ApiServer, endpoints } from './api'
 import type { Env, ExecutionContext } from './env'
 import { TelegramWebhook } from './telegram/webhook'
+import { pushHello } from './push/hello'
 
 const api = new ApiServer(endpoints)
 
@@ -39,12 +41,15 @@ function telegramWebhook(env: Env) {
   return new TelegramWebhook({ secret: env.TELEGRAM_WEBHOOK_SECRET, bot, messenger })
 }
 
+const pushFrom = (env: Env) => (env.VAPID_PRIVATE_KEY ? new WebPushClient(env.VAPID_PRIVATE_KEY, env.VAPID_SUBJECT) : null)
+
 function reminders(env: Env) {
-  if (!env.VAPID_PRIVATE_KEY) return null
+  const push = pushFrom(env)
+  if (!push) return null
   const db = getDbFrom(env)
   return new ReminderService({
     devices: new SupabasePushSubscriptionRepository(db),
-    push: new WebPushClient(env.VAPID_PRIVATE_KEY, env.VAPID_SUBJECT),
+    push,
     stateFor: (userId) => new StateService(SupabaseRepositories.create(db, userId)).load(),
   })
 }
@@ -62,6 +67,7 @@ export default {
     const { pathname, origin } = new URL(req.url)
     if (api.handles(pathname)) return api.handle(req, getDbFrom(env), origin)
     if (pathname === '/tg') return telegramWebhook(env).handle(req, ctx)
+    if (pathname === '/push/hello') return pushHello(req, { url: env.VITE_SUPABASE_URL, key: env.VITE_SUPABASE_PUBLISHABLE_KEY, push: pushFrom(env) })
     return env.ASSETS.fetch(req)
   },
 }

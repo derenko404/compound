@@ -2,9 +2,11 @@ import type { State } from '../domain/types'
 import { reminders, type ReminderKind } from '../domain/reminders'
 import type { PushSenderPort, PushSubscriptionRepositoryPort } from '../ports/push'
 
-// What a reminder push carries. The app's service worker turns it into words in the device's language.
-// items: what's left by name. done and total: today's own tasks and habits.
-export interface ReminderPayload { kind: ReminderKind; lang: 'en' | 'uk'; items: string[]; done: number; total: number }
+/**
+ * What a reminder push carries. The app's service worker turns it into words in the device's language.
+ * items: what's left by name. done and total: today's own tasks and habits. hello: the confirmation when a device turns them on.
+ */
+export interface ReminderPayload { kind: ReminderKind | 'hello'; lang: 'en' | 'uk'; items: string[]; done: number; total: number }
 
 /**
  * The hourly reminders. Each device picks a morning hour ("Start your day") and an evening hour, repeated every

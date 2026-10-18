@@ -36,7 +36,16 @@ async function enable(db: SupabaseClient) {
   const reg = await navigator.serviceWorker.ready
   const sub = (await reg.pushManager.getSubscription()) ?? await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: fromB64url(PUBLIC_KEY!) })
   await pushDevices(db).save(deviceOf(sub))
+  void hello(db, sub.endpoint)
   return true
+}
+
+// Asks the worker for one push now, so turning reminders on shows they arrive. A failure here isn't the user's problem.
+async function hello(db: SupabaseClient, endpoint: string) {
+  const token = (await db.auth.getSession()).data.session?.access_token
+  if (!token) return
+  await fetch('/push/hello', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint }) })
+    .catch((e) => console.warn('push hello', e))
 }
 
 async function disable(db: SupabaseClient) {
