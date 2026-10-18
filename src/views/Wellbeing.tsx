@@ -9,7 +9,7 @@ import {
 } from '@/lib/habits'
 import type { Habit, HabitType, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
-import { praise, toast } from '@/fx/fx'
+import { toast } from '@/fx/fx'
 import { Chip, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, Section, Stats } from '@/components/kit'
 import { FormSheet, PlusButton, RowEdit, TextField, WeekdaysField, fail, move, useSheet } from '@/components/edit'
 import { usePageBar } from '@/components/bar'
@@ -56,7 +56,6 @@ function MoodWidget() {
   const set = (mood: number) => {
     const next = day.mood === mood ? null : mood
     dispatch({ type: 'day', day: k, log: { ...day, mood: next } })
-    if (next) toast(`Mood: ${MOODS[next - 1].label.toLowerCase()}.`)
   }
   const [open, setOpen] = useState(false)
   const now = day.mood ? MOODS[day.mood - 1] : null
@@ -131,7 +130,7 @@ function useHabitLog(h: Habit) {
 // Today's tick for a habit, with the app's sound and burst.
 function HabitDone({ h, label, done }: { h: Habit; label: string; done?: string }) {
   const log = useHabitLog(h)
-  return <DoneButton on={log.value === DONE} label={label} done={done} onToggle={(v) => { log.set(v ? DONE : null); if (v) toast(praise()) }} />
+  return <DoneButton on={log.value === DONE} label={label} done={done} onToggle={(v) => log.set(v ? DONE : null)} />
 }
 
 function SlipButton({ h }: { h: Habit }) {
@@ -150,7 +149,6 @@ function useWaterLog(h: Habit) {
   const add = (d: number) => {
     const v = Math.max(0, n + d)
     log.set(v || null)
-    if (d > 0 && v === target) toast('Target reached.')
   }
   return { add, n, target }
 }

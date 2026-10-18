@@ -1,21 +1,21 @@
-import { useState, type CSSProperties } from 'react'
 import { usePageBar } from '@/components/bar'
-import { BookOpen, Crosshair, Feather, Flame, Gauge, Hammer, Pencil, Plus, RotateCcw, type LucideIcon } from 'lucide-react'
-import { describeWhen, nextPosition, uid } from '@/lib/content'
-import { addDays, fmtLong, keyOf } from '@/lib/dates'
-import { dayProgress, streak, todayItems, type DayItem, type Slot } from '@/lib/derive'
-import type { Habit, Routine, When } from '@/lib/types'
-import { DONE, waterStats } from '@/lib/habits'
-import { reduce } from '@/store/reduce'
-import { HABIT_UI } from '@/components/habits'
-import { useStore } from '@/store/StoreProvider'
-import { celebrate, praise, toast } from '@/fx/fx'
-import { ChapterTag, Linkify } from '@/components/guide'
-import { Check, IconBadge, InnerLink, List, Meter, Row, Section, useDoneLastOnOpen } from '@/components/kit'
-import { FocusCard, WeekStrip } from '@/components/program'
 import {
   ChapterField, Fab, FormSheet, RowEdit, SelectField, SwitchField, TextField, WeekdaysField, fail, move, useSheet,
 } from '@/components/edit'
+import { ChapterTag, Linkify } from '@/components/guide'
+import { HABIT_UI } from '@/components/habits'
+import { Check, IconBadge, InnerLink, List, Meter, Row, Section, useDoneLastOnOpen } from '@/components/kit'
+import { FocusCard, WeekStrip } from '@/components/program'
+import { celebrate, toast } from '@/fx/fx'
+import { describeWhen, nextPosition, uid } from '@/lib/content'
+import { addDays, fmtLong, keyOf } from '@/lib/dates'
+import { dayProgress, streak, todayItems, type DayItem, type Slot } from '@/lib/derive'
+import { DONE, waterStats } from '@/lib/habits'
+import type { Habit, Routine, When } from '@/lib/types'
+import { reduce } from '@/store/reduce'
+import { useStore } from '@/store/StoreProvider'
+import { BookOpen, Crosshair, Feather, Flame, Gauge, Hammer, Pencil, Plus, RotateCcw, type LucideIcon } from 'lucide-react'
+import { useState, type CSSProperties } from 'react'
 
 type WhenKind = 'today' | When['kind']
 
@@ -108,17 +108,16 @@ export function Today() {
   const addGlass = (h: Habit) => {
     const value = waterStats(state, h, today).today + 1
     dispatch({ type: 'habitLog', habit: h.id, day: k, value })
-    toast(`${value} glass${value === 1 ? '' : 'es'} today.`)
   }
 
-  // After a tick: confetti when the whole day is done, else a word of praise.
+  // confetti and the streak when the whole day is done
   const cheer = (next: typeof state) => {
     const p = dayProgress(next, today)
     if (p.done === p.total) {
       setTimeout(celebrate, 250)
       const s = streak(next, today)
       toast(`Day complete. ${s}-day streak.`)
-    } else toast(praise())
+    }
   }
 
   const addTask = () => sheet.open({ id: uid(), position: nextPosition(state.routines), title: '', chapter: 'own', when: { kind: 'once', date: k }, core: true, created_at: new Date().toISOString() })

@@ -6,7 +6,7 @@ import { RESOURCE_KINDS, chapterOf, sizeLabel } from '@/lib/content'
 import { hostOf } from '@/lib/finds'
 import type { Chapter, ChapterId, Project, ProjectStatus, Resource, ResourceKind, Skill } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
-import { burst, praise, toast } from '@/fx/fx'
+import { burst, toast } from '@/fx/fx'
 import { Check, Fold, InnerLink, Row, cvar } from '@/components/kit'
 import { RowEdit } from '@/components/edit'
 
@@ -88,7 +88,6 @@ export function useTick() {
     on: (id: string) => !!state.plan[id],
     set: (id: string, on: boolean) => {
       dispatch({ type: 'plan', taskId: id, doneAt: on ? new Date().toISOString() : null })
-      if (on) toast(praise())
     },
   }
 }

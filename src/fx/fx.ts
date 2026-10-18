@@ -112,5 +112,3 @@ export function celebrate() {
 
 export { toast } from 'sonner'
 
-const PRAISE = ['Nice.', 'One more down.', 'Keep the streak alive.', 'Good work.', 'That counts.', 'Progress.']
-export const praise = () => PRAISE[Math.floor(Math.random() * PRAISE.length)]

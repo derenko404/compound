@@ -5,7 +5,7 @@ import { usePageBar } from '@/components/bar'
 import { byPosition, freshId, nextPosition, uid } from '@/lib/content'
 import type { ListDef, ListDefItem, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
-import { celebrate, praise, toast } from '@/fx/fx'
+import { celebrate, toast } from '@/fx/fx'
 import { Check, Chip, ChipsList, Header, LinkCard, List, Progress, Row, SearchField } from '@/components/kit'
 import { AreaField, ConfirmSheet, FormSheet, PlusButton, RowEdit, TextField, fail, move, useSheet } from '@/components/edit'
 
@@ -138,7 +138,7 @@ export function ListPage() {
     if (next % 10 === 0) {
       setTimeout(celebrate, 200)
       toast(`${next} of ${L.items.length} ${L.name.toLowerCase()}. Milestone.`)
-    } else toast(praise())
+    }
   }
 
   const rows = L.items.map((it, idx) => {

@@ -153,7 +153,9 @@ function Shell() {
           </>
         )}
       </div>
-      <Toaster position="bottom-center" />
+      {/* Toasts at the top, below the iPhone's status bar / notch. */}
+      <Toaster position="top-center" offset={{ top: 'calc(env(safe-area-inset-top, 0px) + var(--space-3))' }}
+        mobileOffset={{ top: 'calc(env(safe-area-inset-top, 0px) + var(--space-3))' }} />
     </>
   )
 }
