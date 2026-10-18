@@ -1,7 +1,7 @@
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { IconBadge } from '@/shared/ui'
-import { dayDiff, fmtShort, parseKey } from '@/shared/lib/dates'
+import { IconBadge, tone } from '@/shared/ui'
+import { dates } from '@/shared/lib/dates'
 import type { Habit, HabitType } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
@@ -11,7 +11,6 @@ import { skinOf } from './habit-skin'
 
 const W = t.wellbeing
 
-const tone = (token: string) => ({ '--c': `var(${token})` }) as CSSProperties
 
 export const START_LABEL: Record<HabitType, string> = W.start
 
@@ -29,7 +28,7 @@ export function HabitCard({ h }: { h: Habit }) {
   const on = started(h, today)
   const skin = on ? skinOf(state, h, today) : null
   const waiting = h.start_date
-    ? W.waiting(START_LABEL[h.type], fmtShort(parseKey(h.start_date)), dayDiff(today, parseKey(h.start_date)))
+    ? W.waiting(START_LABEL[h.type], dates.fmtShort(dates.parseKey(h.start_date)), dates.dayDiff(today, dates.parseKey(h.start_date)))
     : W.notStarted
   return (
     <div className="hcard" style={tone(ui.color)}>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Label } from '@/shared/ui/primitives/label'
 import { nextPosition, uid } from '@core/domain/content'
-import { keyOf } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import { HABIT_DEFAULTS, HABIT_ORDER, HABIT_UI, START_LABEL } from '@/features/habits'
 import type { Habit, HabitType, State } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
@@ -18,7 +18,7 @@ export function newHabit(s: State): Habit {
   const type = HABIT_ORDER.find((ty) => !taken.has(ty)) ?? 'build'
   const d = HABIT_DEFAULTS[type]
   return {
-    id: uid(), type, name: d.name, why: null, start_date: keyOf(new Date()), days: d.days, position: nextPosition(s.habits),
+    id: uid(), type, name: d.name, why: null, start_date: dates.keyOf(new Date()), days: d.days, position: nextPosition(s.habits),
     custom_data: d.data, created_at: new Date().toISOString(),
   }
 }

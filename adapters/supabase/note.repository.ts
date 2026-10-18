@@ -1,5 +1,5 @@
 import type { Note } from '../../core/domain/types'
-import { parseNoteQuery } from '../../core/domain/notes'
+import { noteSearch } from '../../core/domain/notes'
 import type { NoteRepositoryPort, NotesFilter } from '../../core/ports/repositories'
 import { SupabaseTable, type Query, type Row } from './supabase-table'
 
@@ -31,7 +31,7 @@ export class SupabaseNoteRepository extends SupabaseTable implements NoteReposit
 
   // The Notebook's filters as a Supabase query.
   private filter(q: Query, f: NotesFilter): Query {
-    const { tags, text } = parseNoteQuery(f.q)
+    const { tags, text } = noteSearch.parse(f.q)
     if (f.topic) q = q.eq('topic', f.topic)
     if (tags.length) q = q.contains('tags', tags)
     // PostgREST's or() takes a comma list, so commas and brackets are dropped from search words.

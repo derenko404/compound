@@ -1,4 +1,4 @@
-import { findUrls } from '../../core/domain/finds'
+import { links } from '../../core/domain/links'
 import type { MessengerPort } from '../../core/ports/messenger'
 import type { BotMessage, TelegramBotService } from '../../core/services/telegram-bot.service'
 import type { ExecutionContext } from '../env'
@@ -48,7 +48,7 @@ export class TelegramWebhook {
       username: m.from?.username ?? null,
       text: m.text ?? m.caption ?? '',
       textLinks: this.textLinks(m),
-      replyLinks: m.reply_to_message ? [...new Set([...findUrls(m.reply_to_message.text ?? m.reply_to_message.caption ?? ''), ...this.textLinks(m.reply_to_message)])] : [],
+      replyLinks: m.reply_to_message ? [...new Set([...links.findUrls(m.reply_to_message.text ?? m.reply_to_message.caption ?? ''), ...this.textLinks(m.reply_to_message)])] : [],
     }
   }
 

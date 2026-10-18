@@ -1,15 +1,14 @@
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
 import { habitsOf, HABIT_UI, HabitCard } from '@/features/habits'
 import type { Habit } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
-import { Header, List, Row, SortList, Section, RemoveButton, moveTo, useSheet, usePageBar } from '@/shared/ui'
+import { Header, List, Row, SortList, Section, RemoveButton, moveTo, useSheet, usePageBar, tone } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 import { MoodWidget } from './MoodWidget'
 import { HabitSheet, newHabit } from './HabitSheet'
 
 const W = t.wellbeing
 
-const tone = (token: string) => ({ '--c': `var(${token})` }) as CSSProperties
 
 export function Wellbeing() {
   const { state, dispatch } = useStore()

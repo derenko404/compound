@@ -5,7 +5,7 @@
  */
 
 /* ---------- Helpers ---------- */
-export { cvar } from './lib/cvar'
+export { cvar, tone } from './lib/cvar'
 export { empty } from './lib/empty'
 export { fail } from './lib/fail'
 export { cleanLines, linesToItems } from './lib/lines'

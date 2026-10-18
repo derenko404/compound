@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Fold, Meter, Stats } from '@/shared/ui'
-import { addDays, keyOf } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import type { Habit, State } from '@core/domain/types'
 import { t } from '@/shared/i18n'
 import { DONE, chain, cleanStats, dueOn, gymMakeUp, gymStats, smokingStats, valueOn, waterStats, weekOf } from '../model/habits'
@@ -81,8 +81,8 @@ export function skinOf(s: State, h: Habit, today: Date): Skin {
             <span className="gym-days">
               {weekOf(today).map((d) => {
                 const gym = h.days.includes(d.getDay())
-                const done = valueOn(s, h, keyOf(d)) === DONE
-                return <i key={keyOf(d)} className={done ? 'on' : gym ? 'due' : undefined} title={WEEKDAYS_SHORT[d.getDay()]}>{WEEKDAYS_SHORT[d.getDay()][0]}</i>
+                const done = valueOn(s, h, dates.keyOf(d)) === DONE
+                return <i key={dates.keyOf(d)} className={done ? 'on' : gym ? 'due' : undefined} title={WEEKDAYS_SHORT[d.getDay()]}>{WEEKDAYS_SHORT[d.getDay()][0]}</i>
               })}
             </span>
             {!dueOn(h, today) && !makeUp && <span>{W.next(nextGymDay(h, today))}</span>}
@@ -105,7 +105,7 @@ export function skinOf(s: State, h: Habit, today: Date): Skin {
         details: <>
           <div className="bars">
             {st.week.map((d) => (
-              <div key={keyOf(d.day)} className={d.future ? 'future' : undefined}>
+              <div key={dates.keyOf(d.day)} className={d.future ? 'future' : undefined}>
                 <i style={{ '--pct': `${Math.min(1, d.value / st.target) * 100}%` } as CSSProperties} aria-label={W.water.bar(d.value)} />
                 <span>{WEEKDAYS_SHORT[d.day.getDay()]}</span>
               </div>
@@ -121,7 +121,7 @@ export function skinOf(s: State, h: Habit, today: Date): Skin {
 // The first gym day after today, as "Mon".
 const nextGymDay = (h: Habit, today: Date) => {
   for (let i = 1; i <= 7; i++) {
-    const d = addDays(today, i)
+    const d = dates.addDays(today, i)
     if (h.days.includes(d.getDay())) return WEEKDAYS_SHORT[d.getDay()]
   }
   return ''

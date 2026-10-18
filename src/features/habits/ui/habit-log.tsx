@@ -2,7 +2,7 @@
 import { GlassWater } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
 import { CountRow, DoneButton } from '@/shared/ui'
-import { keyOf } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import type { Habit } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
@@ -12,7 +12,7 @@ const W = t.wellbeing
 
 function useHabitLog(h: Habit) {
   const { state, dispatch } = useStore()
-  const k = keyOf(new Date())
+  const k = dates.keyOf(new Date())
   return {
     value: valueOn(state, h, k),
     set: (value: number | null) => dispatch({ type: 'habitLog', habit: h.id, day: k, value }),

@@ -1,6 +1,6 @@
 import type { Note } from '../../core/domain/types'
 import { normalizeState } from '../../core/domain/content'
-import { parseNoteQuery } from '../../core/domain/notes'
+import { noteSearch } from '../../core/domain/notes'
 import type { NoteRepositoryPort, NotesFilter } from '../../core/ports/repositories'
 import type { LocalStore } from './local-store'
 
@@ -13,7 +13,7 @@ export class LocalNoteRepository implements NoteRepositoryPort {
   }
 
   async page(f: NotesFilter, offset: number, limit: number) {
-    const { tags, text } = parseNoteQuery(f.q)
+    const { tags, text } = noteSearch.parse(f.q)
     return this.notes()
       .filter((n) => (!f.topic || n.topic === f.topic) && tags.every((t) => n.tags.includes(t))
         && text.every((w) => [n.body, n.context, n.url ?? ''].join(' ').toLowerCase().includes(w)))

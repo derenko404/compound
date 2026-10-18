@@ -1,6 +1,7 @@
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
+import { tone } from '@/shared/ui'
 import { ChevronDown } from 'lucide-react'
-import { keyOf } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import { weekOf } from '@/features/habits'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
@@ -8,7 +9,6 @@ import { t } from '@/shared/i18n'
 const W = t.wellbeing
 const WEEKDAYS_SHORT = t.nav.weekdaysShort
 
-const tone = (token: string) => ({ '--c': `var(${token})` }) as CSSProperties
 
 // Each face: the mouth (and brows for awful) on a round face filled with the mood's colour.
 const MOODS = [
@@ -37,7 +37,7 @@ function MoodFace({ value, label }: { value: number; label?: string }) {
 export function MoodWidget() {
   const { state, dispatch } = useStore()
   const today = new Date()
-  const k = keyOf(today)
+  const k = dates.keyOf(today)
   const day = state.days[k] ?? { done: [] }
   const set = (mood: number) => {
     const next = day.mood === mood ? null : mood
@@ -58,9 +58,9 @@ export function MoodWidget() {
   const week = (
     <div className="mood-week">
       {weekOf(today).map((d) => {
-        const v = state.days[keyOf(d)]?.mood
+        const v = state.days[dates.keyOf(d)]?.mood
         return (
-          <div key={keyOf(d)}>
+          <div key={dates.keyOf(d)}>
             <span>{WEEKDAYS_SHORT[d.getDay()]}</span>
             {v ? <MoodFace value={v} label={MOODS[v - 1].label} /> : <span className="mood-empty" role="img" aria-label={W.mood.notLogged} />}
           </div>

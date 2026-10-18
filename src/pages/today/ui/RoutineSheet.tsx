@@ -1,5 +1,5 @@
 import { TopicField, FormSheet, SelectField, SwitchField, TextField, WeekdaysField, fail } from '@/shared/ui'
-import { keyOf } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import { t } from '@/shared/i18n'
 import type { Routine, When } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
@@ -9,7 +9,7 @@ type WhenKind = 'today' | When['kind']
 
 export function RoutineSheet({ routine, open, onOpenChange }: { routine: Routine; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { state, dispatch } = useStore()
-  const today = keyOf(new Date())
+  const today = dates.keyOf(new Date())
   const isNew = !state.routines.some((r) => r.id === routine.id)
   const [r, setR] = useState(routine)
   const [kind, setKind] = useState<WhenKind>(isNew ? 'today' : routine.when.kind)

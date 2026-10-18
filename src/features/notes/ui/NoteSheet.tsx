@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { topicOf } from '@core/domain/content'
-import { cleanTag, findUrls, kindFromUrl } from '@core/domain/finds'
+import { links } from '@core/domain/links'
 import type { TopicId, Note } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { AreaField, TopicField, FormSheet, LinesField, fail } from '@/shared/ui'
@@ -26,7 +26,7 @@ export function NoteSheet({ open, onOpenChange, note, topic }: { open: boolean; 
     return x.url ? { ...x, body: x.body ? `${x.url}\n${x.body}` : x.url } : x
   })
   const set = (patch: Partial<Note>) => setN({ ...n, ...patch })
-  const url = findUrls(n.body)[0] ?? null
+  const url = links.findUrls(n.body)[0] ?? null
   return (
     <FormSheet open={open} onOpenChange={onOpenChange} title={t.notebook.title} submit={t.common.save}
       onSubmit={() => {
@@ -36,7 +36,7 @@ export function NoteSheet({ open, onOpenChange, note, topic }: { open: boolean; 
         const type = isLink ? 'link' : n.tags.includes('idea') ? 'idea' : 'note'
         dispatch({ type: 'putNote', note: {
           ...n, type, body: (isLink ? n.body.replace(url!, '') : n.body).trim(),
-          url: isLink ? url : null, kind: isLink ? (url === note?.url && n.kind) || kindFromUrl(url!) || 'site' : null,
+          url: isLink ? url : null, kind: isLink ? (url === note?.url && n.kind) || links.kindFromUrl(url!) || 'site' : null,
         } })
       }}>
       <AreaField label={t.notebook.sheet.note} value={n.body} rows={5} onChange={(body) => set({ body })}
@@ -50,7 +50,7 @@ export function NoteSheet({ open, onOpenChange, note, topic }: { open: boolean; 
       )}
       {!(topic && !note) && <TopicField value={n.topic} onChange={(c) => set({ topic: c })} />}
       <LinesField label={t.notebook.sheet.tags} value={n.tags} placeholder={t.notebook.sheet.tagPlaceholder} quick={QUICK_TAGS}
-        onChange={(ts) => set({ tags: [...new Set(ts.map(cleanTag).filter(Boolean))] })} />
+        onChange={(ts) => set({ tags: [...new Set(ts.map(links.cleanTag).filter(Boolean))] })} />
     </FormSheet>
   )
 }

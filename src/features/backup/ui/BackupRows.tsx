@@ -6,7 +6,7 @@ import { toast } from '@/shared/fx/fx'
 import { exportAll, importFile, parseExport } from '@/shared/api/backends'
 import { useStore } from '@/shared/store/StoreProvider'
 import type { State } from '@core/domain/types'
-import { keyOf } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import { ConfirmSheet, SettingRow } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
@@ -22,7 +22,7 @@ export function BackupRows() {
   const download = async () => {
     const data = await exportAll(backend!, state)
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
-    const a = Object.assign(document.createElement('a'), { href: url, download: `compound-${keyOf(new Date())}.json` })
+    const a = Object.assign(document.createElement('a'), { href: url, download: `compound-${dates.keyOf(new Date())}.json` })
     a.click()
     URL.revokeObjectURL(url)
   }

@@ -1,7 +1,7 @@
 import { ExternalLink, Lightbulb } from 'lucide-react'
 import { topicOf } from '@core/domain/content'
-import { fmtStamp } from '@/shared/lib/dates'
-import { hostOf, youtubeId } from '@core/domain/finds'
+import { dates } from '@/shared/lib/dates'
+import { links } from '@core/domain/links'
 import type { Note } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { Linkify } from '@/features/topics'
@@ -12,16 +12,16 @@ import { t } from '@/shared/i18n'
 // removable: edit mode, with the ⊖ to delete it.
 export function NoteCard({ n, onOpen, onTag, showTopic = true, removable }: { n: Note; onOpen: () => void; onTag?: (t: string) => void; showTopic?: boolean; removable?: boolean }) {
   const { state, dispatch } = useStore()
-  const yt = n.url ? youtubeId(n.url) : null
+  const yt = n.url ? links.youtubeId(n.url) : null
   return (
-    <Entry ch={n.topic} onEdit={onOpen} editLabel={t.common.editNamed(n.body.slice(0, 40) || (n.url ? hostOf(n.url) : t.notebook.card.entry))}
+    <Entry ch={n.topic} onEdit={onOpen} editLabel={t.common.editNamed(n.body.slice(0, 40) || (n.url ? links.hostOf(n.url) : t.notebook.card.entry))}
       remove={removable && <RemoveButton label={t.notebook.card.deleteEntry} title={t.notebook.card.deleteAsk} description={t.notebook.card.deleteText} onConfirm={() => dispatch({ type: 'deleteNote', id: n.id })} />}>
       <div className="nb-card">
         {n.type === 'link' && n.url && (
           <div className="nb-link">
             {yt && <img className="nb-thumb" src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" loading="lazy" />}
             <div className="min-w-0">
-              <a href={n.url} target="_blank" rel="noreferrer" className="res-title nb-title">{hostOf(n.url)}<ExternalLink className="res-ext" aria-label={t.notebook.card.opensNewTab} /></a>
+              <a href={n.url} target="_blank" rel="noreferrer" className="res-title nb-title">{links.hostOf(n.url)}<ExternalLink className="res-ext" aria-label={t.notebook.card.opensNewTab} /></a>
               {n.kind && <div className="nb-sub">{t.notebook.kinds[n.kind]}</div>}
             </div>
           </div>
@@ -35,7 +35,7 @@ export function NoteCard({ n, onOpen, onTag, showTopic = true, removable }: { n:
           {n.tags.map((tag) => onTag
             ? <button key={tag} type="button" className="nb-tag" onClick={() => onTag(tag)}>#{tag}</button>
             : <span key={tag} className="nb-tag">#{tag}</span>)}
-          <span>{fmtStamp(n.created_at)}</span>
+          <span>{dates.fmtStamp(n.created_at)}</span>
           {n.source === 'telegram' && <span>{t.notebook.card.viaTelegram}</span>}
         </div>
       </div>

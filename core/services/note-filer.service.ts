@@ -1,4 +1,4 @@
-import { cleanTag } from '../domain/finds'
+import { links } from '../domain/links'
 import type { LinkKind, TopicId } from '../domain/types'
 import type { AiMessage, AiPort } from '../ports/ai'
 import type { PageMeta } from '../ports/page-reader'
@@ -115,6 +115,6 @@ export class NoteFilerService {
   }
 
   private tags(x: unknown) {
-    return Array.isArray(x) ? [...new Set(x.filter((t): t is string => typeof t === 'string').map(cleanTag).filter(Boolean))].slice(0, 3) : []
+    return Array.isArray(x) ? [...new Set(x.filter((t): t is string => typeof t === 'string').map(links.cleanTag).filter(Boolean))].slice(0, 3) : []
   }
 }

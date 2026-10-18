@@ -1,6 +1,6 @@
 import { ExternalLink, BookOpen, FileText, GraduationCap, Headphones, Hammer, Newspaper, PlayCircle, Wrench, Link2 } from 'lucide-react'
 import { RESOURCE_KINDS } from '@core/domain/content'
-import { hostOf } from '@core/domain/finds'
+import { links } from '@core/domain/links'
 import type { TopicId, Resource, ResourceKind } from '@core/domain/types'
 import { Check, Fold, Row, RemoveButton } from '@/shared/ui'
 import { t } from '@/shared/i18n'
@@ -30,7 +30,7 @@ function ResourceRow({ ch, r, onEdit, onRemove, readOnly }: { ch?: TopicId; r: R
       sub={(r.note || r.url || r.free) ? (
         <>
           {r.note && <span className="block"><Linkify text={r.note} /></span>}
-          {(r.url || r.free) && <span className="res-meta">{r.url && <span className="res-host">{hostOf(r.url)}</span>}{r.free && <span className="res-free">{t.topics.resources.free}</span>}</span>}
+          {(r.url || r.free) && <span className="res-meta">{r.url && <span className="res-host">{links.hostOf(r.url)}</span>}{r.free && <span className="res-free">{t.topics.resources.free}</span>}</span>}
         </>
       ) : undefined}
     />

@@ -5,7 +5,7 @@ import { Toaster } from '@/shared/ui/primitives/sonner'
 import { TopicColors } from '@/shared/ui'
 import { mountFx } from '@/shared/fx/fx'
 import { startReminderLoop } from '@/shared/fx/notify'
-import { keyOf } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import { todayItems } from '@/features/today'
 import { useStore } from '@/shared/store/StoreProvider'
 import { PENDING_SHARE } from '@/features/auth'
@@ -51,9 +51,9 @@ export function Shell() {
     () =>
       startReminderLoop(() => {
         const s = stateRef.current
-        const done = new Set(s.days[keyOf(new Date())]?.done ?? [])
+        const done = new Set(s.days[dates.keyOf(new Date())]?.done ?? [])
         return todayItems(s, new Date()).filter((i) => !(i.done ?? done.has(i.id))).length
-      }, () => keyOf(new Date())),
+      }, () => dates.keyOf(new Date())),
     [],
   )
 

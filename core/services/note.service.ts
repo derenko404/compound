@@ -1,6 +1,6 @@
 import { FALLBACK_TOPIC } from '../domain/content'
 import { fail } from '../domain/errors'
-import { cleanTag, findUrls, kindFromUrl } from '../domain/finds'
+import { links } from '../domain/links'
 import type { Note } from '../domain/types'
 import type { Repositories } from '../ports/repositories'
 import type { NoteInput } from './inputs'
@@ -23,15 +23,15 @@ export class NoteService {
 
   async add(input: NoteInput, source: Note['source'] = 'api', extra: Partial<Pick<Note, 'context' | 'kind' | 'type'>> = {}): Promise<Note> {
     const body = input.text ?? ''
-    const url = input.url || findUrls(body)[0] || null
+    const url = input.url || links.findUrls(body)[0] || null
     if (!body && !url) fail(400, 'A note needs text or a url.')
     const topics = await this.repos.topics.all()
-    const tags = [...new Set((input.tags ?? []).map(cleanTag).filter(Boolean))]
+    const tags = [...new Set((input.tags ?? []).map(links.cleanTag).filter(Boolean))]
     const old = url ? await this.repos.notes.byUrl(url) : null
     const note: Note = {
       id: old?.id ?? crypto.randomUUID(), created_at: old?.created_at ?? new Date().toISOString(),
       type: url ? 'link' : tags.includes('idea') ? 'idea' : 'note', body, url,
-      kind: url ? kindFromUrl(url) ?? 'site' : null, context: old?.context ?? '',
+      kind: url ? links.kindFromUrl(url) ?? 'site' : null, context: old?.context ?? '',
       tags, topic: topics.some((t) => t.id === input.topic) ? input.topic! : FALLBACK_TOPIC, source,
       ...extra,
     }

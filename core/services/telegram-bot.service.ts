@@ -1,5 +1,5 @@
 import { FALLBACK_TOPIC } from '../domain/content'
-import { cleanTag, findUrls, kindFromUrl } from '../domain/finds'
+import { links } from '../domain/links'
 import type { Repositories } from '../ports/repositories'
 import type { PageReaderPort } from '../ports/page-reader'
 import type { TelegramLinkRepositoryPort } from '../ports/telegram'
@@ -60,7 +60,7 @@ export class TelegramBotService {
     const isAi = cmd?.[1].toLowerCase() === 'ai'
     if (cmd && !isAi) return HELP
     const rest = isAi ? cmd[2] : m.text
-    const urls = [...new Set([...findUrls(rest), ...m.textLinks])]
+    const urls = [...new Set([...links.findUrls(rest), ...m.textLinks])]
 
     if (!cmd && !urls.length && m.replyLinks.length && m.text.trim()) return this.noteOnLinks(notes, m.replyLinks, m.text.trim())
     if (!urls.length) {
@@ -85,14 +85,14 @@ export class TelegramBotService {
 
   private async saveLinks(repos: Repositories, notes: NoteService, urls: string[], rest: string, isAi: boolean) {
     let note = rest
-    for (const u of findUrls(rest)) note = note.replace(u, '')
+    for (const u of links.findUrls(rest)) note = note.replace(u, '')
     note = note.replace(/\s+/g, ' ').trim()
     const topics = await this.topics(repos)
     const lines: string[] = []
     for (const url of urls) {
       const meta = await this.pages.read(url)
       const ai = await this.filer.classifyLink(url, meta, topics)
-      const kind = kindFromUrl(url) ?? ai.kind ?? meta.kind ?? 'site'
+      const kind = links.kindFromUrl(url) ?? ai.kind ?? meta.kind ?? 'site'
       // With /ai the summary replaces the page's own description, and the text after the link is the question.
       const summary = isAi ? await this.filer.summarize(url, meta, note) : ''
       try {
@@ -129,7 +129,7 @@ export class TelegramBotService {
     // One AI call files the note: topic (unless the first word named one), tags, and whether it's an idea.
     const ai = await this.filer.fileNote(body, topics)
     const topic = named ?? ai.topic ?? topics.find((t) => t.id === FALLBACK_TOPIC) ?? null
-    const typed = [...body.matchAll(/#([\p{L}\d_-]+)/gu)].map((m) => cleanTag(m[1]))
+    const typed = [...body.matchAll(/#([\p{L}\d_-]+)/gu)].map((m) => links.cleanTag(m[1]))
     const idea = ai.idea || typed.includes('idea')
     // Ideas also carry the #idea tag, the same as ideas made in the app.
     const tags = [...new Set([...(idea ? ['idea'] : []), ...typed, ...ai.tags])]

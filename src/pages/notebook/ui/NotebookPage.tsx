@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { topics as allTopics } from '@core/domain/content'
-import { addDays, fmtLong, keyOf, parseKey } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import type { TopicId, Note } from '@core/domain/types'
 import { useNotes, useStore } from '@/shared/store/StoreProvider'
 import { useLoadMore } from '@/shared/lib/useLoadMore'
@@ -12,9 +12,9 @@ import { t } from '@/shared/i18n'
 
 function dayTitle(key: string) {
   const today = new Date()
-  if (key === keyOf(today)) return t.notebook.today
-  if (key === keyOf(addDays(today, -1))) return t.notebook.yesterday
-  return fmtLong(parseKey(key))
+  if (key === dates.keyOf(today)) return t.notebook.today
+  if (key === dates.keyOf(dates.addDays(today, -1))) return t.notebook.yesterday
+  return dates.fmtLong(dates.parseKey(key))
 }
 
 
@@ -33,7 +33,7 @@ export function Notebook() {
   const days = useMemo(() => {
     const by = new Map<string, Note[]>()
     for (const n of items) {
-      const k = keyOf(new Date(n.created_at))
+      const k = dates.keyOf(new Date(n.created_at))
       by.set(k, [...(by.get(k) ?? []), n])
     }
     return [...by.entries()]

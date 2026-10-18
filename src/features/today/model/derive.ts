@@ -2,7 +2,7 @@
 import type { Topic, TopicId, Habit, Routine, State, When } from '@core/domain/types'
 import { habitRows } from '@/features/habits'
 import { topicOf, topics, matchesWhen, program } from '@core/domain/content'
-import { addDays, dayDiff, fmtShort, keyOf, parseKey } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import { currentLocale, t } from '@/shared/i18n'
 
 // "Aug 2027"
@@ -25,7 +25,7 @@ export function describeWhen(w: When) {
     case 'monthly':
       return w.day > 0 ? t.today.when.monthlyOn(w.day) : t.today.when.monthlyLast
     case 'once':
-      return t.today.when.once(fmtShort(parseKey(w.date)))
+      return t.today.when.once(dates.fmtShort(dates.parseKey(w.date)))
   }
 }
 
@@ -62,23 +62,23 @@ export const currentProject = (s: State, c: Topic) => c.projects.find((p) => (s.
 // Steps ticked per week over the last 4 weeks, and when the topic would finish at that pace.
 export function pace(s: State, c: Topic, today: Date) {
   const ids = new Set(stepIds(c))
-  const since = addDays(today, -28).getTime()
+  const since = dates.addDays(today, -28).getTime()
   const recent = Object.entries(s.plan).filter(([id, at]) => ids.has(id) && new Date(at).getTime() >= since).length
   const perWeek = recent / 4
   const { done, total } = topicProgress(s, c)
   const left = total - done
-  return { perWeek, left, finish: perWeek > 0 && left > 0 ? addDays(today, Math.ceil((left / perWeek) * 7)) : null }
+  return { perWeek, left, finish: perWeek > 0 && left > 0 ? dates.addDays(today, Math.ceil((left / perWeek) * 7)) : null }
 }
 
 // A step ticked exactly 7 or 30 days ago comes back for a recap. The first one found, across the learn topics.
 const REVIEW_AFTER = [7, 30]
 function reviewStep(s: State, today: Date) {
-  const want = new Set(REVIEW_AFTER.map((n) => keyOf(addDays(today, -n))))
+  const want = new Set(REVIEW_AFTER.map((n) => dates.keyOf(dates.addDays(today, -n))))
   for (const c of topics(s, 'learn')) {
     for (const skill of c.skills) {
       for (const step of skill.steps) {
         const at = s.plan[step.id]
-        if (at && want.has(keyOf(new Date(at)))) return { c, skill, step, ago: dayDiff(new Date(at), today) }
+        if (at && want.has(dates.keyOf(new Date(at)))) return { c, skill, step, ago: dates.dayDiff(new Date(at), today) }
       }
     }
   }
@@ -89,7 +89,7 @@ function reviewStep(s: State, today: Date) {
 // Pace looks back 4 weeks, so a younger topic isn't judged yet.
 function catchUp(s: State, c: Topic, today: Date) {
   const target = targetFinish(c)
-  if (!target || !c.created_at || dayDiff(new Date(c.created_at), today) < 28) return null
+  if (!target || !c.created_at || dates.dayDiff(new Date(c.created_at), today) < 28) return null
   const { finish, left } = pace(s, c, today)
   if (!left || (finish && finish <= target)) return null
   const open = c.skills.flatMap((skill) => skill.steps.filter((t) => !s.plan[t.id]).map((step) => ({ skill, step })))
@@ -100,7 +100,7 @@ function catchUp(s: State, c: Topic, today: Date) {
 }
 
 // Weeks since a fixed Monday, so the light topic changes every Monday.
-const weekIndex = (d: Date) => Math.floor(dayDiff(new Date(2024, 0, 1), d) / 7)
+const weekIndex = (d: Date) => Math.floor(dates.dayDiff(new Date(2024, 0, 1), d) / 7)
 
 // Rotates weekly through the roadmap topics that aren't the focus, have something left, and have no daily routine.
 function lightTopic(s: State, d: Date, focus: TopicId | null): TopicId | null {
@@ -134,7 +134,7 @@ export interface DayItem {
 
 export function todayItems(s: State, today: Date): DayItem[] {
   const focus = focusOf(s)
-  const k = keyOf(today)
+  const k = dates.keyOf(today)
   const items: DayItem[] = []
 
   for (const r of [...s.routines].sort((a, b) => a.position - b.position)) {
@@ -164,17 +164,17 @@ export function todayItems(s: State, today: Date): DayItem[] {
 // How much of a day's list was ticked. Past days are measured against today's routines.
 export function dayProgress(s: State, d: Date) {
   const items = todayItems(s, d)
-  const done = new Set(s.days[keyOf(d)]?.done ?? [])
+  const done = new Set(s.days[dates.keyOf(d)]?.done ?? [])
   return { done: items.filter((i) => i.done ?? done.has(i.id)).length, total: items.length }
 }
 
 // Streak tasks due on a day: scheduled for it and created by then, so a new one doesn't break past streaks.
 const coreDue = (s: State, d: Date, k: string) =>
-  s.routines.filter((r) => r.core && keyOf(new Date(r.created_at)) <= k && matchesWhen(r.when, d, k)).map((r) => r.id)
+  s.routines.filter((r) => r.core && dates.keyOf(new Date(r.created_at)) <= k && matchesWhen(r.when, d, k)).map((r) => r.id)
 
 // true when every streak task due that day was ticked, false when one was missed, null when none was due.
 const coreDone = (s: State, d: Date): boolean | null => {
-  const k = keyOf(d)
+  const k = dates.keyOf(d)
   const ids = coreDue(s, d, k)
   if (!ids.length) return null
   const done = s.days[k]?.done ?? []
@@ -183,8 +183,8 @@ const coreDone = (s: State, d: Date): boolean | null => {
 
 // The first day any streak task existed; days before it can't count.
 const coreStart = (s: State) => {
-  const keys = s.routines.filter((r) => r.core).map((r) => keyOf(new Date(r.created_at))).sort()
-  return keys[0] ? parseKey(keys[0]) : null
+  const keys = s.routines.filter((r) => r.core).map((r) => dates.keyOf(new Date(r.created_at))).sort()
+  return keys[0] ? dates.parseKey(keys[0]) : null
 }
 
 // Days with nothing due are skipped: they neither add to the streak nor break it. Today only counts once done.
@@ -193,12 +193,12 @@ export function streak(s: State, today: Date) {
   if (!start) return 0
   let n = 0
   let d = new Date(today)
-  if (coreDone(s, d) !== true) d = addDays(d, -1)
+  if (coreDone(s, d) !== true) d = dates.addDays(d, -1)
   while (d >= start) {
     const ok = coreDone(s, d)
     if (ok === false) break
     if (ok) n++
-    d = addDays(d, -1)
+    d = dates.addDays(d, -1)
   }
   return n
 }
@@ -207,7 +207,7 @@ export function bestStreak(s: State, today = new Date()) {
   const start = coreStart(s)
   let best = 0
   let run = 0
-  for (let d = start; d && d <= today; d = addDays(d, 1)) {
+  for (let d = start; d && d <= today; d = dates.addDays(d, 1)) {
     const ok = coreDone(s, d)
     if (ok === false) run = 0
     else if (ok) best = Math.max(best, ++run)

@@ -7,7 +7,7 @@ import { FocusCard, WeekStrip } from './focus'
 import { RoutineSheet } from './RoutineSheet'
 import { celebrate } from '@/shared/fx/fx'
 import { nextPosition, uid } from '@core/domain/content'
-import { addDays, fmtLong, keyOf } from '@/shared/lib/dates'
+import { dates } from '@/shared/lib/dates'
 import { dayProgress, describeWhen, streak, todayItems, type DayItem, type Slot } from '@/features/today'
 import { DONE, waterStats } from '@/features/habits'
 import { t } from '@/shared/i18n'
@@ -33,7 +33,7 @@ export function Today() {
   usePageBar({ add: { label: t.today.addTask, onClick: () => addTask() }, edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
   const sheet = useSheet<Routine>()
   const today = new Date()
-  const k = keyOf(today)
+  const k = dates.keyOf(today)
   const items = todayItems(state, today)
   const day = state.days[k] ?? { done: [] }
   const done = new Set(day.done)
@@ -76,7 +76,7 @@ export function Today() {
   const shown = useDoneLastOnOpen(items, isDone, (it) => it.id)
   const run = streak(state, today)
 
-  const week = Array.from({ length: 7 }, (_, i) => addDays(today, i - ((today.getDay() + 6) % 7))).filter((d) => d <= today)
+  const week = Array.from({ length: 7 }, (_, i) => dates.addDays(today, i - ((today.getDay() + 6) % 7))).filter((d) => d <= today)
   const fullDays = week.filter((d) => { const p = dayProgress(state, d); return p.total > 0 && p.done === p.total }).length
   const row = (it: DayItem) => {
     const h = it.habit
@@ -98,7 +98,7 @@ export function Today() {
     <>
       <header className="today-head">
         <div className="today-title">
-          <h1 className="day-date">{fmtLong(today)}</h1>
+          <h1 className="day-date">{dates.fmtLong(today)}</h1>
           {items.length > 0 && <span className="muted"><b className="text-foreground">{n}</b>{t.today.doneOf(items.length)}</span>}
         </div>
         {items.length > 0 && <Meter size="lg" value={n / items.length} label={t.today.doneToday(n, items.length)} />}
