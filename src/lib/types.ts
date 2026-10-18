@@ -55,6 +55,20 @@ export interface Idea {
   notes: IdeaNote[]
 }
 
+export type BookmarkKind = 'video' | 'post' | 'site'
+
+export interface Bookmark {
+  id: string
+  url: string
+  kind: BookmarkKind
+  title: string
+  description: string
+  tags: string[]
+  note: string
+  source: 'app' | 'telegram'
+  created_at: string
+}
+
 export interface ListItem {
   done_at?: string | null
   note?: string | null
@@ -70,6 +84,7 @@ export interface State {
   tasks: CustomTask[]
   ideas: Idea[]
   lists: Record<ListKey, Record<number, ListItem>>
+  bookmarks: Bookmark[]
 }
 
 export const emptyState = (): State => ({
@@ -82,6 +97,7 @@ export const emptyState = (): State => ({
   tasks: [],
   ideas: [],
   lists: { books: {}, films: {}, songs: {}, places: {} },
+  bookmarks: [],
 })
 
 // Every change to the data goes through one of these, so the reducer and the
@@ -100,3 +116,5 @@ export type Op =
   | { type: 'deleteIdea'; id: string }
   | { type: 'addIdeaNote'; note: IdeaNote }
   | { type: 'listItem'; list: ListKey; idx: number; item: ListItem }
+  | { type: 'addBookmark'; bookmark: Bookmark }
+  | { type: 'deleteBookmark'; id: string }

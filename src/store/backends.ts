@@ -51,7 +51,7 @@ export function cloudBackend(db: SupabaseClient): Backend {
   return {
     kind: 'cloud',
     async load() {
-      const [settings, days, plan, projects, cnotes, notes, tasks, ideas, ideaNotes, lists] = await Promise.all([
+      const [settings, days, plan, projects, cnotes, notes, tasks, ideas, ideaNotes, lists, bookmarks] = await Promise.all([
         rows(db.from('settings').select('*').maybeSingle()),
         rows(db.from('day_logs').select('*')),
         rows(db.from('plan_progress').select('*')),
@@ -62,6 +62,7 @@ export function cloudBackend(db: SupabaseClient): Backend {
         rows(db.from('ideas').select('*').order('created_at', { ascending: false })),
         rows(db.from('idea_notes').select('*').order('created_at')),
         rows(db.from('list_items').select('*')),
+        rows(db.from('bookmarks').select('*').order('created_at', { ascending: false })),
       ])
 
       const s = emptyState()
@@ -83,6 +84,9 @@ export function cloudBackend(db: SupabaseClient): Backend {
           .map((n: Row) => ({ id: n.id, idea_id: n.idea_id, body: n.body, created_at: n.created_at })),
       }))
       for (const l of (lists ?? []) as Row[]) s.lists[l.list as ListKey][l.idx] = { done_at: l.done_at, note: l.note }
+      s.bookmarks = (bookmarks ?? []).map((b: Row) => ({
+        id: b.id, url: b.url, kind: b.kind, title: b.title, description: b.description, tags: b.tags, note: b.note, source: b.source, created_at: b.created_at,
+      }))
       return s
     },
 
@@ -134,6 +138,12 @@ export function cloudBackend(db: SupabaseClient): Backend {
             check(await db.from('list_items').upsert({ list: op.list, idx: op.idx, done_at: op.item.done_at ?? null, note: op.item.note ?? null }))
           else check(await db.from('list_items').delete().eq('list', op.list).eq('idx', op.idx))
           return
+        case 'addBookmark':
+          check(await db.from('bookmarks').upsert(op.bookmark, { onConflict: 'user_id,url' }))
+          return
+        case 'deleteBookmark':
+          check(await db.from('bookmarks').delete().eq('id', op.id))
+          return
       }
     },
   }
@@ -155,5 +165,6 @@ export async function importLocal(db: SupabaseClient, s: State) {
   }
   for (const list of Object.keys(s.lists) as ListKey[])
     for (const [idx, item] of Object.entries(s.lists[list])) ops.push({ type: 'listItem', list, idx: Number(idx), item })
+  for (const bookmark of s.bookmarks) ops.push({ type: 'addBookmark', bookmark })
   for (const op of ops) await be.save(op, s)
 }

@@ -9,6 +9,7 @@ import { keyOf } from '@/lib/dates'
 import { todayItems } from '@/lib/derive'
 import { useStore } from '@/store/StoreProvider'
 import { Chapters } from '@/views/Chapters'
+import { Finds } from '@/views/Finds'
 import { Health } from '@/views/Health'
 import { Ideas } from '@/views/Ideas'
 import { Lists } from '@/views/Lists'
@@ -20,7 +21,7 @@ import { Today } from '@/views/Today'
 
 const TABS = [
   ['/today', 'Today'], ['/plan', 'Plan'], ['/chapters', 'Chapters'], ['/ideas', 'Ideas'],
-  ['/lists', 'Lists'], ['/notes', 'Notes'], ['/health', 'Health'],
+  ['/finds', 'Finds'], ['/lists', 'Lists'], ['/notes', 'Notes'], ['/health', 'Health'],
 ] as const
 
 function Shell() {
@@ -87,6 +88,7 @@ const routeTree = root.addChildren([
   createRoute({ getParentRoute: () => root, path: '/chapters', beforeLoad: () => { throw redirect({ to: '/chapters/$ch', params: { ch: 'tech' } }) } }),
   page('/chapters/$ch', Chapters),
   page('/ideas', Ideas),
+  page('/finds', Finds),
   page('/lists', Lists),
   page('/notes', Notes),
   page('/health', Health),

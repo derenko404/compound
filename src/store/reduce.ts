@@ -39,5 +39,9 @@ export function reduce(s: State, op: Op): State {
       else delete list[op.idx]
       return { ...s, lists: { ...s.lists, [op.list]: list } }
     }
+    case 'addBookmark':
+      return { ...s, bookmarks: [op.bookmark, ...s.bookmarks] }
+    case 'deleteBookmark':
+      return { ...s, bookmarks: s.bookmarks.filter((b) => b.id !== op.id) }
   }
 }
