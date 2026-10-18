@@ -57,7 +57,7 @@ export function SignIn() {
       <div className="brand mb-6"><span className="brand-mark" aria-hidden="true" />Roadmap Log</div>
       <h1 className="day-date mb-3">{mode === 'signin' ? 'Sign in to sync' : 'Create your account'}</h1>
       <p className="lead mb-6">Your progress, notes and ideas are saved to your account and follow you to every device.</p>
-      <Button size="lg" variant="outline" className="mb-4 w-full bg-card" onClick={google}>
+      <Button variant="outline" className="mb-4 w-full bg-card" onClick={google}>
         <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
           <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.7z" />
           <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z" />

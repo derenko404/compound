@@ -1,11 +1,23 @@
+import { execSync } from 'node:child_process'
 import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Shown in Settings → About. Cloudflare's build has the commit in WORKERS_CI_COMMIT_SHA; locally ask git.
+const commit = (() => {
+  if (process.env.WORKERS_CI_COMMIT_SHA) return process.env.WORKERS_CI_COMMIT_SHA.slice(0, 7)
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'dev'
+  }
+})()
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: { __BUILD__: JSON.stringify({ time: new Date().toISOString(), commit }) },
   plugins: [
     react(),
     tailwindcss(),

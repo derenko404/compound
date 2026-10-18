@@ -1,13 +1,13 @@
-// Renders chapter content (resources, checklists, projects) with cross links.
+// Renders track content (skills, resources, projects) with cross links.
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
+import { useLocation } from '@tanstack/react-router'
 import { BookOpen, ChevronDown, ExternalLink, FileText, GraduationCap, Headphones, Hammer, Newspaper, PlayCircle, Wrench, Link2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { RESOURCE_KINDS, chapterOf } from '@/lib/content'
-import type { Chapter, ChapterId, Checklist, Project, ProjectStatus, Resource, ResourceKind } from '@/lib/types'
+import { RESOURCE_KINDS, chapterOf, sizeLabel } from '@/lib/content'
+import { hostOf } from '@/lib/finds'
+import type { Chapter, ChapterId, Project, ProjectStatus, Resource, ResourceKind, Skill } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { burst, praise, toast } from '@/fx/fx'
-import { Check, Fold, Row, cvar } from '@/components/kit'
+import { Check, Fold, InnerLink, Row, cvar } from '@/components/kit'
 import { RowEdit } from '@/components/edit'
 
 interface LinkIndex {
@@ -56,10 +56,10 @@ export function Linkify({ text }: { text: string }) {
       {parts.map((p, i) => {
         if (i % 2 === 0 || !p) return <Fragment key={i}>{p}</Fragment>
         const pch = ix.projects.get(p)
-        if (pch) return <Link key={i} to="/chapters/$ch" params={{ ch: pch }} hash={p} className="xref" style={cvar(pch)}>{p}</Link>
+        if (pch) return <InnerLink key={i} ch={pch} to="/tracks/$ch" params={{ ch: pch }} hash={p}>{p}</InnerLink>
         const m = /^Chapter ([1-9])$/.exec(p)
         const nch = m ? ix.numbered[Number(m[1]) - 1] : undefined
-        if (nch) return <Link key={i} to="/chapters/$ch" params={{ ch: nch }} className="xref" style={cvar(nch)}>{p}</Link>
+        if (nch) return <InnerLink key={i} ch={nch} to="/tracks/$ch" params={{ ch: nch }}>{p}</InnerLink>
         const r = ix.resources.get(p)
         if (r) return <a key={i} href={r.url} target="_blank" rel="noopener" className="xref-res" style={cvar(r.ch)}>{p}</a>
         return <Fragment key={i}>{p}</Fragment>
@@ -73,7 +73,7 @@ export function ChapterTag({ ch, label }: { ch: ChapterId | null | undefined; la
   const { state } = useStore()
   const c = chapterOf(state, ch)
   if (!c) return <>{label ?? ''}</>
-  return <Link to="/chapters/$ch" params={{ ch: c.id }} className="tag-link" style={cvar(c.id)}>{label ?? c.name}</Link>
+  return <InnerLink ch={c.id} to="/tracks/$ch" params={{ ch: c.id }}>{label ?? c.name}</InnerLink>
 }
 
 const KIND_ICON: Record<ResourceKind, typeof BookOpen> = {
@@ -81,7 +81,7 @@ const KIND_ICON: Record<ResourceKind, typeof BookOpen> = {
   doc: FileText, practice: Hammer, podcast: Headphones, other: Link2,
 }
 
-// Checklist and resource ticks live in the same progress table as plan tasks, under their item ids.
+// Topic and resource ticks live in the same progress table as plan tasks, under their item ids.
 export function useTick() {
   const { state, dispatch } = useStore()
   return {
@@ -95,23 +95,28 @@ export function useTick() {
 
 export interface ItemEdit<T> {
   edit: (item: T) => void
-  remove: (item: T) => void
   move?: (item: T, d: -1 | 1) => void
 }
 
+// A resource: tick, the title as a link with ↗, and one quiet line with the note, the site and whether it's free.
+// No type icon: the list is already grouped by type.
 function ResourceRow({ ch, r, editing }: { ch: ChapterId; r: Resource; editing?: ItemEdit<Resource> }) {
   const tick = useTick()
-  const Icon = KIND_ICON[r.kind] ?? Link2
+  const words = r.title.split(' ')
+  const last = words.pop()
   return (
     <Row ch={ch} done={tick.on(r.id)}
       check={<Check on={tick.on(r.id)} label={r.title} onToggle={(v) => tick.set(r.id, v)} />}
-      title={r.url
-        ? <a href={r.url} target="_blank" rel="noopener" className="res-link"><Icon className="res-icon" aria-hidden="true" />{r.title}<ExternalLink className="size-(--icon-sm) opacity-60" aria-hidden="true" /></a>
-        : <span className="res-link"><Icon className="res-icon" aria-hidden="true" />{r.title}</span>}
-      sub={r.note || r.topic ? <>{r.note && <Linkify text={r.note} />}{r.note && r.topic ? ' · ' : ''}{r.topic && <span className="opacity-75">{r.topic}</span>}</> : undefined}
-      tag={editing
-        ? <RowEdit label={r.title} onEdit={() => editing.edit(r)} onDelete={() => editing.remove(r)} />
-        : r.free ? <Badge variant="outline">Free</Badge> : undefined}
+      // The last word and the ↗ never split, so the icon can't wrap onto a line of its own.
+      title={r.url ? <a href={r.url} target="_blank" rel="noopener" className="res-title">{words.length ? `${words.join(' ')} ` : ''}<span className="whitespace-nowrap">{last}<ExternalLink className="res-ext" aria-label="opens in a new tab" /></span></a> : r.title}
+      // The note on its own line, then where it lives and whether it's free.
+      sub={(r.note || r.url || r.free) ? (
+        <>
+          {r.note && <span className="block"><Linkify text={r.note} /></span>}
+          {(r.url || r.free) && <span className="res-meta">{r.url && <span className="res-host">{hostOf(r.url)}</span>}{r.free && <span className="res-free">Free</span>}</span>}
+        </>
+      ) : undefined}
+      tag={editing ? <RowEdit label={r.title} onEdit={() => editing.edit(r)} /> : undefined}
     />
   )
 }
@@ -135,22 +140,28 @@ export function ResourceGroups({ ch, resources, editing }: { ch: ChapterId; reso
   )
 }
 
-export function Checklists({ ch, lists, editing }: { ch: ChapterId; lists: Checklist[]; editing?: ItemEdit<Checklist> }) {
+// Skills as folds: intro and topics in order, each tickable. The skill you're on starts open, marked "now".
+export function SkillFolds({ ch, skills, current, itemsLabel = 'Topics, in order', editing }: {
+  ch: ChapterId; skills: Skill[]; current?: string; itemsLabel?: string; editing?: ItemEdit<Skill>
+}) {
   const tick = useTick()
   return (
     <div className="grid gap-3">
-      {lists.map((l) => {
-        const done = l.items.filter((i) => tick.on(i.id)).length
+      {skills.map((k) => {
+        const done = k.topics.filter((t) => tick.on(t.id)).length
         return (
-          <Fold key={l.id} ch={ch} title={l.title} meta={editing
+          <Fold key={k.id} ch={ch} open={k.id === current || undefined} title={k.id === current ? `${k.name}, now` : k.name} meta={editing
             // Controls inside the summary mustn't toggle the fold.
-            ? <span onClick={(e) => e.preventDefault()}><RowEdit label={l.title} onEdit={() => editing.edit(l)} onDelete={() => editing.remove(l)}
-                onUp={editing.move && (() => editing.move!(l, -1))} onDown={editing.move && (() => editing.move!(l, 1))} /></span>
-            : `${done}/${l.items.length}`}>
-            {l.items.map((it) => (
+            ? <span onClick={(e) => e.preventDefault()}><RowEdit label={k.name} onEdit={() => editing.edit(k)}
+                onUp={editing.move && (() => editing.move!(k, -1))} onDown={editing.move && (() => editing.move!(k, 1))} movable={!!editing.move} /></span>
+            : `${done}/${k.topics.length}`}>
+            {k.intro && <p className="fold-intro"><Linkify text={k.intro} /></p>}
+            {k.topics.length > 0 && <div className="list-label">{itemsLabel}</div>}
+            {k.topics.map((it) => (
               <Row key={it.id} ch={ch} done={tick.on(it.id)} title={<span className="font-normal"><Linkify text={it.text} /></span>}
                 check={<Check on={tick.on(it.id)} label={it.text} onToggle={(v) => tick.set(it.id, v)} />} />
             ))}
+            {!k.topics.length && <div className="empty">No topics yet.</div>}
           </Fold>
         )
       })}
@@ -167,7 +178,7 @@ export function ProjectCard({ ch, p, editing }: { ch: ChapterId; p: Project; edi
   const sv = state.projects[p.id] ?? 'todo'
   const [open, setOpen] = useState(hash === p.code)
   const ref = useRef<HTMLDivElement>(null)
-  const hasBody = !!(p.goal || p.steps?.length || p.done || p.trains || p.size)
+  const hasBody = !!(p.goal || p.steps?.length || p.done || p.trains?.length || p.size)
 
   // Arriving from a cross link (#T1) opens and reveals the card.
   useEffect(() => {
@@ -186,7 +197,7 @@ export function ProjectCard({ ch, p, editing }: { ch: ChapterId; p: Project; edi
           {hasBody && <ChevronDown className="chev" style={open ? { transform: 'rotate(180deg)' } : undefined} aria-hidden="true" />}
         </button>
         {editing
-          ? <RowEdit label={p.name} onEdit={() => editing.edit(p)} onDelete={() => editing.remove(p)}
+          ? <RowEdit label={p.name} onEdit={() => editing.edit(p)}
               onUp={editing.move && (() => editing.move!(p, -1))} onDown={editing.move && (() => editing.move!(p, 1))} />
           : <button className={`status ${sv}`} aria-label={`${p.name}: ${LABEL[sv]}. Change status`} onClick={(e) => {
               const nx = NEXT[sv]
@@ -203,8 +214,8 @@ export function ProjectCard({ ch, p, editing }: { ch: ChapterId; p: Project; edi
           {p.steps && p.steps.length > 0 && <ol>{p.steps.map((s, i) => <li key={i}><Linkify text={s} /></li>)}</ol>}
           <dl>
             {p.done && <><dt>Done when</dt><dd><Linkify text={p.done} /></dd></>}
-            {p.trains && <><dt>Trains</dt><dd>{p.trains}</dd></>}
-            {p.size && <><dt>Size</dt><dd>{p.size}</dd></>}
+            {p.trains?.length ? <><dt>Trains</dt><dd>{p.trains.join(', ')}</dd></> : null}
+            {p.size && <><dt>Size</dt><dd>{sizeLabel(p.size)}</dd></>}
           </dl>
         </div>
       )}

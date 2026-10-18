@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, createRootRoute, createRoute, createRouter, redirect, useLocation } from '@tanstack/react-router'
 import {
-  BookOpen, CalendarCheck, CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, HeartPulse, Lightbulb, Link2, ListChecks, Map as MapIcon, MoreHorizontal, NotebookPen,
+  CalendarCheck, CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, HeartPulse, ListChecks, Route as RouteIcon, MoreHorizontal, NotebookPen,
   Settings as SettingsIcon, type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { BarBack, BarMenu, BarProvider, useBar } from '@/components/bar'
 import { ChapterColors } from '@/components/kit'
 import { seedOps } from '@/data/seed'
 import { mountFx } from '@/fx/fx'
@@ -15,33 +16,28 @@ import { keyOf } from '@/lib/dates'
 import { todayItems } from '@/lib/derive'
 import { useStore } from '@/store/StoreProvider'
 import { ChapterIndex, Chapters } from '@/views/Chapters'
-import { Finds } from '@/views/Finds'
-import { Health } from '@/views/Health'
-import { Ideas } from '@/views/Ideas'
-import { Lists } from '@/views/Lists'
-import { Notes } from '@/views/Notes'
-import { Plan } from '@/views/Plan'
+import { Wellbeing } from '@/views/Wellbeing'
+import { ListPage, Lists } from '@/views/Lists'
+import { Notebook } from '@/views/Notebook'
 import { Settings } from '@/views/Settings'
 import { SignIn } from '@/views/SignIn'
 import { Today } from '@/views/Today'
 
-type Tab = { to: '/today' | '/plan' | '/chapters' | '/finds' | '/ideas' | '/lists' | '/notes' | '/health' | '/settings'; label: string; icon: LucideIcon }
+type Tab = { to: '/today' | '/tracks' | '/notebook' | '/lists' | '/wellbeing' | '/settings'; label: string; icon: LucideIcon }
 
-// Phones: MAIN in the bottom bar, MORE in its sheet. Settings sits in the header, so it's in neither.
+// Phones: MAIN in the bottom bar, MORE in its sheet.
 const MAIN: Tab[] = [
   { to: '/today', label: 'Today', icon: CalendarCheck },
-  { to: '/chapters', label: 'Chapters', icon: BookOpen },
-  { to: '/finds', label: 'Finds', icon: Link2 },
-  { to: '/notes', label: 'Notes', icon: NotebookPen },
+  { to: '/tracks', label: 'Tracks', icon: RouteIcon },
+  { to: '/notebook', label: 'Notebook', icon: NotebookPen },
+  { to: '/wellbeing', label: 'Wellbeing', icon: HeartPulse },
 ]
 const MORE: Tab[] = [
-  { to: '/plan', label: 'Plan', icon: MapIcon },
-  { to: '/ideas', label: 'Ideas', icon: Lightbulb },
   { to: '/lists', label: 'Lists', icon: ListChecks },
-  { to: '/health', label: 'Health', icon: HeartPulse },
+  { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
 // Wide screens show every view as a tab, in this order.
-const TABS = [MAIN[0], MORE[0], MAIN[1], MAIN[2], MORE[1], MORE[2], MAIN[3], MORE[3]]
+const TABS = [MAIN[0], MAIN[1], MAIN[2], MORE[0], MAIN[3], MORE[1]]
 
 function BottomNav() {
   const [more, setMore] = useState(false)
@@ -82,22 +78,40 @@ function SyncIcon({ sync, mode }: { sync: string; mode: string }) {
   )
 }
 
-// Fills a new (or pre-editable-content) account with the original roadmap, once.
+// Fills a new account with the starting roadmap, or replaces content from an older seed version.
+// Returns true while that is pending, so pages never render content in an old shape.
 function useSeed() {
   const { ready, state, dispatch } = useStore()
   const done = useRef(false)
+  const pending = ready && seedOps(state).length > 0
   useEffect(() => {
-    if (!ready || done.current) return
-    const ops = seedOps(state)
-    if (!ops.length) return
+    if (!pending || done.current) return
     done.current = true
-    dispatch({ type: 'batch', ops })
-  }, [ready, state, dispatch])
+    dispatch({ type: 'batch', ops: seedOps(state) })
+  }, [pending, state, dispatch])
+  return pending
+}
+
+// Top-level pages show the brand and sync state; inner pages show only their back link. The right side is the page's ⋯ menu.
+function TopBar({ sync, mode }: { sync: string; mode: string }) {
+  const bar = useBar()
+  return (
+    <header className="top">
+      <div className="flex min-w-0 items-center gap-2">
+        {bar?.back ? <BarBack {...bar.back} /> : <Link to="/today" className="brand text-foreground no-underline"><span className="brand-mark" aria-hidden="true" />Roadmap Log</Link>}
+        {!bar?.back && <SyncIcon sync={sync} mode={mode} />}
+      </div>
+      {/* Keeps the bar the same height on pages without a ⋯. */}
+      <div className="flex min-h-(--control-md) min-w-0 items-center gap-1">
+        <BarMenu bar={bar} />
+      </div>
+    </header>
+  )
 }
 
 function Shell() {
   const { mode, sync, ready, state } = useStore()
-  useSeed()
+  const seeding = useSeed()
   const fx = useRef<HTMLCanvasElement>(null)
   const stateRef = useRef(state)
   stateRef.current = state
@@ -118,7 +132,7 @@ function Shell() {
       startReminderLoop(() => {
         const s = stateRef.current
         const done = new Set(s.days[keyOf(new Date())]?.done ?? [])
-        return todayItems(s, new Date()).filter((i) => !done.has(i.id)).length
+        return todayItems(s, new Date()).filter((i) => !(i.done ?? done.has(i.id))).length
       }, () => keyOf(new Date())),
     [],
   )
@@ -129,22 +143,12 @@ function Shell() {
       <div className="wrap">
         {mode === 'signin' ? <SignIn /> : (
           <>
-            <header className="top">
-              <div className="flex min-w-0 items-center gap-2">
-                <Link to="/today" className="brand text-foreground no-underline"><span className="brand-mark" aria-hidden="true" />Roadmap Log</Link>
-                <SyncIcon sync={sync} mode={mode} />
-              </div>
-              <div className="flex min-w-0 items-center gap-2">
-                <Link to="/settings" aria-label="Settings" className="grid size-9 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground">
-                  <SettingsIcon className="size-(--icon-md)" />
-                </Link>
-              </div>
-            </header>
+            <TopBar sync={sync} mode={mode} />
             <nav className="tabs" aria-label="Views">
               {TABS.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="tab"><Icon aria-hidden="true" />{label}</Link>)}
             </nav>
             <ChapterColors chapters={state.chapters} />
-            <main>{ready ? <Outlet /> : <div className="empty">Loading your progress…</div>}</main>
+            <main>{ready && !seeding ? <Outlet /> : <div className="empty">Loading your progress…</div>}</main>
             <BottomNav />
           </>
         )}
@@ -154,20 +158,18 @@ function Shell() {
   )
 }
 
-const root = createRootRoute({ component: Shell })
+const root = createRootRoute({ component: () => <BarProvider><Shell /></BarProvider> })
 const page = (path: string, component: () => React.ReactNode) => createRoute({ getParentRoute: () => root, path, component })
 
 const routeTree = root.addChildren([
   createRoute({ getParentRoute: () => root, path: '/', beforeLoad: () => { throw redirect({ to: '/today' }) } }),
   page('/today', Today),
-  page('/plan', Plan),
-  page('/chapters', ChapterIndex),
-  page('/chapters/$ch', Chapters),
-  page('/ideas', Ideas),
-  page('/finds', Finds),
+  page('/tracks', ChapterIndex),
+  page('/tracks/$ch', Chapters),
+  page('/notebook', Notebook),
   page('/lists', Lists),
-  page('/notes', Notes),
-  page('/health', Health),
+  page('/lists/$id', ListPage),
+  page('/wellbeing', Wellbeing),
   page('/settings', Settings),
 ])
 

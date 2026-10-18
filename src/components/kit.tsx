@@ -1,14 +1,13 @@
 // The app's shared building blocks. Pages compose these instead of repeating markup;
 // their look comes from the tokens and patterns in src/index.css.
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
 import { Link, type LinkProps } from '@tanstack/react-router'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Search, X } from 'lucide-react'
 import type { Chapter, ChapterId } from '@/lib/types'
 import { burst } from '@/fx/fx'
 import { playTick, playUntick } from '@/fx/sound'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 // Rows read their colour from --c; each chapter's --c-<id> is set by <ChapterColors>.
 export const cvar = (ch: ChapterId | null | undefined): CSSProperties =>
@@ -60,13 +59,17 @@ export function Check({ on, label, onToggle }: { on: boolean; label: string; onT
   )
 }
 
-export function Row({ ch, done, check, title, sub, tag, children, style }: {
+// note: the user's own text under the sub line (a list item's note). tagInline: on phones the tag stays on the
+// title line instead of moving under it, for a small single control like a note button in a long list.
+export function Row({ ch, done, check, title, sub, note, tag, tagInline, children, style }: {
   ch?: ChapterId | null
   done?: boolean
   check?: ReactNode
   title: ReactNode
   sub?: ReactNode
+  note?: ReactNode
   tag?: ReactNode
+  tagInline?: boolean
   children?: ReactNode
   style?: CSSProperties
 }) {
@@ -82,11 +85,12 @@ export function Row({ ch, done, check, title, sub, tag, children, style }: {
     was.current = done
   }, [done])
   return (
-    <div ref={ref} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}`} style={{ ...(ch ? cvar(ch) : {}), ...style }}>
+    <div ref={ref} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}`} style={{ ...(ch ? cvar(ch) : {}), ...style }}>
       {check}
       <div className="row-body">
         <div className="row-title">{title}</div>
         {sub ? <div className="row-sub">{sub}</div> : null}
+        {note ? <div className="row-note">{note}</div> : null}
         {children}
       </div>
       <div className="row-tag">{tag}</div>
@@ -157,11 +161,20 @@ export function MoreText({ children, lines = 2 }: { children: ReactNode; lines?:
   )
 }
 
-export function Header({ title, lead, children }: { title: ReactNode; lead?: ReactNode; children?: ReactNode }) {
+// action: the whole title becomes a button with a small icon after it, e.g. opening the details form in edit mode
+// (pencil) or an About sheet (info). Same on every page that has one.
+export function Header({ title, lead, action, children }: {
+  title: ReactNode; lead?: ReactNode; children?: ReactNode
+  action?: { label: string; icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>; onClick: () => void }
+}) {
   return (
     <div className="day">
       <div>
-        <h1 className="day-date">{title}</h1>
+        <h1 className="day-date">
+          {action
+            ? <button type="button" className="title-btn" onClick={action.onClick} aria-label={action.label}>{title}<action.icon className="title-info" aria-hidden /></button>
+            : title}
+        </h1>
         {lead ? <div className="lead"><MoreText lines={3}>{lead}</MoreText></div> : null}
       </div>
       {children ? <div className="day-aside">{children}</div> : null}
@@ -170,7 +183,7 @@ export function Header({ title, lead, children }: { title: ReactNode; lead?: Rea
 }
 
 // Two-tap delete: the first tap arms it for 3 seconds.
-export function ConfirmButton({ label, armed, onConfirm, className = 'ml-auto', size = 'sm' }: { label: string; armed: string; onConfirm: () => void; className?: string; size?: 'sm' | 'default' }) {
+export function ConfirmButton({ label, armed, onConfirm, className = 'ml-auto' }: { label: string; armed: string; onConfirm: () => void; className?: string }) {
   const [arm, setArm] = useState(false)
   useEffect(() => {
     if (!arm) return
@@ -178,7 +191,7 @@ export function ConfirmButton({ label, armed, onConfirm, className = 'ml-auto', 
     return () => clearTimeout(t)
   }, [arm])
   return (
-    <Button variant={arm ? 'destructive' : 'outline'} size={size} className={className} onClick={() => (arm ? onConfirm() : setArm(true))}>
+    <Button variant={arm ? 'destructive' : 'outline'} className={className} onClick={() => (arm ? onConfirm() : setArm(true))}>
       {arm ? armed : label}
     </Button>
   )
@@ -194,6 +207,16 @@ export function useDebounced<T>(fn: (v: T) => void, ms = 800) {
     clearTimeout(t.current)
     t.current = setTimeout(() => f.current(v), ms)
   }
+}
+
+// A value that follows `v` once it stops changing for `ms`: search boxes query after typing pauses.
+export function useDebouncedValue<T>(v: T, ms = 300) {
+  const [out, setOut] = useState(v)
+  useEffect(() => {
+    const t = setTimeout(() => setOut(v), ms)
+    return () => clearTimeout(t)
+  }, [v, ms])
+  return out
 }
 
 export const empty = (text: string) => <div className="empty">{text}</div>
@@ -255,6 +278,12 @@ export const Stats = ({ items, ch }: { items: { value: ReactNode; label: ReactNo
   </div>
 )
 
+// A link to another page of the app inside text: project codes, track names. Coloured by `ch`, dashed underline.
+// Links that leave the app use an external-link icon instead.
+export const InnerLink = ({ ch, ...link }: { ch?: ChapterId | null } & LinkProps) => (
+  <Link {...link} className="inner-link" style={ch ? cvar(ch) : undefined} />
+)
+
 // A card that links to a page: chapters, skills.
 export const LinkCard = ({ ch, title, sub, ...link }: { ch?: ChapterId | null; title: ReactNode; sub?: ReactNode } & LinkProps) => (
   <Link {...link} className="link-card" style={ch ? cvar(ch) : undefined}>
@@ -263,22 +292,46 @@ export const LinkCard = ({ ch, title, sub, ...link }: { ch?: ChapterId | null; t
   </Link>
 )
 
+// A row of tabs that sticks under the app header while the page scrolls; scrolls sideways on phones.
+export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { id: T; label: string; count?: string | number }[] }) {
+  return (
+    <div className="seg-tabs" role="tablist">
+      {items.map((it) => (
+        <button key={it.id} type="button" role="tab" aria-selected={value === it.id} className="seg-tab" onClick={() => onChange(it.id)}>
+          {it.label}{it.count != null && <span className="count">{it.count}</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /* ---------- Chips ---------- */
 
 // A chapter's colour dot. Without ch it uses the surrounding --c.
 export const Dot = ({ ch }: { ch?: ChapterId | null }) => <span className="dot" style={ch ? cvar(ch) : undefined} aria-hidden="true" />
 
+// A row of chips. `scroll` keeps them on one line that scrolls sideways (filters); otherwise they wrap.
+// Chips that wrap onto more lines: tags, quick values, pickers inside cards and forms.
 export const Chips = ({ children, className }: { children: ReactNode; className?: string }) => (
   <div className={`chips${className ? ` ${className}` : ''}`}>{children}</div>
 )
 
+// A filter bar above a list: every option visible, wrapping onto more lines as needed.
+export const ChipsList = ({ children, label }: { children: ReactNode; label?: string }) => (
+  <div className="chips chips-list" role="group" aria-label={label}>{children}</div>
+)
+
 // A toggle pill for filters and pickers, with an optional count and chapter dot.
-export function Chip({ pressed, onClick, count, ch, children }: {
-  pressed?: boolean; onClick: () => void; count?: number | string; ch?: ChapterId | null; children: ReactNode
+// icon + tone: an icon in its own colour (a colour token like "--habit-gym") before the label. Use it wherever a
+// choice has its own icon and colour (tracker types, habit filters…), so they look the same everywhere.
+export function Chip({ pressed, onClick, count, ch, icon: Icon, tone, children }: {
+  pressed?: boolean; onClick: () => void; count?: number | string; ch?: ChapterId | null
+  icon?: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>; tone?: string; children: ReactNode
 }) {
+  const style = tone ? ({ '--c': `var(${tone})` } as CSSProperties) : ch ? cvar(ch) : undefined
   return (
-    <button type="button" className="chbtn" aria-pressed={pressed} onClick={onClick} style={ch ? cvar(ch) : undefined}>
-      {ch && <Dot />}{children}{count != null && <span className="count">{count}</span>}
+    <button type="button" className={`chbtn${tone ? ' toned' : ''}`} aria-pressed={pressed} onClick={onClick} style={style}>
+      {ch && !Icon && <Dot />}{Icon && <Icon className="chip-icon" aria-hidden />}{children}{count != null && <span className="count">{count}</span>}
     </button>
   )
 }
@@ -291,17 +344,57 @@ export const ChipLink = ({ ch, pressed, children, ...link }: { ch?: ChapterId | 
 )
 
 // A static pill for facts: "Day 1 of 548", "Q1", a chapter. With `to` it links somewhere.
-export function Badge({ ch, children, ...link }: { ch?: ChapterId | null; children: ReactNode } & Partial<LinkProps>) {
-  const inner = <>{ch && <Dot />}{children}</>
+// tint: tinted with the chapter colour (`ch`, or the surrounding --c) instead of a dot.
+// color: a colour token to tint with instead of a chapter's, e.g. "--slot-focus".
+export function Badge({ ch, tint, color, children, ...link }: { ch?: ChapterId | null; tint?: boolean; color?: string; children: ReactNode } & Partial<LinkProps>) {
+  const inner = <>{ch && !tint && !color && <Dot />}{children}</>
+  const cls = `chip${color || tint ? ' tint' : ''}`
+  const style = color ? ({ '--c': `var(${color})` } as CSSProperties) : ch ? cvar(ch) : undefined
   return link.to
-    ? <Link {...(link as LinkProps)} className="chip text-foreground no-underline" style={ch ? cvar(ch) : undefined}>{inner}</Link>
-    : <span className="chip" style={ch ? cvar(ch) : undefined}>{inner}</span>
+    ? <Link {...(link as LinkProps)} className={`${cls} text-foreground no-underline`} style={style}>{inner}</Link>
+    : <span className={cls} style={style}>{inner}</span>
+}
+
+// A round tinted badge holding only an icon; the label is its tooltip and accessible name. color: a colour token.
+export const IconBadge = ({ icon: Icon, label, color }: { icon: ComponentType<{ 'aria-hidden'?: boolean }>; label: string; color: string }) => (
+  <span className="chip tint icon-badge" role="img" aria-label={label} title={label} style={{ '--c': `var(${color})` } as CSSProperties}>
+    <Icon aria-hidden />
+  </span>
+)
+
+// One setting in a Panel: title and explanation on the left, its control on the right. Rows are divided by lines.
+export const SettingRow = ({ title, sub, children }: { title: ReactNode; sub?: ReactNode; children?: ReactNode }) => (
+  <div className="setting-row">
+    <div className="min-w-0"><div className="font-bold">{title}</div>{sub && <div className="text-small text-muted-foreground">{sub}</div>}</div>
+    {children}
+  </div>
+)
+
+// One choice out of a few, as a single bar split into equal segments (the theme, a view). Same look as WeekdaysField.
+export function Segmented<T extends string>({ value, onChange, options, label }: {
+  value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode }[]; label: string
+}) {
+  return (
+    <div className="segmented" role="radiogroup" aria-label={label} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+      {options.map((o) => (
+        <button key={o.value} type="button" role="radio" aria-checked={value === o.value} className="segment" onClick={() => onChange(o.value)}>{o.label}</button>
+      ))}
+    </div>
+  )
 }
 
 // A slim progress bar.
 export const Meter = ({ value, label }: { value: number; label: string }) => (
   <div className="meter" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)}>
     <i style={{ width: `${Math.min(1, Math.max(0, value)) * 100}%` }} />
+  </div>
+)
+
+// A Meter with its count beside it: "12 of 100 done".
+export const Progress = ({ n, total, label = 'done' }: { n: number; total: number; label?: string }) => (
+  <div className="progress-line">
+    <Meter value={total ? n / total : 0} label={`${n} of ${total} ${label}`} />
+    <span><b>{n}</b> of {total} {label}</span>
   </div>
 )
 
@@ -321,14 +414,15 @@ export function useDoneLastOnOpen<T>(items: T[], isDone: (t: T) => boolean, key:
 
 /* ---------- Inputs ---------- */
 
-export function SearchField({ value, onChange, placeholder, label = 'Search', className }: {
+// A compact search box: icon inside, no visible label (screen readers still get one), clear button once typed.
+export function SearchField({ value, onChange, placeholder = 'Search', label = 'Search', className }: {
   value: string; onChange: (v: string) => void; placeholder?: string; label?: string; className?: string
 }) {
-  const id = useId()
   return (
-    <div className={`field${className ? ` ${className}` : ''}`}>
-      <Label htmlFor={id}>{label}</Label>
-      <Input id={id} type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    <div className={`search${className ? ` ${className}` : ''}`}>
+      <Search className="search-icon" aria-hidden="true" />
+      <Input type="search" aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      {value && <button type="button" className="icon-btn search-clear" aria-label="Clear search" onClick={() => onChange('')}><X /></button>}
     </div>
   )
 }

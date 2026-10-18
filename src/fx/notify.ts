@@ -1,7 +1,8 @@
 // Daily reminder. Without a push server, the reminder fires from the open app (or the
-// installed PWA while it is alive): at the chosen time, if today's tasks aren't done.
+// installed PWA while it is alive): at 20:00, if today's tasks aren't done. Settings only switches it on or off.
 const KEY = 'roadmap-reminder'
 const SENT = 'roadmap-reminder-sent'
+const REMINDER_TIME = '20:00'
 
 export interface Reminder {
   enabled: boolean
@@ -12,9 +13,9 @@ export const supported = () => 'Notification' in window && 'serviceWorker' in na
 
 export function getReminder(): Reminder {
   try {
-    return { enabled: false, time: '20:00', ...JSON.parse(localStorage.getItem(KEY) || '{}') }
+    return { enabled: false, ...JSON.parse(localStorage.getItem(KEY) || '{}'), time: REMINDER_TIME }
   } catch {
-    return { enabled: false, time: '20:00' }
+    return { enabled: false, time: REMINDER_TIME }
   }
 }
 export const setReminder = (r: Reminder) => localStorage.setItem(KEY, JSON.stringify(r))

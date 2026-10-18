@@ -1,21 +1,33 @@
-import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { Flame } from 'lucide-react'
+import { useState, type CSSProperties } from 'react'
+import { usePageBar } from '@/components/bar'
+import { BookOpen, Crosshair, Feather, Flame, Gauge, Hammer, Pencil, Plus, RotateCcw, type LucideIcon } from 'lucide-react'
 import { describeWhen, nextPosition, uid } from '@/lib/content'
-import { addDays, fmtLong, fmtShort, keyOf } from '@/lib/dates'
-import { allTasks, dayProgress, isActive, programPos, quarterPlan, startDate, streak, todayItems, type DayItem } from '@/lib/derive'
-import type { Fill, Routine, When } from '@/lib/types'
+import { addDays, fmtLong, keyOf } from '@/lib/dates'
+import { dayProgress, streak, todayItems, type DayItem, type Slot } from '@/lib/derive'
+import type { Habit, Routine, When } from '@/lib/types'
+import { DONE, waterStats } from '@/lib/habits'
+import { reduce } from '@/store/reduce'
+import { HABIT_UI } from '@/components/habits'
 import { useStore } from '@/store/StoreProvider'
 import { celebrate, praise, toast } from '@/fx/fx'
-import { usePlanToggle } from './Plan'
 import { ChapterTag, Linkify } from '@/components/guide'
-import { Check, LinkButton, List, Meter, Row, Section, useDoneLastOnOpen } from '@/components/kit'
-import { FocusCard, WeekSlots, WeekStrip } from '@/components/program'
+import { Check, IconBadge, InnerLink, List, Meter, Row, Section, useDoneLastOnOpen } from '@/components/kit'
+import { FocusCard, WeekStrip } from '@/components/program'
 import {
   ChapterField, Fab, FormSheet, RowEdit, SelectField, SwitchField, TextField, WeekdaysField, fail, move, useSheet,
 } from '@/components/edit'
 
 type WhenKind = 'today' | When['kind']
+
+// Rows from the tracks: the badge's icon, label (its tooltip) and colour token.
+const SLOT: Record<Slot, [LucideIcon, string, string]> = {
+  focus: [Crosshair, 'Focus track', '--slot-focus'],
+  light: [Feather, 'Light track', '--slot-light'],
+  project: [Hammer, 'Project', '--slot-project'],
+  resource: [BookOpen, 'Resource', '--slot-resource'],
+  review: [RotateCcw, 'Review', '--slot-review'],
+  catchup: [Gauge, 'Catch up', '--slot-catchup'],
+}
 
 function RoutineSheet({ routine, open, onOpenChange }: { routine: Routine; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { state, dispatch } = useStore()
@@ -53,15 +65,7 @@ function RoutineSheet({ routine, open, onOpenChange }: { routine: Routine; open:
           { value: 'weekly', label: 'On days of the week' },
           { value: 'monthly', label: 'Every month' },
         ]} />
-        {r.fill ? (
-          <SelectField<Fill> label="Fills from the plan" value={r.fill} onChange={(fill) => set({ fill })} options={[
-            { value: 'focus', label: "Focus chapter's task" },
-            { value: 'light', label: 'Another chapter, rotating' },
-            { value: 'project', label: 'Quarter project' },
-          ]} />
-        ) : (
-          <ChapterField value={r.chapter} onChange={(chapter) => set({ chapter: chapter ?? 'own' })} />
-        )}
+        <ChapterField value={r.chapter} onChange={(chapter) => set({ chapter: chapter ?? 'own' })} />
         {kind === 'once' && <TextField label="Date" type="date" value={date} onChange={setDate} required />}
         {kind === 'monthly' && (
           <SelectField label="Day of month" value={monthDay} onChange={setMonthDay}
@@ -69,7 +73,7 @@ function RoutineSheet({ routine, open, onOpenChange }: { routine: Routine; open:
         )}
         {kind === 'weekly' && <WeekdaysField value={days} onChange={setDays} />}
       </div>
-      <SwitchField label="Counts for the streak" sub="A day counts when every streak task is ticked" checked={!!r.core} onChange={(core) => set({ core })} />
+      <SwitchField label="Counts for the streak" sub="A day counts when every streak task due that day is ticked" checked={!!r.core} onChange={(core) => set({ core })} />
     </FormSheet>
   )
 }
@@ -77,100 +81,117 @@ function RoutineSheet({ routine, open, onOpenChange }: { routine: Routine; open:
 export function Today() {
   const { state, dispatch } = useStore()
   const [edit, setEdit] = useState(false)
+  usePageBar({ actions: [{ label: 'Edit', icon: Pencil, onSelect: () => setEdit(true) }], done: edit ? () => setEdit(false) : undefined })
   const sheet = useSheet<Routine>()
   const today = new Date()
   const k = keyOf(today)
-  const pos = programPos(state, today)
-  const Q = quarterPlan(state, pos.q)
   const items = todayItems(state, today)
   const day = state.days[k] ?? { done: [] }
   const done = new Set(day.done)
-  const n = items.filter((i) => done.has(i.id)).length
+  const isDone = (it: DayItem) => it.done ?? done.has(it.id)
+  const n = items.filter(isDone).length
   // Past one-off tasks drop out of the editable list.
   const routines = [...state.routines].filter((r) => r.when.kind !== 'once' || r.when.date >= k).sort((a, b) => a.position - b.position)
 
   const toggleDay = (id: string, on: boolean) => {
     const next = { ...day, done: on ? [...day.done, id] : day.done.filter((x) => x !== id) }
-    if (id === 'smoke-free') next.smoke = on ? 'free' : null
     dispatch({ type: 'day', day: k, log: next })
-    if (!on) return
-    if (n + 1 === items.length) {
+    if (on) cheer({ ...state, days: { ...state.days, [k]: next } })
+  }
+
+  // A habit row's tick goes to the habit's log. Water's tick fills the day's target.
+  const toggleHabit = (h: Habit, on: boolean) => {
+    const value = on ? (h.type === 'water' ? waterStats(state, h, today).target : DONE) : null
+    dispatch({ type: 'habitLog', habit: h.id, day: k, value })
+    if (on) cheer(reduce(state, { type: 'habitLog', habit: h.id, day: k, value }))
+  }
+  const addGlass = (h: Habit) => {
+    const value = waterStats(state, h, today).today + 1
+    dispatch({ type: 'habitLog', habit: h.id, day: k, value })
+    toast(`${value} glass${value === 1 ? '' : 'es'} today.`)
+  }
+
+  // After a tick: confetti when the whole day is done, else a word of praise.
+  const cheer = (next: typeof state) => {
+    const p = dayProgress(next, today)
+    if (p.done === p.total) {
       setTimeout(celebrate, 250)
-      const s = streak({ ...state, days: { ...state.days, [k]: next } }, today)
+      const s = streak(next, today)
       toast(`Day complete. ${s}-day streak.`)
     } else toast(praise())
   }
 
-  const togglePlan = usePlanToggle()
-  const addTask = () => sheet.open({ id: uid(), position: nextPosition(state.routines), title: '', chapter: Q.focus ?? 'own', when: { kind: 'once', date: k }, created_at: new Date().toISOString() })
+  const addTask = () => sheet.open({ id: uid(), position: nextPosition(state.routines), title: '', chapter: 'own', when: { kind: 'once', date: k }, core: true, created_at: new Date().toISOString() })
   const reorder = (r: Routine, d: -1 | 1) => {
     const i = routines.findIndex((x) => x.id === r.id)
     const ys = move(routines, i, d)
     dispatch({ type: 'batch', ops: ys.flatMap((x, j) => (x.position === j ? [] : [{ type: 'putRoutine' as const, routine: { ...x, position: j } }])) })
   }
 
-  const monthTasks = allTasks(state).filter((t) => isActive(t, pos.m))
-  const month = today.toLocaleDateString('en-GB', { month: 'long' })
-  const shown = useDoneLastOnOpen(items, (it) => done.has(it.id), (it) => it.id)
-  const goals = useDoneLastOnOpen(monthTasks, (t) => !!state.plan[t.id], (t) => t.id)
+  const shown = useDoneLastOnOpen(items, isDone, (it) => it.id)
   const run = streak(state, today)
 
   const week = Array.from({ length: 7 }, (_, i) => addDays(today, i - ((today.getDay() + 6) % 7))).filter((d) => d <= today)
   const fullDays = week.filter((d) => { const p = dayProgress(state, d); return p.total > 0 && p.done === p.total }).length
-  const row = (it: DayItem) => (
-    <Row key={it.id} ch={it.ch} done={done.has(it.id)} title={it.title} sub={it.sub ? <Linkify text={it.sub} /> : undefined} tag={<ChapterTag ch={it.ch} />}
-      check={<Check on={done.has(it.id)} label={it.title} onToggle={(on) => toggleDay(it.id, on)} />}>
-    </Row>
-  )
+  const row = (it: DayItem) => {
+    const h = it.habit
+    const ui = h && HABIT_UI[h.type]
+    return (
+      <Row key={it.id} ch={it.ch} done={isDone(it)} style={ui ? ({ '--c': `var(${ui.color})` } as CSSProperties) : undefined}
+        title={it.slot ? <Linkify text={it.title} /> : it.title} sub={it.sub ? <Linkify text={it.sub} /> : undefined}
+        tag={<>
+          {it.slot && <IconBadge icon={SLOT[it.slot][0]} label={SLOT[it.slot][1]} color={SLOT[it.slot][2]} />}
+          {ui && <IconBadge icon={ui.icon} label={ui.label} color={ui.color} />}
+          {h?.type === 'water' && <button type="button" className="icon-btn" aria-label="Add a glass" onClick={() => addGlass(h)}><Plus aria-hidden="true" /></button>}
+          <ChapterTag ch={it.ch} />
+        </>}
+        check={<Check on={isDone(it)} label={it.title} onToggle={(on) => (h ? toggleHabit(h, on) : toggleDay(it.id, on))} />} />
+    )
+  }
 
   return (
     <>
       <header className="today-head">
         <div className="today-title">
           <h1 className="day-date">{fmtLong(today)}</h1>
-          <span className="muted"><b className="text-foreground">{n}</b> of {items.length} done</span>
+          {items.length > 0 && <span className="muted"><b className="text-foreground">{n}</b> of {items.length} done</span>}
         </div>
-        <Meter value={items.length ? n / items.length : 0} label={`${n} of ${items.length} done today`} />
-        {pos.before && (
-          <p className="today-context">
-            Your program starts on {fmtShort(startDate(state))}.{' '}
-            <LinkButton onClick={() => { dispatch({ type: 'settings', patch: { start_date: k } }); toast('Program started. Day 1.') }}>Start today instead</LinkButton>
-          </p>
-        )}
+        {items.length > 0 && <Meter value={n / items.length} label={`${n} of ${items.length} done today`} />}
       </header>
 
-      <Section title={edit ? 'Routines' : "Today's goals"} aside={<LinkButton onClick={() => setEdit(!edit)}>{edit ? 'Done editing' : 'Edit routines'}</LinkButton>}>
+      <Section title={edit ? 'Routines' : "Today's goals"} >
         {edit ? (
           <List empty="No routines yet. Add one with +.">
             {routines.map((r, i) => (
-              <Row key={r.id} ch={r.fill ? Q.focus : r.chapter} title={r.title} sub={`${describeWhen(r.when)}${r.core ? ', counts for the streak' : ''}${r.fill ? ', from the plan' : ''}`}
-                tag={<RowEdit label={r.title} onEdit={() => sheet.open(r)} onDelete={() => dispatch({ type: 'deleteRoutine', id: r.id })}
+              <Row key={r.id} ch={r.chapter} title={r.title} sub={`${describeWhen(r.when)}${r.core ? ', counts for the streak' : ''}`}
+                tag={<RowEdit label={r.title} onEdit={() => sheet.open(r)}
                   onUp={i > 0 ? () => reorder(r, -1) : undefined} onDown={i < routines.length - 1 ? () => reorder(r, 1) : undefined} />} />
             ))}
           </List>
         ) : (
-          <List empty={items.length ? undefined : 'Nothing planned today. Add a task with +.'}>{shown.map(row)}</List>
+          <List empty="Nothing planned today. Add a task with +.">{shown.filter((it) => !it.slot && !it.habit).map(row)}</List>
         )}
       </Section>
 
+      {!edit && shown.some((it) => it.habit) && (
+        <Section title="From your habits" aside={<InnerLink to="/wellbeing">Wellbeing</InnerLink>}>
+          <List>{shown.filter((it) => it.habit).map(row)}</List>
+        </Section>
+      )}
+
+      {!edit && shown.some((it) => it.slot) && (
+        <Section title="From your tracks" aside="Updates daily">
+          <List>{shown.filter((it) => it.slot).map(row)}</List>
+        </Section>
+      )}
+
       <Section title="This week" aside={<span className={`today-streak${run ? ' on' : ''}`}><Flame aria-hidden="true" />{run}-day streak, {fullDays} of {week.length} days complete</span>}>
-        <div className="grid gap-3">
-          <WeekStrip />
-          <WeekSlots />
-        </div>
+        <WeekStrip />
       </Section>
 
       <section><FocusCard /></section>
 
 
-      <Section title={`${month} goals`} aside={<Link to="/plan">Plan</Link>}>
-        <List empty="No goals for this month.">
-          {goals.map((t) => (
-            <Row key={t.id} ch={t.ch} done={!!state.plan[t.id]} title={<Linkify text={t.text} />} tag={<ChapterTag ch={t.ch} />}
-              check={<Check on={!!state.plan[t.id]} label={t.text} onToggle={(on) => togglePlan(t.id, on)} />} />
-          ))}
-        </List>
-      </Section>
 
       <Fab label="Add a task" onClick={addTask} />
       {sheet.value && <RoutineSheet key={sheet.value.id} {...sheet.props} routine={sheet.value} />}

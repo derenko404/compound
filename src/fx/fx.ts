@@ -72,6 +72,30 @@ export function burst(el: Element, count = 18) {
   if (!raf) raf = requestAnimationFrame(tick)
 }
 
+// "I'm the focus now!": the screen dims around the element, a targeting reticle snaps onto it,
+// and particles fly out in waves. Everything removes itself.
+export function lockOn(el: Element) {
+  if (reduced()) return
+  const r = el.getBoundingClientRect()
+  const color = colorOf(el)
+  const cx = r.left + r.width / 2
+  const cy = r.top + r.height / 2
+  const add = (cls: string, style: Partial<CSSStyleDeclaration>, html = '') => {
+    const d = document.createElement('div')
+    d.className = cls
+    d.innerHTML = html
+    Object.assign(d.style, style)
+    d.style.setProperty('--lock-c', color)
+    document.body.appendChild(d)
+    d.addEventListener('animationend', (e) => { if (e.target === d) d.remove() })
+    return d
+  }
+  const hole = `${Math.max(r.width, r.height) * 0.62}px`
+  add('lock-shade', { background: `radial-gradient(circle at ${cx}px ${cy}px, transparent ${hole}, rgb(0 0 0 / .6) calc(${hole} + 120px))` })
+  add('lock-reticle', { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` }, '<i></i><i></i><i></i><i></i>')
+  ;[0, 180, 360].forEach((t, i) => setTimeout(() => burst(el, 30 - i * 6), t))
+}
+
 export function celebrate() {
   playFanfare()
   if (reduced()) return

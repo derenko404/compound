@@ -1,22 +1,24 @@
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useState, type CSSProperties } from 'react'
+import { getRouteApi, useNavigate } from '@tanstack/react-router'
+import { NotebookPen, Pencil, Trash2 } from 'lucide-react'
+import { usePageBar } from '@/components/bar'
 import { byPosition, freshId, nextPosition, uid } from '@/lib/content'
-import type { ListDef, ListDefItem } from '@/lib/types'
+import type { ListDef, ListDefItem, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { celebrate, praise, toast } from '@/fx/fx'
-import { Banner, Check, Chip, Chips, Dial, Header, List, Row, SearchField, useDebounced } from '@/components/kit'
-import { EditToggle, FormSheet, PlusButton, RowEdit, TextField, fail, move, useSheet } from '@/components/edit'
+import { Check, Chip, ChipsList, Header, LinkCard, List, Progress, Row, SearchField } from '@/components/kit'
+import { AreaField, ConfirmSheet, FormSheet, PlusButton, RowEdit, TextField, fail, move, useSheet } from '@/components/edit'
 
 type Filter = 'all' | 'todo' | 'done'
 
-function ListSheet({ list, open, onOpenChange, onSaved }: { list: ListDef; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (id: string) => void }) {
+function ListSheet({ list, open, onOpenChange, onSaved, onDeleted }: { list: ListDef; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (id: string) => void; onDeleted?: () => void }) {
   const { state, dispatch } = useStore()
   const [l, setL] = useState(list)
   const isNew = !list.id
   return (
     <FormSheet open={open} onOpenChange={onOpenChange} title={isNew ? 'New list' : `Edit ${list.name}`} submit={isNew ? 'Create list' : 'Save'}
-      onDelete={isNew ? undefined : () => { dispatch({ type: 'deleteList', id: list.id }); toast('List deleted.') }}
+      onDelete={isNew ? undefined : () => { dispatch({ type: 'deleteList', id: list.id }); toast('List deleted.'); onDeleted?.() }}
+      confirmDelete={{ title: `Delete ${list.name}?`, description: "Its items, ticks and notes go with it. This can't be undone." }}
       onSubmit={() => {
         if (!l.name.trim()) return fail('Give the list a name first.')
         const id = l.id || freshId(l.name, state.lists.map((x) => x.id))
@@ -24,8 +26,8 @@ function ListSheet({ list, open, onOpenChange, onSaved }: { list: ListDef; open:
         onSaved(id)
       }}>
       <div className="grid2">
-        <TextField label="Short name" value={l.name} onChange={(name) => setL({ ...l, name })} placeholder="Books" required />
-        <TextField label="Second column" value={l.sub_label} onChange={(sub_label) => setL({ ...l, sub_label })} placeholder="Author" hint="Author, year, artist, country…" />
+        <TextField label="Short name" value={l.name} onChange={(name) => setL({ ...l, name })} placeholder="📚 Books" required />
+        <TextField label="Detail under each item" value={l.sub_label} onChange={(sub_label) => setL({ ...l, sub_label })} placeholder="Author" hint="Like the author for books, the year for films, the artist for songs" />
       </div>
       <TextField label="Title" value={l.title} onChange={(title) => setL({ ...l, title })} placeholder="100 books everyone should read" full />
     </FormSheet>
@@ -53,50 +55,80 @@ function ItemSheet({ list, item, open, onOpenChange }: { list: ListDef; item: Li
 
 const blankList = (lists: ListDef[]): ListDef => ({ id: '', position: nextPosition(lists), name: '', title: '', sub_label: '', items: [] })
 
-export function Lists() {
+const doneIn = (s: State, l: ListDef) => l.items.filter((i) => s.listProgress[l.id]?.[i.id]?.done_at).length
+
+// A note on one item: its own sheet, so rows stay one line tall.
+function NoteSheet({ list, item, open, onOpenChange }: { list: ListDef; item: ListDefItem; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { state, dispatch } = useStore()
+  const p = state.listProgress[list.id]?.[item.id] ?? {}
+  const [note, setNote] = useState(p.note ?? '')
+  return (
+    <FormSheet open={open} onOpenChange={onOpenChange} title={item.title} description={item.sub} submit="Save"
+      onSubmit={() => {
+        dispatch({ type: 'listItem', list: list.id, item: item.id, progress: { ...p, note: note.trim() || null } })
+        toast(note.trim() ? 'Note saved.' : 'Note removed.')
+      }}>
+      <AreaField label="Note" value={note} onChange={setNote} rows={4} placeholder="Thoughts, rating, when and where" />
+    </FormSheet>
+  )
+}
+
+/* ---------- All lists ---------- */
+
+export function Lists() {
+  const { state } = useStore()
+  const nav = useNavigate()
   const lists = byPosition(state.lists)
-  const [selId, setSel] = useState<string | null>(null)
+  const listSheet = useSheet<ListDef>()
+  return (
+    <>
+      <Header title="Lists" lead="Books to read, films to watch, places to go.">
+        <PlusButton label="New list" onClick={() => listSheet.open(blankList(lists))} />
+      </Header>
+      {lists.length ? (
+        <div className="card-grid" style={{ '--c': 'var(--primary)' } as CSSProperties}>
+          {lists.map((l) => {
+            const n = doneIn(state, l)
+            return (
+              <LinkCard key={l.id} to="/lists/$id" params={{ id: l.id }} title={l.name}
+                sub={<span className="grid gap-2"><span>{l.title}</span><Progress n={n} total={l.items.length} /></span>} />
+            )
+          })}
+        </div>
+      ) : <List empty="No lists yet. Start one with +." />}
+      {listSheet.value && <ListSheet key="new" {...listSheet.props} list={listSheet.value} onSaved={(id) => void nav({ to: '/lists/$id', params: { id } })} />}
+    </>
+  )
+}
+
+/* ---------- One list ---------- */
+
+const route = getRouteApi('/lists/$id')
+
+export function ListPage() {
+  const { id } = route.useParams()
+  const { state, dispatch } = useStore()
+  const nav = useNavigate()
+  const L = state.lists.find((l) => l.id === id)
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
   const [edit, setEdit] = useState(false)
-  const [openNotes, setOpenNotes] = useState<Set<string>>(new Set())
   const listSheet = useSheet<ListDef>()
   const itemSheet = useSheet<ListDefItem>()
-  const L = lists.find((l) => l.id === selId) ?? lists[0]
-  const progress = (id: string) => state.listProgress[id] ?? {}
-  const doneCount = (l: ListDef) => l.items.filter((i) => progress(l.id)[i.id]?.done_at).length
-  const saveNote = useDebounced(({ list, item, note }: { list: string; item: string; note: string }) => {
-    dispatch({ type: 'listItem', list, item, progress: { ...state.listProgress[list]?.[item], note: note.trim() ? note : null } })
+  const noteSheet = useSheet<ListDefItem>()
+  const [deleting, setDeleting] = useState(false)
+  usePageBar({
+    back: { to: '/lists', label: 'Lists' },
+    actions: L ? [
+      { label: 'Edit', icon: Pencil, onSelect: () => setEdit(true) },
+      { label: 'Delete list', icon: Trash2, onSelect: () => setDeleting(true), danger: true },
+    ] : [],
+    done: edit ? () => setEdit(false) : undefined,
   })
+  if (!L) return <List empty="This list no longer exists." />
 
-  const header = (
-    <Header title={L?.title ?? 'Lists'} lead="Tick what you've done and keep a note on each one. Edit any list, or start your own.">
-      <div className="flex items-center gap-2">
-        {L && <Dial n={doneCount(L)} total={L.items.length} sub={`of ${L.items.length}`} />}
-      </div>
-    </Header>
-  )
-  const sheets = (
-    <>
-      {listSheet.value && <ListSheet key={listSheet.value.id || 'new'} {...listSheet.props} list={listSheet.value} onSaved={setSel} />}
-      {itemSheet.value && L && <ItemSheet key={itemSheet.value.id} {...itemSheet.props} list={L} item={itemSheet.value} />}
-    </>
-  )
-
-  const chips = (
-    <Chips className="items-center">
-      {lists.map((l) => (
-        <Chip key={l.id} pressed={L?.id === l.id} onClick={() => { setSel(l.id); setQuery('') }} count={`${doneCount(l)}/${l.items.length}`}>{l.name}</Chip>
-      ))}
-      <PlusButton label="New list" onClick={() => listSheet.open(blankList(lists))} />
-    </Chips>
-  )
-
-  if (!L) return <>{header}{chips}<List empty="No lists yet. Start one with +." />{sheets}</>
-
-  const items = progress(L.id)
-  const n = doneCount(L)
+  const items = state.listProgress[L.id] ?? {}
+  const n = doneIn(state, L)
   const q = query.toLowerCase()
 
   const toggle = (item: string, on: boolean) => {
@@ -115,50 +147,47 @@ export function Lists() {
     if (!edit && ((filter === 'done' && !on) || (filter === 'todo' && on))) return null
     const note = p.note ?? ''
     if (q && !`${it.title} ${it.sub ?? ''} ${note}`.toLowerCase().includes(q)) return null
-    const key = L.id + it.id
-    const showNote = !edit && (!!note || openNotes.has(key))
     return (
-      <Row key={key} done={on} style={{ '--c': 'var(--primary)' } as React.CSSProperties}
+      <Row key={it.id} done={on} style={{ '--c': 'var(--primary)' } as CSSProperties}
         title={<><span className="font-normal tabular-nums text-muted-foreground">{idx + 1}.</span> {it.title}</>}
-        sub={it.sub}
+        sub={it.sub} note={note} tagInline
         check={<Check on={on} label={it.title} onToggle={(v) => toggle(it.id, v)} />}
         tag={edit
           ? <RowEdit label={it.title} onEdit={() => itemSheet.open(it)}
               onUp={idx > 0 ? () => dispatch({ type: 'putList', list: { ...L, items: move(L.items, idx, -1) } }) : undefined}
-              onDown={idx < L.items.length - 1 ? () => dispatch({ type: 'putList', list: { ...L, items: move(L.items, idx, 1) } }) : undefined}
-              onDelete={() => dispatch({ type: 'putList', list: { ...L, items: L.items.filter((x) => x.id !== it.id) } })} />
-          : showNote ? null : <Button variant="outline" size="sm" onClick={() => setOpenNotes(new Set(openNotes).add(key))}>Note</Button>}>
-        {showNote && (
-          <Input className="mt-2 bg-background" autoFocus={!note} defaultValue={note} aria-label={`Note for ${it.title}`}
-            placeholder="Your note: thoughts, rating, when and where" onChange={(e) => saveNote({ list: L.id, item: it.id, note: e.target.value })} />
-        )}
-      </Row>
+              onDown={idx < L.items.length - 1 ? () => dispatch({ type: 'putList', list: { ...L, items: move(L.items, idx, 1) } }) : undefined} />
+          : <button type="button" className={`icon-btn${note ? ' on' : ''}`} aria-label={note ? `Edit note for ${it.title}` : `Add a note to ${it.title}`} onClick={() => noteSheet.open(it)}>
+              <NotebookPen aria-hidden="true" />
+            </button>} />
     )
   }).filter(Boolean)
 
   return (
     <>
-      {header}
-      {chips}
-      <div className="actions mb-4 mt-0">
-        <SearchField className="flex-[1_1_220px]" value={query} onChange={setQuery} placeholder={`Title, ${(L.sub_label || 'details').toLowerCase()} or note`} />
-        <Chips className="m-0 self-end">
-          {!edit && (['all', 'todo', 'done'] as Filter[]).map((f) => (
+      <Header title={L.name} lead={L.title} action={edit ? { label: `Edit ${L.name}'s name and title`, icon: Pencil, onClick: () => listSheet.open(L) } : undefined}>
+        <PlusButton label={`Add to ${L.name}`} onClick={() => itemSheet.open({ id: uid(), title: '' })} />
+      </Header>
+      <div className="mb-4"><Progress n={n} total={L.items.length} /></div>
+      <SearchField value={query} onChange={setQuery} placeholder={`Search ${L.name.toLowerCase()}`} />
+      {!edit && (
+        <ChipsList label="Show">
+          {(['all', 'todo', 'done'] as Filter[]).map((f) => (
             <Chip key={f} pressed={filter === f} onClick={() => setFilter(f)}>{{ all: 'All', todo: 'Still to do', done: 'Done' }[f]}</Chip>
           ))}
-          <EditToggle on={edit} onChange={setEdit} />
-        </Chips>
-      </div>
-      {edit && (
-        <Banner actions={<>
-          <Chip onClick={() => listSheet.open(L)}>List name and title</Chip>
-          <PlusButton label="Add item" onClick={() => itemSheet.open({ id: uid(), title: '' })} />
-        </>}>
-          Editing {L.name}. Ticks and notes stay with each item.
-        </Banner>
+        </ChipsList>
       )}
-      <List empty={L.items.length ? 'Nothing here with this filter.' : 'This list is empty. Tap Edit, then + to add items.'}>{rows}</List>
-      {sheets}
+      <List empty={L.items.length ? 'Nothing here with this filter.' : 'This list is empty. Tap + to add items.'}>{rows}</List>
+      <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={`Delete ${L.name}?`}
+        description="Its items, ticks and notes go with it. This can't be undone."
+        onConfirm={() => {
+          dispatch({ type: 'deleteList', id: L.id })
+          toast(`${L.name} deleted.`)
+          void nav({ to: '/lists' })
+        }} />
+      {listSheet.value && <ListSheet key={listSheet.value.id} {...listSheet.props} list={listSheet.value} onSaved={() => {}}
+        onDeleted={() => void nav({ to: '/lists' })} />}
+      {itemSheet.value && <ItemSheet key={itemSheet.value.id} {...itemSheet.props} list={L} item={itemSheet.value} />}
+      {noteSheet.value && <NoteSheet key={noteSheet.value.id} {...noteSheet.props} list={L} item={noteSheet.value} />}
     </>
   )
 }

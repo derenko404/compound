@@ -1,57 +1,87 @@
-import { useState } from 'react'
-import { Link, getRouteApi, useNavigate } from '@tanstack/react-router'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { KIND_LABEL, chapterOf, chapters, monthRange, program } from '@/lib/content'
-import { programPos, quarterPlan, startDate } from '@/lib/derive'
-import { fmtStamp } from '@/lib/dates'
-import { hostOf, kindName } from '@/lib/finds'
-import type { Chapter, ChapterKind, Checklist, PlanTask, Project, Resource } from '@/lib/types'
-import { useStore } from '@/store/StoreProvider'
-import { Banner, Check, Chip, ChipLink, Chips, Entry, Header, LinkCard, List, Panel, Row, Section, Stats, empty, useDebounced } from '@/components/kit'
-import { EditToggle, PlusButton, RowEdit, move, useSheet } from '@/components/edit'
-import { Bullets, Checklists, Linkify, ProjectCard, ResourceGroups } from '@/components/guide'
-import { usePlanToggle } from './Plan'
+import { useRef, useState } from 'react'
+import { Link, getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
+import { Crosshair, Info, Pencil, Trash2 } from 'lucide-react'
+import { usePageBar } from '@/components/bar'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { RESOURCE_KINDS, chapterOf, chapters, program } from '@/lib/content'
+import { focusOf, monthName, targetFinish, nextUp, pace, trackProgress } from '@/lib/derive'
+import type { Chapter, Note, Project, Resource, ResourceKind, Skill } from '@/lib/types'
+import { useNoteCount, useNotes, useStore } from '@/store/StoreProvider'
+import { lockOn, toast } from '@/fx/fx'
+import { playFocus } from '@/fx/sound'
 import {
-  ChapterSheet, ChecklistSheet, ComponentsSheet, ProjectSheet, ResourceSheet, TaskSheet,
-  blankChecklist, blankProject, blankResource, blankTask, newChapter, useChapterSave,
+  Chip, ChipsList, Header, List, Meter, SearchField, Section, Tabs, cvar, empty,
+} from '@/components/kit'
+import { ConfirmSheet, PlusButton, move, useSheet } from '@/components/edit'
+import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/components/guide'
+import { NoteCard, NoteSheet, useLoadMore } from './Notebook'
+import {
+  ChapterSheet, SkillSheet, ProjectSheet, ResourceSheet,
+  blankSkill, blankProject, blankResource, newChapter, useChapterSave,
 } from './chapterForms'
-import { Trackers } from './Health'
 
-const route = getRouteApi('/chapters/$ch')
+const route = getRouteApi('/tracks/$ch')
 
 /* ---------- All chapters ---------- */
+
+// One track on the index: topics done, its focus quarters, and what's next.
+function ChapterCard({ c }: { c: Chapter }) {
+  const { state } = useStore()
+  const { done, total } = trackProgress(state, c)
+  const focus = focusOf(state) === c.id
+  const next = nextUp(state, c)
+  // Pace only when there is some: topics a week over the last 4 weeks, and when that finishes the track.
+  const { perWeek, left, finish } = pace(state, c, new Date())
+  const end = targetFinish(c)
+  const late = !!finish && !!end && finish > end
+  const paceLine = perWeek && left && finish
+    ? `${perWeek % 1 ? perWeek.toFixed(1) : perWeek} topics a week, done around ${finish.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}${late ? `, after your ${monthName(end!)} target` : ''}`
+    : null
+  return (
+    <Link to="/tracks/$ch" params={{ ch: c.id }} className={`chapter-card${focus ? ' is-focus' : ''}`} style={cvar(c.id)}>
+      <div className="chapter-card-head">
+        <span className="focus-name"><span className="dot" />{c.name}</span>
+        {/* One track is the focus (heavy): it gets the study sessions and the weekend project. Set from the track's ⋯ menu. */}
+        {focus && <span className="focus-badge"><Crosshair aria-hidden="true" />Focus</span>}
+      </div>
+      {total > 0 ? (
+        <>
+          <div className="chapter-card-progress"><Meter value={done / total} label={`${done} of ${total} topics`} /><span>{done} of {total}</span></div>
+          {next?.topic && <div className="chapter-card-now"><span className="focus-label">Next topic in {next.skill.name}</span>{next.topic.text}</div>}
+          {paceLine && <div className={`track-row-pace${late ? ' late' : ''}`}>{paceLine}</div>}
+        </>
+      ) : (
+        <div className="muted text-small">{c.skills.length} skills, {c.resources.length} resources</div>
+      )}
+    </Link>
+  )
+}
 
 export function ChapterIndex() {
   const { state } = useStore()
   const sheet = useSheet<Chapter>()
   const nav = useNavigate()
-  const groups: ChapterKind[] = ['learn', 'health', 'general']
-  const start = startDate(state)
+  // The focus track when the page opened leads. Switching focus during the visit moves nothing,
+  // like ticks with useDoneLastOnOpen; the next visit shows the new order.
+  const [lead] = useState(() => focusOf(state))
+  const roadmap = chapters(state, 'learn').sort((a, b) => Number(b.id === lead) - Number(a.id === lead))
+  // Personal, the default track, sits apart under Other.
+  const other = chapters(state, 'general')
 
   return (
     <>
-      <Header title="Chapters" lead="Each chapter holds its plan tasks, projects, resources, checklists and tips. Add your own or edit any of them.">
-        <PlusButton label="New chapter" onClick={() => sheet.open(newChapter('learn', state.chapters, program(state).months))} />
+      <Header title="Tracks" lead="Your roadmap, one track per skill area, all running in parallel.">
+        <PlusButton label="New track" onClick={() => sheet.open(newChapter('learn', state.chapters))} />
       </Header>
-      {groups.map((k) => {
-        const cs = chapters(state, k)
-        if (!cs.length) return null
-        return (
-          <Section key={k} title={k === 'learn' ? 'Roadmap' : KIND_LABEL[k]}>
-            <div className="card-grid">
-              {cs.map((c) => {
-                const done = c.tasks.filter((t) => state.plan[t.id]).length
-                return (
-                  <LinkCard key={c.id} to="/chapters/$ch" params={{ ch: c.id }} ch={c.id} title={c.name}
-                    sub={c.kind === 'learn' ? `${monthRange(start, c.start, c.start + c.months - 1)} · ${done}/${c.tasks.length} tasks` : `${c.resources.length} resources · ${c.checklists.length} checklists`} />
-                )
-              })}
-            </div>
-          </Section>
-        )
-      })}
-      {sheet.value && <ChapterSheet {...sheet.props} chapter={sheet.value} onSaved={(c) => nav({ to: '/chapters/$ch', params: { ch: c.id } })} />}
+      <Section title="Your tracks">
+        <div className="card-grid">{roadmap.map((c) => <ChapterCard key={c.id} c={c} />)}</div>
+      </Section>
+      {other.length > 0 && (
+        <Section title="Other">
+          <div className="card-grid">{other.map((c) => <ChapterCard key={c.id} c={c} />)}</div>
+        </Section>
+      )}
+      {sheet.value && <ChapterSheet {...sheet.props} chapter={sheet.value} onSaved={(c) => nav({ to: '/tracks/$ch', params: { ch: c.id } })} />}
     </>
   )
 }
@@ -62,162 +92,205 @@ export function Chapters() {
   const { ch } = route.useParams()
   const { state } = useStore()
   const c = chapterOf(state, ch)
-  if (!c) return empty('This chapter no longer exists.')
+  if (!c) return empty('This track no longer exists.')
   return <ChapterPage key={c.id} c={c} />
 }
 
 type Editing =
-  | { kind: 'chapter' } | { kind: 'components' }
-  | { kind: 'task'; v: PlanTask } | { kind: 'project'; v: Project } | { kind: 'resource'; v: Resource } | { kind: 'checklist'; v: Checklist }
+  | { kind: 'chapter' }
+  | { kind: 'project'; v: Project } | { kind: 'resource'; v: Resource } | { kind: 'skill'; v: Skill }
 
+// Read-only: what the track is about, where it leads, and the skills it builds.
+function AboutSheet({ c, open, onOpenChange }: { c: Chapter; open: boolean; onOpenChange: (o: boolean) => void }) {
+  const target = targetFinish(c)
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sheet-wide" style={cvar(c.id)}>
+        <DialogTitle>{c.name}</DialogTitle>
+        <DialogDescription className="sr-only">About {c.name}</DialogDescription>
+        <div className="grid gap-5 pb-2">
+          {c.description && <div className="about-text"><Linkify text={c.description} /></div>}
+          {c.outcomes.length > 0 && (
+            <div className="grid gap-2">
+              <h3 className="text-title font-bold">{target ? `Where you'll be by ${monthName(target)}` : 'Goals'}</h3>
+              <Bullets items={c.outcomes} />
+            </div>
+          )}
+          {!c.description && !c.outcomes.length && <p className="muted">Nothing here yet. Tap Edit, then the pencil by the name.</p>}
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// The track's notebook entries, loaded 10 at a time like the Notebook page.
+function TrackNotes({ ch, onOpen }: { ch: string; onOpen: (n: Note) => void }) {
+  const notes = useNotes({ chapter: ch })
+  const items = notes.data?.pages.flat() ?? []
+  const more = useLoadMore(notes)
+  return (
+    <>
+      <List empty={notes.isPending ? 'Loading…' : 'Nothing here yet. Add notes, ideas and links with +, or send them to your Telegram bot.'}>
+        {items.map((n) => <NoteCard key={n.id} n={n} showTrack={false} onOpen={() => onOpen(n)} />)}
+      </List>
+      {notes.hasNextPage && <div ref={more} className="empty">{notes.isFetchingNextPage ? 'Loading more…' : ''}</div>}
+    </>
+  )
+}
+
+type Tab = 'learn' | 'resources' | 'projects' | 'notes'
+
+// A track's page.
 function ChapterPage({ c }: { c: Chapter }) {
   const { state, dispatch } = useStore()
   const save = useChapterSave()
-  const toggle = usePlanToggle()
-  // A fresh chapter opens in edit mode, ready to fill.
-  const [edit, setEdit] = useState(!c.tasks.length && !c.projects.length && !c.resources.length && !c.checklists.length)
+  const nav = useNavigate()
+  const [deleting, setDeleting] = useState(false)
+  const { hash } = useLocation()
+  const empty0 = !c.projects.length && !c.resources.length && !c.skills.length
+  // A fresh chapter opens in edit mode, ready to fill. A link to a project (#T1) opens the Projects tab.
+  const [edit, setEdit] = useState(empty0)
+  const [tab, setTab] = useState<Tab>(c.projects.some((p) => p.code && p.code === hash) ? 'projects' : 'learn')
   const sheet = useSheet<Editing>()
-  const [noteState, setNoteState] = useState('Saves as you type')
-  const pos = programPos(state, new Date())
-  const start = startDate(state)
-  const done = c.tasks.filter((t) => state.plan[t.id]).length
-  const resDone = c.resources.filter((r) => state.plan[r.id]).length
-  const focusQs = program(state).quarters.map((_, i) => i + 1).filter((q) => quarterPlan(state, q).focus === c.id).map((q) => `Q${q}`)
-  const finds = state.bookmarks.filter((b) => b.chapter === c.id)
-  const notes = state.notes.filter((n) => n.chapter === c.id)
-  const saveNote = useDebounced((body: string) => {
-    dispatch({ type: 'chapterNote', chapter: c.id, body })
-    setNoteState('Saved')
-  })
-  const plus = (label: string, e: Editing) => (edit ? <PlusButton label={label} onClick={() => sheet.open(e)} /> : undefined)
-  const moveIn = <K extends 'projects' | 'checklists'>(key: K) => (item: Chapter[K][number], d: -1 | 1) => {
+  const [noting, setNoting] = useState<{ note?: Note } | null>(null)
+  const [about, setAbout] = useState(false)
+  const { done, total } = trackProgress(state, c)
+  const next = nextUp(state, c)
+  const active = c.projects.filter((p) => state.projects[p.id] === 'doing')
+  const [query, setQuery] = useState('')
+  const [kind, setKind] = useState<ResourceKind | null>(null)
+  const q = query.trim().toLowerCase()
+  const resources = c.resources.filter((r) => (!kind || r.kind === kind) && (!q || `${r.title} ${r.note ?? ''}`.toLowerCase().includes(q)))
+  const kindCount = (k: ResourceKind) => c.resources.filter((r) => r.kind === k).length
+  const kinds = RESOURCE_KINDS.filter((k) => kindCount(k.id)).sort((a, b) => kindCount(b.id) - kindCount(a.id))
+  // In edit mode every list shows its + and the rows show their controls.
+  const listActions = (label: string, e: Editing, idle?: React.ReactNode) => (edit ? <PlusButton label={label} onClick={() => sheet.open(e)} /> : idle)
+  const moveIn = <K extends 'projects' | 'skills'>(key: K) => (item: Chapter[K][number], d: -1 | 1) => {
     const xs = c[key] as { id: string }[]
     save({ ...c, [key]: move(xs, xs.findIndex((x) => x.id === item.id), d) })
   }
-  const removeFrom = <K extends 'projects' | 'resources' | 'checklists'>(key: K) => (item: { id: string }) =>
-    save({ ...c, [key]: (c[key] as { id: string }[]).filter((x) => x.id !== item.id) })
+
+  const noteCount = useNoteCount({ chapter: c.id })
+  const tabs: { id: Tab; label: string; count?: string | number; show: boolean }[] = [
+    { id: 'learn', label: 'Skills', count: total ? `${done}/${total}` : c.skills.length || undefined, show: true },
+    { id: 'resources', label: 'Resources', count: c.resources.length || undefined, show: true },
+    { id: 'projects', label: 'Projects', count: c.projects.length || undefined, show: true },
+    { id: 'notes', label: 'Notebook', count: noteCount || undefined, show: true },
+  ]
+
+  // The focus (heavy) track gets the study sessions and the weekend project. Choosing it locks on with a sound and animation.
+  const isFocus = focusOf(state) === c.id
+  const head = useRef<HTMLDivElement>(null)
+  const [pop, setPop] = useState(false)
+  const makeFocus = () => {
+    dispatch({ type: 'settings', patch: { program: { ...program(state), focus: c.id } } })
+    playFocus()
+    setPop(true)
+    if (head.current) lockOn(head.current)
+    toast(`${c.name} is now the focus.`)
+  }
+
+  usePageBar({
+    back: { to: '/tracks', label: 'Tracks' },
+    actions: [
+      { label: 'Edit', icon: Pencil, onSelect: () => setEdit(true) },
+      // Personal is the built-in default track (new notes and routines go there), so it can't be deleted.
+      ...(c.kind === 'general' ? [] : [{ label: 'Delete track', icon: Trash2, onSelect: () => setDeleting(true), danger: true }]),
+    ],
+    done: edit ? () => setEdit(false) : undefined,
+  })
 
   return (
     <>
-      <Header title={c.name} lead={c.description ? <Linkify text={c.description} /> : undefined}>
-        <EditToggle on={edit} onChange={setEdit} />
+      <div ref={head} className={`track-head${pop ? ' focus-pop' : ''}`} style={cvar(c.id)} onAnimationEnd={(e) => e.target === e.currentTarget && setPop(false)}>
+      {/* The name opens About; in edit mode it opens the details form. */}
+      <Header title={<><span className="dot title-dot" />{c.name}</>}
+        action={edit
+          ? { label: `Edit ${c.name}'s details`, icon: Pencil, onClick: () => sheet.open({ kind: 'chapter' }) }
+          : { label: `About ${c.name}`, icon: Info, onClick: () => setAbout(true) }}>
+        {/* Right of the title: the Focus badge, or a button to make this the focus track. */}
+        {c.kind === 'learn' && (isFocus
+          ? <span className="focus-badge"><Crosshair aria-hidden="true" />Focus</span>
+          : <button type="button" className="focus-set" onClick={makeFocus}><Crosshair aria-hidden="true" />Set focus</button>)}
       </Header>
-      <Chips>
-        <ChipLink to="/chapters">All</ChipLink>
-        {chapters(state, c.kind).map((x) => (
-          <ChipLink key={x.id} to="/chapters/$ch" params={{ ch: x.id }} ch={x.id} pressed={x.id === c.id}>{x.name}</ChipLink>
-        ))}
-      </Chips>
 
-      {edit && (
-        <Banner ch={c.id} actions={<>
-          <Chip onClick={() => sheet.open({ kind: 'chapter' })}>Name, dates, outcomes, tips</Chip>
-          <Chip onClick={() => sheet.open({ kind: 'components' })}>Trackers</Chip>
-        </>}>
-          Editing. Use + to add, the pencil to change, the bin to remove.
-        </Banner>
+      {total > 0 && (
+        <div className="chapter-progress" style={cvar(c.id)}>
+          <Meter value={done / total} label={`${done} of ${total} topics done`} />
+          <span className="muted text-small">
+            {done} of {total} topics{next ? `, skill ${next.index + 1} of ${c.skills.length}` : ', all done'}
+          </span>
+        </div>
+      )}
+      </div>
+      {active.length > 0 && (
+        <button type="button" className="active-project" style={cvar(c.id)} onClick={() => setTab('projects')}>
+          <span className="muted">In progress:</span> <span className="project-code">{active[0].code}</span> <b>{active[0].name}</b>
+          {active.length > 1 && <span className="muted"> and {active.length - 1} more</span>}
+        </button>
       )}
 
-      <Stats ch={c.id} items={[
-        { value: `${done}/${c.tasks.length}`, label: 'plan tasks' },
-        { value: `${resDone}/${c.resources.length}`, label: 'resources' },
-        { value: focusQs.length ? focusQs.join(', ') : monthRange(start, c.start, c.start + c.months - 1), label: focusQs.length ? 'focus quarters' : 'runs' },
-      ]} />
 
-      {c.components && Object.keys(c.components).length > 0 && <Section title="Trackers"><Trackers c={c} /></Section>}
+      <Tabs value={tab} onChange={setTab} items={tabs.filter((t) => t.show)} />
 
-      {c.outcomes.length > 0 && (
-        <Section title={`Where you'll be in ${c.months} month${c.months === 1 ? '' : 's'}`}>
-          <Panel ch={c.id}><Bullets items={c.outcomes} /></Panel>
-        </Section>
-      )}
-
-      {(c.tasks.length > 0 || edit) && (
-        <Section title="Plan tasks" aside={plus('New plan task', { kind: 'task', v: blankTask(Math.max(c.start, pos.m)) }) ?? <Link to="/plan">See the plan</Link>}>
-          <List empty="No tasks yet. Add one with +.">
-            {c.tasks.map((t) => (
-              <Row key={t.id} ch={c.id} done={!!state.plan[t.id]} title={<Linkify text={t.text} />}
-                tag={edit
-                  ? <RowEdit label="task" onEdit={() => sheet.open({ kind: 'task', v: t })} onDelete={() => save({ ...c, tasks: c.tasks.filter((x) => x.id !== t.id) })} />
-                  : monthRange(start, t.from, t.to)}
-                check={<Check on={!!state.plan[t.id]} label={t.text} onToggle={(on) => toggle(t.id, on)} />} />
-            ))}
-          </List>
-        </Section>
-      )}
-
-      {(c.projects.length > 0 || edit) && (
-        <Section title="Projects" aside={plus('New project', { kind: 'project', v: blankProject() }) ?? 'Tap a project for details'}>
+      {tab === 'projects' && (
+        <Section title="Projects" aside={listActions('New project', { kind: 'project', v: blankProject() })}>
           <List empty="No projects yet.">
             {c.projects.map((p) => (
               <ProjectCard key={p.id} ch={c.id} p={p}
-                editing={edit ? { edit: (v) => sheet.open({ kind: 'project', v }), remove: removeFrom('projects'), move: moveIn('projects') } : undefined} />
+                editing={edit ? { edit: (v) => sheet.open({ kind: 'project', v }), move: moveIn('projects') } : undefined} />
             ))}
           </List>
         </Section>
       )}
 
-      {(c.resources.length > 0 || edit) && (
-        <Section title="Resources" aside={plus('New resource', { kind: 'resource', v: blankResource() }) ?? "Tick what you've finished"}>
-          {c.resources.length
-            ? <ResourceGroups ch={c.id} resources={c.resources} editing={edit ? { edit: (v) => sheet.open({ kind: 'resource', v }), remove: removeFrom('resources') } : undefined} />
-            : <List empty="No resources yet." />}
+      {tab === 'learn' && (
+        <Section title="Skills" aside={listActions('New skill', { kind: 'skill', v: blankSkill() })}>
+          {c.skills.length
+            ? <SkillFolds ch={c.id} skills={c.skills} current={next?.skill.id} itemsLabel="Topics, in order"
+                editing={edit ? { edit: (v) => sheet.open({ kind: 'skill', v }), move: moveIn('skills') } : undefined} />
+            : <List empty="No skills yet. Tap Edit, then + to add one." />}
         </Section>
       )}
 
-      {(c.checklists.length > 0 || edit) && (
-        <Section title="Checklists" aside={plus('New checklist', { kind: 'checklist', v: blankChecklist() })}>
-          {c.checklists.length
-            ? <Checklists ch={c.id} lists={c.checklists} editing={edit ? { edit: (v) => sheet.open({ kind: 'checklist', v }), remove: removeFrom('checklists'), move: moveIn('checklists') } : undefined} />
-            : <List empty="No checklists yet." />}
+      {tab === 'resources' && (
+        <Section title="Resources" aside={listActions('New resource', { kind: 'resource', v: blankResource() })}>
+          {c.resources.length > 3 && (
+            <>
+              <SearchField value={query} onChange={setQuery} placeholder="Search by title or note" />
+              {kinds.length > 1 && (
+                <ChipsList label="Resource type">
+                  <Chip pressed={!kind} onClick={() => setKind(null)} count={c.resources.length}>All</Chip>
+                  {kinds.map((k) => <Chip key={k.id} pressed={kind === k.id} onClick={() => setKind(k.id)} count={kindCount(k.id)}>{k.label}</Chip>)}
+                </ChipsList>
+              )}
+            </>
+          )}
+          {resources.length
+            ? <ResourceGroups ch={c.id} resources={resources} editing={edit ? { edit: (v) => sheet.open({ kind: 'resource', v }) } : undefined} />
+            : <List empty={c.resources.length ? 'Nothing matches.' : 'No resources yet.'} />}
         </Section>
       )}
 
-      {c.tips.length > 0 && (
-        <Section title="Tips">
-          <Panel ch={c.id}><Bullets items={c.tips} /></Panel>
+      {tab === 'notes' && (
+        <Section title="Notebook" aside={<PlusButton label="New note" onClick={() => setNoting({})} />}>
+          <TrackNotes ch={c.id} onOpen={(n) => setNoting({ note: n })} />
         </Section>
       )}
 
-      <Section title="Chapter notes" aside={noteState}>
-        <Panel>
-          <div className="field">
-            <Label htmlFor={`cnote-${c.id}`}>What you learned, links, ideas</Label>
-            <Textarea id={`cnote-${c.id}`} rows={6} defaultValue={state.chapterNotes[c.id] ?? ''} onChange={(e) => {
-              setNoteState('Typing…')
-              saveNote(e.target.value)
-            }} />
-          </div>
-        </Panel>
-      </Section>
-
-      {notes.length > 0 && (
-        <Section title="Notes" aside={<Link to="/notes">All notes</Link>}>
-          <List>
-            {notes.map((n) => (
-              <Entry key={n.id} ch={c.id} meta={fmtStamp(n.created_at)}><div className="note-text">{n.body}</div></Entry>
-            ))}
-          </List>
-        </Section>
-      )}
-
-      {finds.length > 0 && (
-        <Section title="Your finds" aside={<Link to="/finds">All finds</Link>}>
-          <List>
-            {finds.map((b) => (
-              <Row key={b.id} ch={c.id} title={<a href={b.url} target="_blank" rel="noreferrer" className="text-foreground">{b.title || hostOf(b.url)}</a>}
-                sub={b.note || b.tags.map((t) => `#${t}`).join(' ') || undefined} tag={`${kindName(b.kind)} · ${hostOf(b.url)}`} />
-            ))}
-          </List>
-        </Section>
-      )}
-
+      <AboutSheet c={c} open={about} onOpenChange={setAbout} />
+      <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={`Delete ${c.name}?`}
+        description={`Its skills, resources and projects go with it. Notes filed under it stay in your notebook. This can't be undone.`}
+        onConfirm={() => {
+          dispatch({ type: 'deleteChapter', id: c.id })
+          toast(`${c.name} deleted.`)
+          void nav({ to: '/tracks' })
+        }} />
+      {noting && <NoteSheet open onOpenChange={(o) => !o && setNoting(null)} note={noting.note} chapter={c.id} />}
       {sheet.value?.kind === 'chapter' && <ChapterSheet {...sheet.props} chapter={c} />}
-      {sheet.value?.kind === 'components' && <ComponentsSheet {...sheet.props} chapter={c} />}
-      {sheet.value?.kind === 'task' && <TaskSheet {...sheet.props} chapter={c} task={sheet.value.v} />}
-      {sheet.value?.kind === 'project' && <ProjectSheet {...sheet.props} chapter={c} project={sheet.value.v} />}
+            {sheet.value?.kind === 'project' && <ProjectSheet {...sheet.props} chapter={c} project={sheet.value.v} />}
       {sheet.value?.kind === 'resource' && <ResourceSheet {...sheet.props} chapter={c} resource={sheet.value.v} />}
-      {sheet.value?.kind === 'checklist' && <ChecklistSheet {...sheet.props} chapter={c} list={sheet.value.v} />}
+      {sheet.value?.kind === 'skill' && <SkillSheet {...sheet.props} chapter={c} skill={sheet.value.v} />}
     </>
   )
 }

@@ -1,15 +1,14 @@
 // Building blocks for editing content: form sheets, fields, pickers and row controls.
-import { useId, useState, type ReactNode } from 'react'
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { ArrowDown, ArrowUp, CornerDownLeft, Pencil, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { PALETTE, WEEKDAYS_SHORT, chapters, monthLabel, uid } from '@/lib/content'
-import { startDate } from '@/lib/derive'
+import { PALETTE, WEEKDAYS_SHORT, chapters, uid } from '@/lib/content'
 import type { ChapterId, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { toast } from '@/fx/fx'
@@ -17,7 +16,26 @@ import { Chip, Chips, ConfirmButton, Dot } from './kit'
 
 /* ---------- Sheet with a form ---------- */
 
-export function FormSheet({ open, onOpenChange, title, description, children, onSubmit, submit = 'Save', onDelete, wide }: {
+// "Delete X?" with what it removes. Opens as a small dialog; Delete is red and on the right.
+export function ConfirmSheet({ open, onOpenChange, title, description, confirm = 'Delete', onConfirm }: {
+  open: boolean; onOpenChange: (o: boolean) => void; title: string; description: string; confirm?: string; onConfirm: () => void
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="confirm-sheet">
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription>{description}</DialogDescription>
+        <div className="actions confirm-actions">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button type="button" variant="destructive" onClick={() => { onConfirm(); onOpenChange(false) }}>{confirm}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// confirmDelete: for things that are hard to lose (a note, a track), Delete asks in a dialog instead of a second tap.
+export function FormSheet({ open, onOpenChange, title, description, children, onSubmit, submit = 'Save', onDelete, confirmDelete, wide }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
@@ -26,9 +44,14 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
   onSubmit: () => boolean | void // return false to keep the sheet open
   submit?: string
   onDelete?: () => void
+  confirmDelete?: { title: string; description: string }
   wide?: boolean
 }) {
   const formId = useId()
+  const [asking, setAsking] = useState(false)
+  const del = (className: string, armed: string) => confirmDelete
+    ? <Button type="button" variant="outline" className={`${className} text-destructive`} onClick={() => setAsking(true)}>Delete</Button>
+    : <ConfirmButton className={className} label="Delete" armed={armed} onConfirm={() => { onDelete!(); onOpenChange(false) }} />
   const cancel = <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,13 +69,16 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
         >
           {children}
           {/* Delete: a full-width row at the end of the form on phones, the footer's far left on desktop. */}
-          {onDelete && <ConfirmButton className="sheet-delete sheet-delete-row" size="default" label="Delete" armed="Tap again to delete" onConfirm={() => { onDelete(); onOpenChange(false) }} />}
+          {onDelete && del('sheet-delete sheet-delete-row', 'Tap again to delete')}
           <div className="actions sheet-foot">
-            {onDelete && <ConfirmButton className="sheet-delete" size="default" label="Delete" armed="Click again to delete" onConfirm={() => { onDelete(); onOpenChange(false) }} />}
+            {onDelete && del('sheet-delete', 'Click again to delete')}
             {cancel}
             <Button type="submit">{submit}</Button>
           </div>
         </form>
+        {confirmDelete && onDelete && (
+          <ConfirmSheet open={asking} onOpenChange={setAsking} {...confirmDelete} onConfirm={() => { onDelete(); onOpenChange(false) }} />
+        )}
       </DialogContent>
     </Dialog>
   )
@@ -122,9 +148,59 @@ export const SwitchField = ({ label, sub, checked, onChange }: { label: string; 
 )
 
 // One item per line. Used for outcomes, tips, skills, steps and checklist items.
-export const LinesField = ({ label, value, onChange, hint, rows = 5 }: { label: string; value: string[]; onChange: (v: string[]) => void; hint?: string; rows?: number }) => (
-  <AreaField label={label} hint={hint ?? 'One per line'} rows={rows} value={value.join('\n')} onChange={(v) => onChange(v.split('\n'))} />
-)
+// A list of short texts (outcomes, tips, steps, checklist items): type one, press Enter or ↵, and it drops below as its
+// own entry. Tap an entry to edit it again, × to remove it. Pasting several lines adds each as an entry.
+// quick: common entries offered as one-tap chips under the field until added. Nothing is added by default.
+export function LinesField({ label, value, onChange, hint, placeholder, quick }: {
+  label: string; value: string[]; onChange: (v: string[]) => void; hint?: string; placeholder?: string; rows?: number; quick?: string[]
+}) {
+  const id = useId()
+  const [draft, setDraft] = useState('')
+  const items = value.filter((x) => x.trim())
+  const offer = (quick ?? []).filter((x) => !items.includes(x))
+  // The box grows with a long entry and shrinks back once it's added.
+  const box = useRef<HTMLTextAreaElement | null>(null)
+  const grow = (el: HTMLTextAreaElement | null) => { box.current = el }
+  useLayoutEffect(() => {
+    const el = box.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [draft])
+  const add = (text: string) => {
+    const more = cleanLines(text.split('\n'))
+    if (more.length) onChange([...items, ...more])
+    setDraft('')
+  }
+  return (
+    <div className="field span-all">
+      <Label htmlFor={id}>{label}</Label>
+      {/* The ↵ button inside the box shows how an entry is added: tap it or press Enter. */}
+      <div className="lines-input">
+        <Textarea id={id} rows={1} value={draft} placeholder={placeholder} className="min-h-0" ref={grow}
+          onChange={(e) => (e.target.value.includes('\n') ? add(e.target.value) : setDraft(e.target.value))}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); add(draft) } }}
+          onBlur={() => draft.trim() && add(draft)} />
+        <button type="button" className="lines-add" aria-label={`Add to ${label}`} disabled={!draft.trim()}
+          onMouseDown={(e) => e.preventDefault()} onClick={() => add(draft)}><CornerDownLeft /></button>
+      </div>
+      {hint && <span className="text-caption text-muted-foreground">{hint}</span>}
+      {items.length > 0 && (
+        <ul className="entries">
+          {items.map((it, i) => (
+            <li key={i} className="entry">
+              <button type="button" className="entry-text" title="Edit" onClick={() => { onChange(items.filter((_, j) => j !== i)); setDraft(it) }}>{it}</button>
+              <button type="button" className="icon-btn" aria-label={`Remove ${it}`} onClick={() => onChange(items.filter((_, j) => j !== i))}><X /></button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {offer.length > 0 && (
+        <Chips className="m-0">{offer.map((x) => <Chip key={x} onClick={() => onChange([...items, x])}>+ {x}</Chip>)}</Chips>
+      )}
+    </div>
+  )
+}
 export const cleanLines = (xs: string[]) => xs.map((x) => x.trim()).filter(Boolean)
 
 // Keeps ids of lines that didn't change (or were edited in place), so progress on them survives an edit.
@@ -146,23 +222,32 @@ export function linesToItems(lines: string[], old: { id: string; text: string }[
   })
 }
 
+// Personal (and other general tracks) first, then the roadmap tracks, then wellbeing habits.
 export function ChapterSelect({ id, value, onChange, state, allowNone }: {
   id?: string; value: ChapterId | null; onChange: (c: ChapterId | null) => void; state: State; allowNone?: string
 }) {
+  const groups = [
+    { label: '', items: chapters(state, 'general') },
+    { label: 'Tracks', items: chapters(state, 'learn') },
+  ].filter((g) => g.items.length)
   return (
     <Select value={value ?? 'none'} onValueChange={(v) => onChange(v === 'none' ? null : v)}>
       <SelectTrigger id={id} className="w-full"><SelectValue /></SelectTrigger>
       <SelectContent>
         {allowNone && <SelectItem value="none">{allowNone}</SelectItem>}
-        {chapters(state).map((c) => (
-          <SelectItem key={c.id} value={c.id}><Dot ch={c.id} />{c.name}</SelectItem>
+        {groups.map((g, i) => (
+          <SelectGroup key={g.label || 'general'}>
+            {(i > 0 || allowNone) && <SelectSeparator />}
+            {g.label && <SelectLabel>{g.label}</SelectLabel>}
+            {g.items.map((c) => <SelectItem key={c.id} value={c.id}><Dot ch={c.id} />{c.name}</SelectItem>)}
+          </SelectGroup>
         ))}
       </SelectContent>
     </Select>
   )
 }
 
-export const ChapterField = ({ label = 'Chapter', value, onChange, allowNone }: { label?: string; value: ChapterId | null; onChange: (c: ChapterId | null) => void; allowNone?: string }) => {
+export const ChapterField = ({ label = 'Track', value, onChange, allowNone }: { label?: string; value: ChapterId | null; onChange: (c: ChapterId | null) => void; allowNone?: string }) => {
   const { state } = useStore()
   return <Field label={label}>{(id) => <ChapterSelect id={id} state={state} value={value} onChange={onChange} allowNone={allowNone} />}</Field>
 }
@@ -180,58 +265,43 @@ export function ColorField({ value, onChange }: { value: string; onChange: (v: s
   )
 }
 
+// The days of the week as one row of seven equal buttons, Monday first. Never wraps.
 export function WeekdaysField({ value, onChange }: { value: number[]; onChange: (v: number[]) => void }) {
-  // Monday first.
   const order = [1, 2, 3, 4, 5, 6, 0]
   return (
     <div className="field span-all">
       <Label>Days</Label>
-      <Chips className="m-0">
+      <div className="segmented" role="group" aria-label="Days" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
         {order.map((d) => (
-          <Chip key={d} pressed={value.includes(d)} onClick={() => onChange(value.includes(d) ? value.filter((x) => x !== d) : [...value, d].sort())}>
+          <button key={d} type="button" className="segment" aria-pressed={value.includes(d)}
+            onClick={() => onChange(value.includes(d) ? value.filter((x) => x !== d) : [...value, d].sort())}>
             {WEEKDAYS_SHORT[d]}
-          </Chip>
+          </button>
         ))}
-      </Chips>
+      </div>
     </div>
-  )
-}
-
-// Program month picker: "Month 3 · Jan".
-export function MonthField({ label, value, onChange, months }: { label: string; value: number; onChange: (v: number) => void; months: number }) {
-  const { state } = useStore()
-  const start = startDate(state)
-  return (
-    <SelectField label={label} value={String(value)} onChange={(v) => onChange(Number(v))}
-      options={Array.from({ length: months }, (_, m) => ({ value: String(m), label: `Month ${m + 1} · ${monthLabel(start, m)}` }))} />
   )
 }
 
 /* ---------- Edit controls on rows ---------- */
 
-// Row controls. Move buttons always take their place (disabled at the ends), so every row's buttons line up.
-export function RowEdit({ onEdit, onUp, onDown, onDelete, label, movable }: {
-  onEdit?: () => void; onUp?: () => void; onDown?: () => void; onDelete?: () => void; label: string; movable?: boolean
+// Row controls in edit mode: move up/down and edit; deleting lives in the edit sheet.
+// Move buttons always take their place (disabled at the ends), so every row's buttons line up.
+export function RowEdit({ onEdit, onUp, onDown, label, movable }: {
+  onEdit?: () => void; onUp?: () => void; onDown?: () => void; label: string; movable?: boolean
 }) {
-  const [arm, setArm] = useState(false)
   const showMove = movable ?? !!(onUp || onDown)
   return (
     <div className="row-edit">
       {showMove && <button type="button" className="icon-btn" aria-label={`Move ${label} up`} disabled={!onUp} onClick={onUp}><ArrowUp /></button>}
       {showMove && <button type="button" className="icon-btn" aria-label={`Move ${label} down`} disabled={!onDown} onClick={onDown}><ArrowDown /></button>}
       {onEdit && <button type="button" className="icon-btn" aria-label={`Edit ${label}`} onClick={onEdit}><Pencil /></button>}
-      {onDelete && (
-        <button type="button" className={`icon-btn${arm ? ' danger' : ''}`} aria-label={arm ? `Tap again to delete ${label}` : `Delete ${label}`}
-          onClick={() => { if (arm) onDelete(); else { setArm(true); setTimeout(() => setArm(false), 3000) } }}>
-          <Trash2 />
-        </button>
-      )}
     </div>
   )
 }
 
 export function AddButton({ label, onClick, variant = 'outline' }: { label: string; onClick: () => void; variant?: 'outline' | 'default' }) {
-  return <Button type="button" variant={variant} size="sm" onClick={onClick}><Plus />{label}</Button>
+  return <Button type="button" variant={variant} onClick={onClick}><Plus />{label}</Button>
 }
 
 // Round "+" next to a section or page title.
@@ -242,14 +312,6 @@ export function PlusButton({ label, onClick }: { label: string; onClick: () => v
 // The page's main add action, floating bottom right (above the bottom nav on phones).
 export function Fab({ label, onClick }: { label: string; onClick: () => void }) {
   return <button type="button" className="fab" aria-label={label} title={label} onClick={onClick}><Plus /></button>
-}
-
-export function EditToggle({ on, onChange }: { on: boolean; onChange: (on: boolean) => void }) {
-  return (
-    <Button type="button" variant={on ? 'default' : 'outline'} size="sm" onClick={() => onChange(!on)}>
-      {on ? 'Done' : <><Pencil />Edit</>}
-    </Button>
-  )
 }
 
 export const move = <T,>(xs: T[], i: number, d: -1 | 1) => {

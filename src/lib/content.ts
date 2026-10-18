@@ -1,14 +1,13 @@
 // Helpers over the editable content in State. Shared with the Telegram worker, so keep it free of DOM and app imports.
-import type { Chapter, ChapterId, ChapterKind, Program, ResourceKind, State, When } from './types'
+import type { Chapter, ChapterId, ChapterKind, Note, Program, ProjectSize, ResourceKind, State, When } from './types'
 
-export const DEFAULT_START = '2026-11-01'
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 // Chapter colours: each key has a light and a dark value in index.css (--p-<key>).
 export const PALETTE = ['blue', 'orange', 'purple', 'green', 'pink', 'amber', 'slate', 'teal', 'gray', 'red', 'indigo', 'lime'] as const
 
-export const KIND_LABEL: Record<ChapterKind, string> = { learn: 'Roadmap chapter', health: 'Health', general: 'General' }
+
 
 export const RESOURCE_KINDS: { id: ResourceKind; label: string }[] = [
   { id: 'book', label: 'Books' },
@@ -22,15 +21,14 @@ export const RESOURCE_KINDS: { id: ResourceKind; label: string }[] = [
   { id: 'other', label: 'Other' },
 ]
 
-export const defaultProgram = (): Program => ({ months: 18, quarters: [] })
-export const program = (s: State): Program => ({ ...defaultProgram(), ...s.settings.program })
+export const program = (s: State): Program => ({ focus: null, ...s.settings.program })
 
 export const byPosition = <T extends { position: number }>(xs: T[]) => [...xs].sort((a, b) => a.position - b.position)
 export const nextPosition = (xs: { position: number }[]) => xs.reduce((m, x) => Math.max(m, x.position), -1) + 1
 
 export const chapters = (s: State, kind?: ChapterKind) => byPosition(s.chapters.filter((c) => !c.archived && (!kind || c.kind === kind)))
 export const chapterOf = (s: State, id: ChapterId | null | undefined): Chapter | undefined => (id ? s.chapters.find((c) => c.id === id) : undefined)
-export const chapterName = (s: State, id: ChapterId | null | undefined) => chapterOf(s, id)?.name ?? 'No chapter'
+export const chapterName = (s: State, id: ChapterId | null | undefined) => chapterOf(s, id)?.name ?? 'No track'
 
 // The chapter notes fall back to when nothing else fits.
 export const FALLBACK_CHAPTER = 'own'
@@ -78,26 +76,62 @@ export function describeWhen(w: When) {
   }
 }
 
-export const monthLabel = (start: Date, m: number, year = false) =>
-  new Date(start.getFullYear(), start.getMonth() + m, 1).toLocaleDateString('en-GB', year ? { month: 'short', year: 'numeric' } : { month: 'short' })
+// Project codes: the track's first two letters plus a number (TE1, TE2…). A track whose first two letters
+// an earlier track already uses takes three, so codes stay unique across tracks.
+const letters = (name: string) => name.toUpperCase().normalize('NFKD').replace(/[^A-Z]/g, '')
 
-// Years are added once a range is long enough for month names alone to be ambiguous.
-export const monthRange = (start: Date, from: number, to: number) =>
-  from === to ? monthLabel(start, from) : `${monthLabel(start, from, to - from >= 11)}–${monthLabel(start, to, to - from >= 11)}`
+export function codePrefix(c: Chapter, all: Chapter[]) {
+  const mine = letters(c.name) || 'PR'
+  const earlier = all.filter((x) => x.id !== c.id && (x.position < c.position || (x.position === c.position && x.id < c.id)))
+  const clash = earlier.some((x) => letters(x.name).slice(0, 2) === mine.slice(0, 2))
+  return clash && mine.length > 2 ? mine.slice(0, 3) : mine.slice(0, 2)
+}
 
-// How the method works. Product copy, the same for every user, so it lives here rather than in their data.
-export const HOW_IT_WORKS = [
-  'Chapters run in parallel. Each one has a month-by-month plan, resources, projects, checklists and tips.',
-  'Every quarter has one focus chapter; the others run as light tracks, so nothing stalls and nothing overloads you.',
-  'Each skill gets a project, because building and doing beats watching.',
-  'Today is built from your routines: daily habits, study sessions for the focus chapter, a light-track slot that rotates through the other chapters, and a weekend project block.',
-  'A day counts for your streak when every streak routine is ticked. When a week goes badly, keep only those. Streaks beat intensity.',
-  "Health points sit beside the roadmap. Start one whenever you're ready; its trackers add a daily check to Today.",
-  'Daily (2 min): one line in the learning log: what you learned or did today.',
-  "Weekly (30 min): tick finished tasks, note what worked and what didn't, and pick next week's 3 tasks.",
-  'Monthly (1 h): ship one visible output (a post, demo, design doc or talk) and re-score your skills.',
-  'Quarterly (2 h): run a retro, ask 2 people for honest feedback, then adjust the next quarter.',
-  "Yearly: a big retro. Keep the chapters that pay off, drop the rest, and pick next year's focus.",
-  'Learn in public: post one short write-up a month. It trains writing and builds your reputation at once.',
-  'Score each skill 1–5 (1 = never done it, 3 = can do it alone, 5 = can teach it) when you start, then every quarter.',
+export function nextProjectCode(c: Chapter, all: Chapter[]) {
+  const prefix = codePrefix(c, all)
+  const used = c.projects.map((p) => (p.code.startsWith(prefix) ? Number(p.code.slice(prefix.length)) || 0 : 0))
+  return `${prefix}${Math.max(0, ...used) + 1}`
+}
+
+
+// Tracks are stored as JSON, so one saved in an older shape could break a page. Every loaded track is brought to the
+// current shape: missing lists become empty, entries in an old format (skills as plain names, checklists) are dropped.
+export const PROJECT_SIZES: { value: ProjectSize; label: string; means: string }[] = [
+  { value: 'small', label: 'Small', means: 'a few hours to a few days' },
+  { value: 'medium', label: 'Medium', means: 'one to a few weeks' },
+  { value: 'big', label: 'Big', means: 'a month or more' },
 ]
+export const sizeLabel = (s: ProjectSize) => {
+  const z = PROJECT_SIZES.find((x) => x.value === s)
+  return z ? `${z.label}, ${z.means}` : s
+}
+
+const list = <T,>(x: unknown, ok: (v: T) => boolean = () => true): T[] => (Array.isArray(x) ? (x as T[]).filter((v) => v && typeof v === 'object' && ok(v)) : [])
+
+export function normalizeChapter(raw: Chapter): Chapter {
+  const c = raw as Chapter & Record<string, unknown>
+  return {
+    ...c,
+    outcomes: Array.isArray(c.outcomes) ? c.outcomes.filter((x) => typeof x === 'string') : [],
+    projects: list<Chapter['projects'][number]>(c.projects).map((p) => ({ ...p, trains: Array.isArray(p.trains) ? p.trains : undefined, size: PROJECT_SIZES.some((s) => s.value === p.size) ? p.size : undefined })),
+    resources: list(c.resources),
+    skills: list<Chapter['skills'][number]>(c.skills, (k) => Array.isArray(k.topics)),
+  }
+}
+
+const normalizeNote = (n: Note): Note => ({
+  ...n,
+  type: n.type ?? (n.url ? 'link' : 'note'),
+  body: n.body ?? '', url: n.url ?? null, kind: n.kind ?? null, context: n.context ?? '',
+  chapter: n.chapter ?? null, source: n.source ?? 'app',
+  tags: Array.isArray(n.tags) ? n.tags : [],
+})
+
+// Routines that used to fill from the tracks (old shape) are dropped: Today's track rows replace them.
+// So are habit chapters (old kind 'health'): habits have their own table now.
+export const normalizeState = (s: State): State => ({
+  ...s, chapters: (s.chapters ?? []).filter((c) => c.kind === 'learn' || c.kind === 'general').map(normalizeChapter), notes: (s.notes ?? []).map(normalizeNote),
+  routines: (s.routines ?? []).filter((r) => !('fill' in r)),
+  habits: s.habits ?? [],
+  habitLogs: s.habitLogs ?? {},
+})

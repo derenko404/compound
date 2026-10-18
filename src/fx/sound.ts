@@ -55,3 +55,27 @@ export function playFanfare() {
   ;[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(a, f, t + i * 0.09, 0.35, 'triangle', 0.15))
   tone(a, 1318.5, t + 0.4, 0.6, 'sine', 0.08)
 }
+
+// "Lock on" for choosing the focus track: a low thump, a rising sweep, then a bright chord with a shimmer on top.
+export function playFocus() {
+  const a = ctx()
+  if (!a) return
+  const t = a.currentTime
+  const sweep = (from: number, to: number, start: number, dur: number, gain: number, type: OscillatorType) => {
+    const o = a.createOscillator()
+    const g = a.createGain()
+    o.type = type
+    o.frequency.setValueAtTime(from, start)
+    o.frequency.exponentialRampToValueAtTime(to, start + dur * 0.8)
+    g.gain.setValueAtTime(0.0001, start)
+    g.gain.exponentialRampToValueAtTime(gain, start + 0.02)
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur)
+    o.connect(g).connect(a.destination)
+    o.start(start)
+    o.stop(start + dur + 0.02)
+  }
+  sweep(140, 45, t, 0.35, 0.35, 'sine') // thump
+  sweep(220, 990, t + 0.04, 0.24, 0.1, 'sawtooth') // charge up
+  ;[659.25, 987.77, 1318.5].forEach((f) => tone(a, f, t + 0.26, 0.7, 'triangle', 0.11)) // the chord
+  ;[1975.5, 2637].forEach((f, i) => tone(a, f, t + 0.34 + i * 0.07, 0.35, 'sine', 0.05)) // shimmer
+}

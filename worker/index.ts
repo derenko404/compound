@@ -2,8 +2,8 @@
 // Only /tg reaches this code (run_worker_first in wrangler.jsonc); everything else goes straight to assets.
 import { createClient } from '@supabase/supabase-js'
 import { ALL_CHAPTERS, CH } from '../src/data/plan'
-import { findUrls, kindFromUrl } from '../src/lib/finds'
-import type { BookmarkKind, Chapter, ChapterId } from '../src/lib/types'
+import { cleanTag, findUrls, kindFromUrl } from '../src/lib/finds'
+import type { LinkKind, Chapter, ChapterId } from '../src/lib/types'
 
 interface Env {
   ASSETS: { fetch(req: Request): Promise<Response> }
@@ -11,10 +11,8 @@ interface Env {
   VITE_SUPABASE_URL: string
   // Secrets (wrangler secret put, or the dashboard's Variables and Secrets):
   SUPABASE_SECRET_KEY: string // service-role / secret key; bypasses RLS, so user_id is set explicitly
-  OWNER_USER_ID: string // your auth.users id
   TELEGRAM_BOT_TOKEN: string
   TELEGRAM_WEBHOOK_SECRET: string // the secret_token passed to setWebhook
-  TELEGRAM_CHAT_ID?: string // your chat with the bot; until set, the bot only replies with the chat id
 }
 
 interface Ctx {
@@ -24,6 +22,7 @@ interface Ctx {
 interface TgEntity { type: string; url?: string }
 interface TgMessage {
   chat: { id: number }
+  from?: { username?: string }
   text?: string
   caption?: string
   entities?: TgEntity[]
@@ -51,16 +50,14 @@ const CHAPTER_HINTS: Record<string, string> = {
   biz: 'startups, adtech, how companies work, strategy',
   eng: 'pronunciation, speaking, writing, public speaking',
   money: 'budget, savings, investing',
-  smoke: 'cravings, triggers',
-  gym: 'workouts, food, weight, sleep',
   own: 'anything personal that fits nothing above',
 }
 
 interface Ch { id: ChapterId; name: string; hint: string }
 const FALLBACK: Ch[] = ALL_CHAPTERS.map((id) => ({ id, name: CH[id].short, hint: CHAPTER_HINTS[id] ?? '' }))
 
-async function loadChapters(env: Env): Promise<Ch[]> {
-  const { data, error } = await dbFor(env).from('chapters').select('data').eq('user_id', env.OWNER_USER_ID)
+async function loadChapters(env: Env, user: string): Promise<Ch[]> {
+  const { data, error } = await dbFor(env).from('chapters').select('data').eq('user_id', user)
   if (error) console.error('chapters', error)
   const live = ((data ?? []) as { data: Chapter }[]).map((r) => r.data).filter((c) => !c.archived)
   return live.length ? live.map((c) => ({ id: c.id, name: c.name, hint: c.hint || c.description?.slice(0, 120) || '' })) : FALLBACK
@@ -70,9 +67,9 @@ const chapterList = (chs: Ch[]) => chs.map((c) => `${c.id} = ${c.name}${c.hint ?
 const chapterIn = (chs: Ch[], id: unknown) => chs.find((c) => c.id === id) ?? null
 const UA = 'Mozilla/5.0 (compatible; RoadmapFinds/1.0)'
 const HELP = [
-  'Send me a link, with a note if you like, and I\'ll save it to Finds. Reply to a link later to add a note to it.',
-  'Any other text is saved as a note in Notes. Start it with a chapter to pick one, e.g. "english practise th sounds"; otherwise the AI picks.',
-  '/ai <link> [question] reads the page, sums it up and saves it to Finds. /ai <question> just asks the AI.',
+  'Send me a link, with a note if you like, and I\'ll save it to your notebook. Reply to a link later to add a note to it.',
+  'Any other text is saved as a note. Start it with a track to pick one, e.g. "english practise th sounds"; otherwise the AI picks. The AI also adds tags and spots ideas (or add #idea); #tags you type are kept too.',
+  '/ai <link> [question] reads the page, sums it up and saves it to your notebook. /ai <question> just asks the AI.',
 ].join('\n\n')
 
 const dbFor = (env: Env) => createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
@@ -90,12 +87,42 @@ export default {
   },
 }
 
+const NOT_LINKED = 'Open Roadmap Log, then Settings → Connect Telegram, to link this chat to your account.'
+
+// Each chat is linked to one account (table telegram_links); everything it sends is saved for that account.
+async function userFor(env: Env, chat: number): Promise<string | null> {
+  const { data, error } = await dbFor(env).from('telegram_links').select('user_id').eq('chat_id', chat).maybeSingle()
+  if (error) console.error('link', error)
+  return data?.user_id ?? null
+}
+
+// /start <code> from Settings → Connect Telegram: the code (made by the app, valid 15 minutes) names the account.
+async function connect(env: Env, chat: number, username: string | null, code: string) {
+  const db = dbFor(env)
+  const { data } = await db.from('telegram_codes').select('user_id, created_at').eq('code', code).maybeSingle()
+  if (!data || Date.now() - new Date(data.created_at).getTime() > 15 * 60_000) return 'That link has expired. Open Settings → Connect Telegram again.'
+  // A chat belongs to one account: linking it here unlinks it anywhere else.
+  await db.from('telegram_links').delete().eq('chat_id', chat)
+  const { error } = await db.from('telegram_links').upsert({ user_id: data.user_id, chat_id: chat, username }, { onConflict: 'user_id' })
+  await db.from('telegram_codes').delete().eq('user_id', data.user_id)
+  // Settings makes a code each time it shows Connect; drop the unused ones after a day.
+  await db.from('telegram_codes').delete().lt('created_at', new Date(Date.now() - 86_400_000).toISOString())
+  if (error) {
+    console.error('connect', error)
+    return `Couldn't connect: ${error.message}`
+  }
+  return `Connected to Roadmap Log.\n\n${HELP}`
+}
+
 async function handle(msg: TgMessage, env: Env) {
   const chat = msg.chat.id
   const say = (text: string) => reply(env, chat, text)
-  if (String(chat) !== env.TELEGRAM_CHAT_ID) return say(`This bot is private. Your chat id is ${chat}.`)
-
   const text = msg.text ?? msg.caption ?? ''
+  const start = text.match(/^\/start(?:@\w+)?(?:\s+([\w-]+))?/)
+  if (start?.[1]) return say(await connect(env, chat, msg.from?.username ?? null, start[1]))
+  const user = await userFor(env, chat)
+  if (!user) return say(NOT_LINKED)
+
   const cmd = text.match(/^\/(\w+)(?:@\w+)?\s*([\s\S]*)$/)
   const isAi = cmd?.[1].toLowerCase() === 'ai'
   if (cmd && !isAi) return say(HELP)
@@ -104,11 +131,11 @@ async function handle(msg: TgMessage, env: Env) {
   const urls = linksIn(msg, rest)
   // A reply to a message with a link (yours, or the bot's "Saved" reply) adds a note to that link.
   const replied = msg.reply_to_message ? linksIn(msg.reply_to_message) : []
-  if (!cmd && !urls.length && replied.length && text.trim()) return say(await noteOnLinks(env, replied, text.trim()))
+  if (!cmd && !urls.length && replied.length && text.trim()) return say(await noteOnLinks(env, user, replied, text.trim()))
   if (!urls.length) {
     if (isAi) return say(rest.trim() ? await ask(env, rest.trim()) : HELP)
     // Plain text with no link is a note.
-    return say(text.trim() ? await saveNote(env, text.trim()) : HELP)
+    return say(text.trim() ? await saveNote(env, user, text.trim()) : HELP)
   }
 
   let note = rest
@@ -116,7 +143,7 @@ async function handle(msg: TgMessage, env: Env) {
   note = note.replace(/\s+/g, ' ').trim()
 
   const db = dbFor(env)
-  const chs = await loadChapters(env)
+  const chs = await loadChapters(env, user)
   const lines: string[] = []
   for (const url of urls) {
     const meta = await pageMeta(url)
@@ -124,8 +151,9 @@ async function handle(msg: TgMessage, env: Env) {
     const kind = kindFromUrl(url) ?? ai.kind ?? meta.kind ?? 'site'
     // With /ai the summary replaces the page's own description, and the text after the link is the question.
     const summary = isAi ? await analyze(env, url, meta, note) : ''
-    const { error } = await db.from('bookmarks').upsert(
-      { user_id: env.OWNER_USER_ID, url, kind, title: meta.title, description: summary || meta.description, tags: ai.tags, chapter: ai.chapter, ...(note && { note }), source: 'telegram' },
+    // Upsert on the link: resending it updates the page details and keeps the old text unless new text came with it.
+    const { error } = await db.from('notes').upsert(
+      { user_id: user, type: 'link', url, kind, context: [meta.title, summary || meta.description].filter(Boolean).join('\n'), tags: ai.tags, chapter: ai.chapter ?? chapterIn(chs, 'own')?.id ?? null, ...(note && { body: note }), source: 'telegram' },
       { onConflict: 'user_id,url' },
     )
     if (error) {
@@ -136,21 +164,21 @@ async function handle(msg: TgMessage, env: Env) {
   await say(lines.join('\n\n'))
 }
 
-async function noteOnLinks(env: Env, urls: string[], text: string) {
+// A reply to a saved link adds its text to the link's note, on a new line.
+async function noteOnLinks(env: Env, user: string, urls: string[], text: string) {
   const db = dbFor(env)
   const lines: string[] = []
   for (const url of urls) {
-    const { data, error } = await db.from('bookmarks').select('note').eq('user_id', env.OWNER_USER_ID).eq('url', url).maybeSingle()
-    // Earlier replies stay; each new one goes on its own line.
-    const note = data?.note ? `${data.note}\n${text}` : text
-    const res = error ?? (data ? (await db.from('bookmarks').update({ note }).eq('user_id', env.OWNER_USER_ID).eq('url', url)).error : null)
+    const { data, error } = await db.from('notes').select('id, body').eq('user_id', user).eq('url', url).maybeSingle()
+    const body = data?.body ? `${data.body}\n${text}` : text
+    const res = error ?? (data ? (await db.from('notes').update({ body }).eq('id', data.id)).error : null)
     if (res) console.error('reply note', res)
-    lines.push(res ? `Couldn't add the note: ${res.message}` : data ? `Note added to ${url}` : `${url} isn't in Finds. Send the link itself to save it.`)
+    lines.push(res ? `Couldn't add the note: ${res.message}` : data ? `Note added to ${url}` : `${url} isn't in your notebook. Send the link itself to save it.`)
   }
   return lines.join('\n')
 }
 
-/* ---------- Notes: plain text for the Notes tab ---------- */
+/* ---------- Notes: plain text for the notebook ---------- */
 
 // "english text": the first word picks the chapter when it names one (its id, its name, or its name's first word).
 function chapterWord(chs: Ch[], word: string): Ch | null {
@@ -158,38 +186,61 @@ function chapterWord(chs: Ch[], word: string): Ch | null {
   return chs.find((c) => c.id === w || c.name.toLowerCase() === w || c.name.toLowerCase().split(/\s+/)[0] === w) ?? null
 }
 
-async function saveNote(env: Env, text: string) {
-  const chs = await loadChapters(env)
+async function saveNote(env: Env, user: string, text: string) {
+  const chs = await loadChapters(env, user)
   const [first, ...rest] = text.split(/\s+/)
   const named = rest.length ? chapterWord(chs, first) : null
   const body = named ? text.slice(first.length).trim() : text
-  const chapter = named ?? (await pickChapter(env, body, chs)) ?? chapterIn(chs, 'own') ?? chs[0]
-  const { error } = await dbFor(env).from('notes').insert({ user_id: env.OWNER_USER_ID, chapter: chapter?.id ?? 'own', body })
+  // One AI call files the note: track (unless the first word named one), topic tags, and whether it's an idea.
+  const ai = await fileNote(env, body, chs)
+  const chapter = named ?? ai.chapter ?? chapterIn(chs, 'own')
+  const typed = [...body.matchAll(/#([\p{L}\d_-]+)/gu)].map((m) => cleanTag(m[1]))
+  const idea = ai.idea || typed.includes('idea')
+  // Ideas also carry the #idea tag, the same as ideas made in the app.
+  const tags = [...new Set([...(idea ? ['idea'] : []), ...typed, ...ai.tags])]
+  const { error } = await dbFor(env).from('notes').insert({ user_id: user, type: idea ? 'idea' : 'note', chapter: chapter?.id ?? null, body, tags, source: 'telegram' })
   if (error) {
     console.error('note', error)
     return `Couldn't save the note: ${error.message}`
   }
-  return `Noted in ${chapter?.name ?? 'Notes'}.`
+  return `Noted${idea ? ' as an idea' : ''}${chapter ? ` in ${chapter.name}` : ''}${tags.length ? `\n${tags.map((t) => `#${t}`).join(' ')}` : ''}`
 }
 
-async function pickChapter(env: Env, body: string, chs: Ch[]): Promise<Ch | null> {
+async function fileNote(env: Env, body: string, chs: Ch[]): Promise<{ chapter: Ch | null; tags: string[]; idea: boolean }> {
   try {
     const response = await run(env, {
-      max_tokens: 30,
-      response_format: { type: 'json_schema', json_schema: { type: 'object', properties: { chapter: { type: 'string', enum: chs.map((c) => c.id) } }, required: ['chapter'] } },
+      max_tokens: 80,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          type: 'object',
+          properties: {
+            chapter: { type: 'string', enum: chs.map((c) => c.id) },
+            tags: { type: 'array', items: { type: 'string' }, maxItems: 3 },
+            idea: { type: 'boolean' },
+          },
+          required: ['chapter', 'tags', 'idea'],
+        },
+      },
       messages: [
         {
           role: 'system',
-          content: `File a personal note under one chapter of a self-development roadmap. Chapters:\n${chapterList(chs)}\nReply with JSON: {"chapter": "<id>"}.`,
+          content:
+            'You file a personal note in a self-development notebook. Reply with JSON: {"chapter": "<id>", "tags": [1 to 3 short lowercase topic words], "idea": true | false}. ' +
+            'idea = true only when the note proposes something to build, start or try (a product, project, plan or experiment), not for facts, learnings, reminders or questions. ' +
+            `chapter = the part of the roadmap it belongs to:\n${chapterList(chs)}`,
         },
         { role: 'user', content: body },
       ],
     })
-    const { chapter } = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { chapter?: string }
-    return chapterIn(chs, chapter)
+    const j = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { chapter?: string; tags?: unknown; idea?: unknown }
+    const tags = Array.isArray(j.tags)
+      ? [...new Set(j.tags.filter((t): t is string => typeof t === 'string').map(cleanTag).filter((t) => t && t !== 'idea'))].slice(0, 3)
+      : []
+    return { chapter: chapterIn(chs, j.chapter), tags, idea: j.idea === true }
   } catch (e) {
     console.error('ai', e)
-    return null
+    return { chapter: null, tags: [], idea: false }
   }
 }
 
@@ -243,7 +294,7 @@ async function reply(env: Env, chat_id: number, text: string) {
 
 /* ---------- Page title and description ---------- */
 
-interface Meta { title: string; description: string; kind: BookmarkKind | null; text: string }
+interface Meta { title: string; description: string; kind: LinkKind | null; text: string }
 
 const OEMBED: [RegExp, string][] = [
   [/(^|\.)(youtube\.com|youtu\.be)$/, 'https://www.youtube.com/oembed?format=json&url='],
@@ -304,7 +355,7 @@ const clip = (s: string, n: number) => {
 
 /* ---------- Kind and tags from Workers AI ---------- */
 
-async function classify(env: Env, url: string, meta: Meta, chs: Ch[]): Promise<{ kind: BookmarkKind | null; tags: string[]; chapter: ChapterId | null }> {
+async function classify(env: Env, url: string, meta: Meta, chs: Ch[]): Promise<{ kind: LinkKind | null; tags: string[]; chapter: ChapterId | null }> {
   try {
     const response = await run(env, {
       max_tokens: 120,

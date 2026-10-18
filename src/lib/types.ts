@@ -4,16 +4,10 @@ export type ProjectStatus = 'todo' | 'doing' | 'done'
 
 /* ---------- Content: everything the user can edit ---------- */
 
-export type ChapterKind = 'learn' | 'health' | 'general'
+export type ChapterKind = 'learn' | 'general'
 export type ResourceKind = 'book' | 'course' | 'video' | 'article' | 'podcast' | 'tool' | 'doc' | 'practice' | 'other'
 
-export interface PlanTask {
-  id: string
-  text: string
-  // Program months (0-based, inclusive) the task belongs to.
-  from: number
-  to: number
-}
+export type ProjectSize = 'small' | 'medium' | 'big'
 
 export interface Project {
   id: string
@@ -22,8 +16,8 @@ export interface Project {
   goal?: string
   steps?: string[]
   done?: string
-  trains?: string
-  size?: string
+  trains?: string[] // skills the project practises
+  size?: ProjectSize
 }
 
 export interface Resource {
@@ -33,35 +27,13 @@ export interface Resource {
   kind: ResourceKind
   note?: string
   free?: boolean
-  topic?: string
 }
 
-export interface ChecklistItem { id: string; text: string }
-export interface Checklist { id: string; title: string; items: ChecklistItem[] }
+export interface Topic { id: string; text: string }
+// What to learn: a skill with its topics in order, each tickable. Resources are a separate list on the track.
+export interface Skill { id: string; name: string; intro?: string; topics: Topic[] }
 
 export interface Milestone { mins: number; label: string; text: string }
-export interface Workout { name: string; text: string }
-
-// Optional trackers a chapter (usually a health one) can switch on.
-export interface Components {
-  quit?: {
-    date?: string | null // set when started
-    per_day: number
-    price: number // per pack of 20
-    unit: string // "cigarettes"
-    milestones: Milestone[]
-    tips: string[] // rotate under the daily check on Today
-    check_id: string // id ticked on Today for a clean day
-    check_title: string // "Smoke-free today"
-  }
-  workout?: {
-    start?: string | null
-    days: number[] // weekdays, 0 = Sunday
-    workouts: Workout[] // alternate in order
-    check_id: string
-  }
-  weight?: { unit: string }
-}
 
 export interface Chapter {
   id: ChapterId
@@ -70,17 +42,15 @@ export interface Chapter {
   name: string // one name everywhere: tags, cards, headers, the bot
   color: string // palette key, see PALETTE in content.ts
   description?: string
-  start: number // program month the chapter starts (0-based)
-  months: number // duration
-  outcomes: string[]
-  skills: string[]
-  tasks: PlanTask[]
-  projects: Project[]
+  outcomes: string[] // "where you'll be": plain text goals
+  created_at?: string // ISO; the duration counts from here
+  months?: number // optional duration from created_at; the target finish is worked out from it, and pace warns when it would land later
+  // The track is its skills in order: "next" is always the first unticked topic. No dates inside a track;
+  // the focus (heavy) track is Program.focus.
+  projects: Project[] // in order: the weekend slot takes the first unfinished one
   resources: Resource[]
-  checklists: Checklist[]
-  tips: string[]
+  skills: Skill[]
   hint?: string // what belongs here, for the Telegram bot's AI
-  components?: Components
   archived?: boolean
 }
 
@@ -100,8 +70,6 @@ export type When =
   | { kind: 'monthly'; day: number } // 1–31, or -1 for the last day
   | { kind: 'once'; date: string }
 
-// Fills the routine's subtitle from the plan: the focus chapter's task, a rotating other chapter, the quarter project.
-export type Fill = 'focus' | 'light' | 'project'
 
 export interface Routine {
   id: string
@@ -110,70 +78,65 @@ export interface Routine {
   sub?: string
   chapter: ChapterId
   when: When
-  fill?: Fill
   core?: boolean // counts for the streak
   created_at: string
 }
 
-export interface QuarterPlan { focus: ChapterId | null; project: string }
-
+// Stored in settings.program.
 export interface Program {
   seeded?: number // seed version applied
-  months: number
-  motivation?: string // why you're doing the program; shown folded under the Plan title
-  quarters: QuarterPlan[]
+  focus: ChapterId | null // the heavy track: it gets the study sessions and the weekend project
 }
 
 /* ---------- Progress and records ---------- */
 
 export interface Settings {
-  start_date?: string
   program?: Program
-  // Before chapters were editable; the seed moves these into the smoke and gym chapters.
-  quit?: { date: string; cpd: number; price: number } | null
-  gym_start?: string | null
 }
 
 export interface DayLog {
   done: string[]
-  log?: string | null
-  weight?: number | null
-  smoke?: 'free' | 'slip' | null
+  mood?: number | null // 1 (awful) to 5 (great), set on Wellbeing
 }
 
+/* ---------- Wellbeing habits ---------- */
+
+// Each type is a skin over the same habit: the shape below is shared, the widget, Today row and texts differ.
+export type HabitType = 'gym' | 'water' | 'smoking' | 'build' | 'break'
+
+// What only some types use (table column custom_data).
+export interface HabitData {
+  per_day?: number // smoking: cigarettes a day before quitting
+  price?: number // smoking: price of a pack of 20
+  target?: number // water: glasses a day; build: days in the challenge (21)
+}
+
+// Field names match the table's columns.
+export interface Habit {
+  id: string
+  type: HabitType
+  name: string
+  why: string | null // the user's reason, one line
+  start_date: string | null // quit day, day 1 of a new habit, first gym week; null = not started
+  days: number[] // weekdays it's due, 0 = Sunday; empty = every day
+  position: number
+  custom_data: HabitData
+  created_at: string
+}
+
+export type LinkKind = 'video' | 'post' | 'site'
+
+export type NoteType = 'note' | 'idea' | 'link'
+
+// One Notebook entry, of one of three types: a note (text), an idea (title and details) or a link (url, page title, why).
 export interface Note {
   id: string
-  chapter: ChapterId
-  body: string
-  created_at: string
-}
-
-export interface IdeaNote {
-  id: string
-  idea_id: string
-  body: string
-  created_at: string
-}
-
-export interface Idea {
-  id: string
-  title: string
-  body: string
-  labels: string[]
-  created_at: string
-  notes: IdeaNote[]
-}
-
-export type BookmarkKind = 'video' | 'post' | 'site'
-
-export interface Bookmark {
-  id: string
-  url: string
-  kind: BookmarkKind
-  title: string
-  description: string
+  type: NoteType
+  body: string // the note or idea itself, or why the link is interesting
+  url: string | null // unique per user
+  kind: LinkKind | null // links only
+  context: string // written by the AI only (the bot): a link's page title and summary, and the like; read-only in the app
   tags: string[]
-  note: string
   chapter: ChapterId | null
   source: 'app' | 'telegram'
   created_at: string
@@ -189,14 +152,14 @@ export interface State {
   days: Record<string, DayLog>
   plan: Record<string, string>
   projects: Record<string, ProjectStatus>
-  chapterNotes: Record<string, string>
   notes: Note[]
-  ideas: Idea[]
-  bookmarks: Bookmark[]
   chapters: Chapter[]
   lists: ListDef[]
   listProgress: Record<string, Record<string, ListItem>>
   routines: Routine[]
+  habits: Habit[]
+  // habit id → day key → value: 1 = done or a clean day, -1 = a slip, a count for water
+  habitLogs: Record<string, Record<string, number>>
 }
 
 export const emptyState = (): State => ({
@@ -204,14 +167,13 @@ export const emptyState = (): State => ({
   days: {},
   plan: {},
   projects: {},
-  chapterNotes: {},
   notes: [],
-  ideas: [],
-  bookmarks: [],
   chapters: [],
   lists: [],
   listProgress: {},
   routines: [],
+  habits: [],
+  habitLogs: {},
 })
 
 // Every change to the data goes through one of these, so the reducer and the
@@ -221,14 +183,8 @@ export type Op =
   | { type: 'day'; day: string; log: DayLog }
   | { type: 'plan'; taskId: string; doneAt: string | null }
   | { type: 'project'; projectId: string; status: ProjectStatus }
-  | { type: 'chapterNote'; chapter: string; body: string }
-  | { type: 'addNote'; note: Note }
+  | { type: 'putNote'; note: Note }
   | { type: 'deleteNote'; id: string }
-  | { type: 'addIdea'; idea: Idea }
-  | { type: 'deleteIdea'; id: string }
-  | { type: 'addIdeaNote'; note: IdeaNote }
-  | { type: 'addBookmark'; bookmark: Bookmark }
-  | { type: 'deleteBookmark'; id: string }
   | { type: 'putChapter'; chapter: Chapter }
   | { type: 'deleteChapter'; id: string }
   | { type: 'putList'; list: ListDef }
@@ -236,4 +192,7 @@ export type Op =
   | { type: 'listItem'; list: string; item: string; progress: ListItem }
   | { type: 'putRoutine'; routine: Routine }
   | { type: 'deleteRoutine'; id: string }
+  | { type: 'putHabit'; habit: Habit }
+  | { type: 'deleteHabit'; id: string }
+  | { type: 'habitLog'; habit: string; day: string; value: number | null }
   | { type: 'batch'; ops: Op[] }

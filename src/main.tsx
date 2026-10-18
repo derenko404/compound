@@ -5,7 +5,10 @@ import { RouterProvider } from '@tanstack/react-router'
 import { registerSW } from 'virtual:pwa-register'
 import { router } from './router'
 import { StoreProvider } from './store/StoreProvider'
+import { applyTheme } from './fx/theme'
 import './index.css'
+
+applyTheme()
 
 registerSW({
   immediate: true,

@@ -1,108 +1,143 @@
 // Pure functions that turn stored state into what the views show.
-import type { Chapter, ChapterId, PlanTask, Routine, State } from './types'
-import { DEFAULT_START, chapterOf, chapters, matchesWhen, program } from './content'
+import type { Chapter, ChapterId, Habit, Routine, State } from './types'
+import { habitRows } from './habits'
+import { chapterOf, chapters, matchesWhen, program } from './content'
 import { addDays, dayDiff, keyOf, parseKey } from './dates'
 
-export const startDate = (s: State) => parseKey(s.settings.start_date || DEFAULT_START)
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
 
-export function programPos(s: State, today: Date) {
-  const start = startDate(s)
-  const len = program(s).months
-  const months =
-    (today.getFullYear() - start.getFullYear()) * 12 +
-    (today.getMonth() - start.getMonth()) -
-    (today.getDate() < start.getDate() ? 1 : 0)
-  const before = today < start
-  const total = dayDiff(start, new Date(start.getFullYear(), start.getMonth() + len, start.getDate()))
-  const dayN = dayDiff(start, today) + 1
-  const finished = !before && months >= len
-  // Month index into the program, clamped so a finished program still shows its last month.
-  const m = before ? 0 : Math.min(len - 1, Math.max(0, months))
-  const quarters = Math.ceil(len / 3)
-  return { before, total, dayN, m, q: Math.floor(m / 3) + 1, mi: m % 3, quarters, finished, daysToStart: before ? dayDiff(today, start) : 0 }
+// "Aug 2027"
+export const monthName = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+
+// A track's target finish: its duration counted from when it was created.
+export function targetFinish(c: Chapter, months = c.months) {
+  if (!months) return null
+  const from = c.created_at ? new Date(c.created_at) : new Date()
+  return new Date(from.getFullYear(), from.getMonth() + months, from.getDate())
 }
 
-export const quarterPlan = (s: State, q: number) => program(s).quarters[q - 1] ?? { focus: null, project: '' }
+// The heavy track: study sessions and the weekend project work on it.
+export const focusOf = (s: State): ChapterId | null => program(s).focus
 
-export interface TaskRef extends PlanTask { ch: ChapterId }
+// A track's progress is its topics ticked.
+export const topicIds = (c: Chapter) => c.skills.flatMap((k) => k.topics.map((t) => t.id))
 
-export const allTasks = (s: State): TaskRef[] => chapters(s, 'learn').flatMap((c) => c.tasks.map((t) => ({ ...t, ch: c.id })))
-export const isActive = (t: PlanTask, m: number) => t.from <= m && m <= t.to
-export const tasksInMonth = (s: State, m: number) => allTasks(s).filter((t) => isActive(t, m))
-export const tasksInQuarter = (s: State, q: number) => allTasks(s).filter((t) => t.from <= q * 3 - 1 && t.to >= (q - 1) * 3)
-export const chapterActive = (c: Chapter, m: number) => c.start <= m && m < c.start + c.months
-
-// The most specific open task of a chapter for this month.
-export function monthTask(s: State, ch: ChapterId, m: number) {
-  const c = chapterOf(s, ch)
-  const list = (c?.tasks ?? []).filter((t) => isActive(t, m)).sort((a, b) => a.to - a.from - (b.to - b.from))
-  return list.find((t) => !s.plan[t.id]) ?? list[0]
+export function trackProgress(s: State, c: Chapter) {
+  const ids = topicIds(c)
+  return { done: ids.filter((id) => s.plan[id]).length, total: ids.length }
 }
 
-const weekIndex = (s: State, d: Date) => Math.floor(dayDiff(startDate(s), d) / 7)
+// What to study next on a track: the first skill with a topic left, and that topic.
+export function nextUp(s: State, c: Chapter) {
+  for (const [index, skill] of c.skills.entries()) {
+    const topic = skill.topics.find((t) => !s.plan[t.id])
+    if (topic) return { skill, index, topic }
+  }
+  return null
+}
 
-// Rotates through the learn chapters that aren't the focus and don't already have a daily routine.
-function lightTrackChapter(s: State, d: Date, m: number, focus: ChapterId | null): ChapterId | null {
+// The weekend slot's project: the first one not done.
+export const currentProject = (s: State, c: Chapter) => c.projects.find((p) => (s.projects[p.id] ?? 'todo') !== 'done')
+
+// Topics ticked per week over the last 4 weeks, and when the track would finish at that pace.
+export function pace(s: State, c: Chapter, today: Date) {
+  const ids = new Set(topicIds(c))
+  const since = addDays(today, -28).getTime()
+  const recent = Object.entries(s.plan).filter(([id, at]) => ids.has(id) && new Date(at).getTime() >= since).length
+  const perWeek = recent / 4
+  const { done, total } = trackProgress(s, c)
+  const left = total - done
+  return { perWeek, left, finish: perWeek > 0 && left > 0 ? addDays(today, Math.ceil((left / perWeek) * 7)) : null }
+}
+
+// A topic ticked exactly 7 or 30 days ago comes back for a recap. The first one found, across the learn tracks.
+const REVIEW_AFTER = [7, 30]
+function reviewTopic(s: State, today: Date) {
+  const want = new Set(REVIEW_AFTER.map((n) => keyOf(addDays(today, -n))))
+  for (const c of chapters(s, 'learn')) {
+    for (const skill of c.skills) {
+      for (const topic of skill.topics) {
+        const at = s.plan[topic.id]
+        if (at && want.has(keyOf(new Date(at)))) return { c, skill, topic, ago: dayDiff(new Date(at), today) }
+      }
+    }
+  }
+  return null
+}
+
+// When a track with a target would finish late at its pace: one more topic today, the one after the next.
+// Pace looks back 4 weeks, so a younger track isn't judged yet.
+function catchUp(s: State, c: Chapter, today: Date) {
+  const target = targetFinish(c)
+  if (!target || !c.created_at || dayDiff(new Date(c.created_at), today) < 28) return null
+  const { finish, left } = pace(s, c, today)
+  if (!left || (finish && finish <= target)) return null
+  const open = c.skills.flatMap((skill) => skill.topics.filter((t) => !s.plan[t.id]).map((topic) => ({ skill, topic })))
+  const extra = open[1]
+  if (!extra) return null
+  const why = finish ? `Behind pace: you'd finish ${monthName(finish)}, target ${monthName(target)}` : `Behind pace: nothing ticked in 4 weeks, target ${monthName(target)}`
+  return { topic: extra.topic, why }
+}
+
+// Weeks since a fixed Monday, so the light track changes every Monday.
+const weekIndex = (d: Date) => Math.floor(dayDiff(new Date(2024, 0, 1), d) / 7)
+
+// Rotates weekly through the roadmap tracks that aren't the focus, have something left, and have no daily routine.
+function lightTrackChapter(s: State, d: Date, focus: ChapterId | null): ChapterId | null {
   const daily = new Set(s.routines.filter((r) => r.core).map((r) => r.chapter))
-  const pool = chapters(s, 'learn').filter((c) => c.id !== focus && !daily.has(c.id) && chapterActive(c, m)).map((c) => c.id)
+  const pool = chapters(s, 'learn').filter((c) => c.id !== focus && !daily.has(c.id) && nextUp(s, c)).map((c) => c.id)
   if (!pool.length) return null
-  const w = ((weekIndex(s, d) % pool.length) + pool.length) % pool.length
+  const w = ((weekIndex(d) % pool.length) + pool.length) % pool.length
   return pool[w]
+}
+
+// A track's next topic as a Today row: the topic as the title, its skill below.
+const nextRow = (s: State, c: Chapter) => {
+  const n = nextUp(s, c)
+  return n ? { title: n.topic.text, sub: n.skill.name } : { title: 'Everything on this track is done.', sub: '' }
 }
 
 export const checkCount = (s: State, id: string) => Object.values(s.days).filter((d) => d.done.includes(id)).length
 
+export type Slot = 'focus' | 'light' | 'project' | 'resource' | 'review' | 'catchup'
+
 export interface DayItem {
   id: string
-  ch: ChapterId
+  ch: ChapterId | null
   title: string
   sub: string
   routine?: Routine // set when the item comes from an editable routine
+  slot?: Slot // set on the rows from the tracks
+  habit?: Habit // set on wellbeing habit rows
+  done?: boolean // set when the tick isn't in the day's done list (habit rows)
 }
 
 export function todayItems(s: State, today: Date): DayItem[] {
-  const pos = programPos(s, today)
-  const Q = quarterPlan(s, pos.q)
+  const focus = focusOf(s)
   const k = keyOf(today)
   const items: DayItem[] = []
 
   for (const r of [...s.routines].sort((a, b) => a.position - b.position)) {
     if (!matchesWhen(r.when, today, k)) continue
-    let ch = r.chapter
-    let title = r.title
-    let sub = r.sub ?? ''
-    if (r.fill === 'focus' && Q.focus) {
-      ch = Q.focus
-      title = `${r.title}: ${chapterOf(s, ch)?.name ?? ''}`
-      sub = monthTask(s, ch, pos.m)?.text ?? sub
-    } else if (r.fill === 'light') {
-      const lc = lightTrackChapter(s, today, pos.m, Q.focus)
-      if (!lc) continue
-      ch = lc
-      title = `${r.title}: ${chapterOf(s, ch)?.name ?? ''}`
-      sub = monthTask(s, ch, pos.m)?.text ?? sub
-    } else if (r.fill === 'project') {
-      ch = Q.focus ?? ch
-      sub = Q.project || sub
-    }
-    items.push({ id: r.id, ch, title, sub, routine: r })
+    items.push({ id: r.id, ch: r.chapter, title: r.title, sub: r.sub ?? '', routine: r })
   }
 
-  // Trackers switched on in chapters (health ones, usually).
-  for (const c of chapters(s)) {
-    const { quit, workout } = c.components ?? {}
-    if (quit?.date && parseKey(quit.date) <= today) {
-      const n = dayDiff(parseKey(quit.date), today)
-      const tip = quit.tips.length ? quit.tips[n % quit.tips.length] : ''
-      items.push({ id: quit.check_id, ch: c.id, title: quit.check_title || `${c.name}: clean today`, sub: tip })
-    }
-    if (workout?.start && parseKey(workout.start) <= today && workout.days.includes(today.getDay()) && workout.workouts.length) {
-      // Today's tick doesn't move the rotation; only earlier days do.
-      const done = Object.entries(s.days).filter(([d, l]) => d < k && l.done.includes(workout.check_id)).length
-      const w = workout.workouts[done % workout.workouts.length]
-      items.push({ id: workout.check_id, ch: c.id, title: w.name, sub: w.text })
-    }
-  }
+  // Rows from the tracks: the focus track's next topic, another track's (rotating weekly), the focus track's current project.
+  const fc = chapterOf(s, focus)
+  if (fc) items.push({ id: 'slot-focus', ch: fc.id, slot: 'focus', ...nextRow(s, fc) })
+  const lc = chapterOf(s, lightTrackChapter(s, today, focus))
+  if (lc) items.push({ id: 'slot-light', ch: lc.id, slot: 'light', ...nextRow(s, lc) })
+  const p = fc ? currentProject(s, fc) : undefined
+  if (fc && p) items.push({ id: 'slot-project', ch: fc.id, slot: 'project', title: `${p.code} ${p.name}`, sub: '' })
+  const res = fc?.resources.find((r) => !s.plan[r.id])
+  if (fc && res) items.push({ id: 'slot-resource', ch: fc.id, slot: 'resource', title: res.title, sub: res.note ?? '' })
+  const rev = reviewTopic(s, today)
+  if (rev) items.push({ id: 'slot-review', ch: rev.c.id, slot: 'review', title: rev.topic.text, sub: `${rev.skill.name}, ticked ${rev.ago} days ago` })
+  const cu = fc ? catchUp(s, fc, today) : null
+  if (fc && cu) items.push({ id: 'slot-catchup', ch: fc.id, slot: 'catchup', title: cu.topic.text, sub: cu.why })
+
+  // Wellbeing habits due today. Their tick lives in the habit's log, so `done` comes with the row.
+  for (const r of habitRows(s, today)) items.push({ id: `habit:${r.habit.id}`, ch: null, title: r.title, sub: r.sub, habit: r.habit, done: r.done })
   return items
 }
 
@@ -110,41 +145,52 @@ export function todayItems(s: State, today: Date): DayItem[] {
 export function dayProgress(s: State, d: Date) {
   const items = todayItems(s, d)
   const done = new Set(s.days[keyOf(d)]?.done ?? [])
-  return { done: items.filter((i) => done.has(i.id)).length, total: items.length }
+  return { done: items.filter((i) => i.done ?? done.has(i.id)).length, total: items.length }
 }
 
-const coreIds = (s: State) => s.routines.filter((r) => r.core).map((r) => r.id)
+// Streak tasks due on a day: scheduled for it and created by then, so a new one doesn't break past streaks.
+const coreDue = (s: State, d: Date, k: string) =>
+  s.routines.filter((r) => r.core && keyOf(new Date(r.created_at)) <= k && matchesWhen(r.when, d, k)).map((r) => r.id)
 
-const coreDone = (ids: string[], s: State, k: string) => {
-  const d = s.days[k]
-  return !!d && ids.length > 0 && ids.every((id) => d.done.includes(id))
+// true when every streak task due that day was ticked, false when one was missed, null when none was due.
+const coreDone = (s: State, d: Date): boolean | null => {
+  const k = keyOf(d)
+  const ids = coreDue(s, d, k)
+  if (!ids.length) return null
+  const done = s.days[k]?.done ?? []
+  return ids.every((id) => done.includes(id))
 }
 
+// The first day any streak task existed; days before it can't count.
+const coreStart = (s: State) => {
+  const keys = s.routines.filter((r) => r.core).map((r) => keyOf(new Date(r.created_at))).sort()
+  return keys[0] ? parseKey(keys[0]) : null
+}
+
+// Days with nothing due are skipped: they neither add to the streak nor break it. Today only counts once done.
 export function streak(s: State, today: Date) {
-  const ids = coreIds(s)
+  const start = coreStart(s)
+  if (!start) return 0
   let n = 0
   let d = new Date(today)
-  if (!coreDone(ids, s, keyOf(d))) d = addDays(d, -1)
-  while (coreDone(ids, s, keyOf(d)) && n < 2000) {
-    n++
+  if (coreDone(s, d) !== true) d = addDays(d, -1)
+  while (d >= start) {
+    const ok = coreDone(s, d)
+    if (ok === false) break
+    if (ok) n++
     d = addDays(d, -1)
   }
   return n
 }
 
-export function bestStreak(s: State) {
-  const ids = coreIds(s)
-  const keys = Object.keys(s.days).sort()
+export function bestStreak(s: State, today = new Date()) {
+  const start = coreStart(s)
   let best = 0
   let run = 0
-  let prev: string | null = null
-  for (const k of keys) {
-    const ok = coreDone(ids, s, k)
-    if (!ok) run = 0
-    else if (prev && dayDiff(parseKey(prev), parseKey(k)) === 1) run++
-    else run = 1
-    best = Math.max(best, run)
-    prev = ok ? k : null
+  for (let d = start; d && d <= today; d = addDays(d, 1)) {
+    const ok = coreDone(s, d)
+    if (ok === false) run = 0
+    else if (ok) best = Math.max(best, ++run)
   }
   return best
 }

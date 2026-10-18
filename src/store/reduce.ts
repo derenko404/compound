@@ -16,25 +16,10 @@ export function reduce(s: State, op: Op): State {
     }
     case 'project':
       return { ...s, projects: { ...s.projects, [op.projectId]: op.status } }
-    case 'chapterNote':
-      return { ...s, chapterNotes: { ...s.chapterNotes, [op.chapter]: op.body } }
-    case 'addNote':
-      return { ...s, notes: [op.note, ...s.notes] }
+    case 'putNote':
+      return { ...s, notes: s.notes.some((n) => n.id === op.note.id) ? s.notes.map((n) => (n.id === op.note.id ? op.note : n)) : [op.note, ...s.notes] }
     case 'deleteNote':
       return { ...s, notes: s.notes.filter((n) => n.id !== op.id) }
-    case 'addIdea':
-      return { ...s, ideas: [op.idea, ...s.ideas] }
-    case 'deleteIdea':
-      return { ...s, ideas: s.ideas.filter((i) => i.id !== op.id) }
-    case 'addIdeaNote':
-      return {
-        ...s,
-        ideas: s.ideas.map((i) => (i.id === op.note.idea_id ? { ...i, notes: [...i.notes, op.note] } : i)),
-      }
-    case 'addBookmark':
-      return { ...s, bookmarks: [op.bookmark, ...s.bookmarks] }
-    case 'deleteBookmark':
-      return { ...s, bookmarks: s.bookmarks.filter((b) => b.id !== op.id) }
     case 'putChapter':
       return { ...s, chapters: put(s.chapters, op.chapter) }
     case 'deleteChapter':
@@ -56,6 +41,19 @@ export function reduce(s: State, op: Op): State {
       return { ...s, routines: put(s.routines, op.routine) }
     case 'deleteRoutine':
       return { ...s, routines: s.routines.filter((r) => r.id !== op.id) }
+    case 'putHabit':
+      return { ...s, habits: put(s.habits, op.habit) }
+    case 'deleteHabit': {
+      const habitLogs = { ...s.habitLogs }
+      delete habitLogs[op.id]
+      return { ...s, habits: s.habits.filter((h) => h.id !== op.id), habitLogs }
+    }
+    case 'habitLog': {
+      const log = { ...s.habitLogs[op.habit] }
+      if (op.value == null) delete log[op.day]
+      else log[op.day] = op.value
+      return { ...s, habitLogs: { ...s.habitLogs, [op.habit]: log } }
+    }
     case 'batch':
       return op.ops.reduce(reduce, s)
   }

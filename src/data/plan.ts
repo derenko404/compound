@@ -21,7 +21,7 @@ export const CH: Record<ChapterId, Chapter> = {
   own: { name: 'My own', short: 'Personal', color: '--c-own' },
 }
 export const CH_ORDER: ChapterId[] = ['tech', 'product', 'mgmt', 'biz', 'eng', 'money']
-export const ALL_CHAPTERS: ChapterId[] = [...CH_ORDER, 'smoke', 'gym', 'own']
+export const ALL_CHAPTERS: ChapterId[] = [...CH_ORDER, 'own']
 
 export interface Quarter {
   q: number
@@ -149,7 +149,7 @@ export const MILESTONES = [
 ]
 
 export const CRAVING_TIPS = [
-  'Craving? Delay 10 minutes; it usually fades first.',
+  'Craving? Delay 10 minutes. It usually fades first.',
   'Breathe in for 4, out for 6, ten times.',
   'Drink a full glass of water, slowly.',
   'Walk, do push-ups or message a friend.',
