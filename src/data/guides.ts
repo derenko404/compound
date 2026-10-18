@@ -668,6 +668,7 @@ export const GUIDES: Partial<Record<ChapterId, ChapterGuide>> = {
           { title: 'Pronunciation with Emma', url: 'https://www.youtube.com/@pronunciationwithemma', kind: 'video', note: 'Clear lessons on single sounds.', free: true },
           { title: 'English with Jennifer', url: 'https://www.youtube.com/@EnglishwithJennifer', kind: 'video', note: 'Pronunciation and grammar from a careful teacher.', free: true },
           { title: 'BBC Learning English: pronunciation series', url: 'https://www.bbc.co.uk/learningenglish/english/features/pronunciation', kind: 'video', note: 'British English, short videos.', free: true },
+          { title: 'Hadar: 15 Minute Morning Pronunciation Practice', url: 'https://www.youtube.com/watch?v=l69yZ5xabbo', kind: 'video', note: 'A follow-along warm-up for sounds and rhythm; an option for the daily shadowing slot.', free: true },
           { title: 'Sounds American', url: 'https://www.soundsamerican.net/', kind: 'course', note: 'An American pronunciation course with free materials.', free: true },
           { title: 'YouGlish', url: 'https://youglish.com/', kind: 'tool', note: 'Hear any word said by real people in YouTube videos.', free: true },
           { title: 'Cambridge Dictionary', url: 'https://dictionary.cambridge.org/', kind: 'tool', note: 'Audio and stress marks for every word.', free: true },
@@ -760,7 +761,7 @@ export const GUIDES: Partial<Record<ChapterId, ChapterGuide>> = {
         title: 'Daily 20-minute routine',
         items: [
           '7 min, Listen: one podcast or video in English at 1× speed: tech, business or BBC 6 Minute English',
-          '7 min, Shadow: pick 1 minute of it and repeat each sentence aloud right after the speaker, copying rhythm and intonation',
+          '7 min, Shadow: pick 1 minute of it and repeat each sentence aloud right after the speaker, copying rhythm and intonation. Or follow Hadar: 15 Minute Morning Pronunciation Practice',
           '6 min, Speak or write: explain your workday aloud and record it, or write 5 sentences, then check them (Claude can correct them)',
         ],
       },

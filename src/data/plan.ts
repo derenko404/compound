@@ -134,7 +134,7 @@ export interface DailyItem {
 
 export const DAILY: DailyItem[] = [
   { id: 'eng-listen', ch: 'eng', title: 'Listen for 7 minutes', sub: 'A podcast or video in English at 1× speed' },
-  { id: 'eng-shadow', ch: 'eng', title: 'Shadow for 7 minutes', sub: 'Repeat 1 minute aloud right after the speaker' },
+  { id: 'eng-shadow', ch: 'eng', title: 'Shadow for 7 minutes', sub: 'Repeat 1 minute aloud right after the speaker, or follow Hadar: 15 Minute Morning Pronunciation Practice' },
   { id: 'eng-speak', ch: 'eng', title: 'Speak or write for 6 minutes', sub: 'Record your day, or write 5 sentences and check them' },
   { id: 'log', ch: 'own', title: 'Learning log', sub: 'One line: what did you learn or do today?', log: true },
 ]
