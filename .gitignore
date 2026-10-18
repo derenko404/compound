@@ -28,3 +28,6 @@ dist-ssr
 
 # Personal data exports (never commit)
 /backup/
+
+# Wrangler local dev state
+.wrangler/
