@@ -7,7 +7,7 @@ import type { BookmarkKind, ChapterId } from '../src/lib/types'
 
 interface Env {
   ASSETS: { fetch(req: Request): Promise<Response> }
-  AI: { run(model: string, input: unknown): Promise<{ response?: string }> }
+  AI: { run(model: string, input: unknown): Promise<{ response?: unknown }> }
   VITE_SUPABASE_URL: string
   // Secrets (wrangler secret put, or the dashboard's Variables and Secrets):
   SUPABASE_SECRET_KEY: string // service-role / secret key; bypasses RLS, so user_id is set explicitly
@@ -30,7 +30,8 @@ interface TgMessage {
   caption_entities?: TgEntity[]
 }
 
-const MODEL = '@cf/meta/llama-3.1-8b-instruct'
+// Workers AI retires models (the plain 3.1 8B went on 2026-05-30); check the catalog if AI calls start failing.
+const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8'
 const UA = 'Mozilla/5.0 (compatible; RoadmapFinds/1.0)'
 const HELP = [
   'Send me a link, with a note if you like, and I\'ll save it to Finds.',
@@ -82,7 +83,7 @@ async function handle(msg: TgMessage, env: Env) {
     // With /ai the summary replaces the page's own description, and the text after the link is the question.
     const summary = isAi ? await analyze(env, url, meta, note) : ''
     const { error } = await db.from('bookmarks').upsert(
-      { user_id: env.OWNER_USER_ID, url, kind, title: meta.title, description: summary || meta.description, tags: ai.tags, note, source: 'telegram' },
+      { user_id: env.OWNER_USER_ID, url, kind, title: meta.title, description: summary || meta.description, tags: ai.tags, ...(note && { note }), source: 'telegram' },
       { onConflict: 'user_id,url' },
     )
     if (error) {
@@ -117,7 +118,7 @@ async function saveNote(env: Env, text: string) {
 
 async function pickChapter(env: Env, body: string): Promise<ChapterId | null> {
   try {
-    const { response = '' } = await env.AI.run(MODEL, {
+    const response = await run(env, {
       max_tokens: 10,
       messages: [
         {
@@ -160,12 +161,18 @@ const ask = (env: Env, question: string) =>
 
 async function chat(env: Env, max_tokens: number, messages: { role: string; content: string }[]) {
   try {
-    const { response = '' } = await env.AI.run(MODEL, { max_tokens, messages })
+    const response = await run(env, { max_tokens, messages })
     return response.trim().slice(0, 3500) || 'The AI had nothing to say. Try again.'
   } catch (e) {
     console.error('ai', e)
     return "Couldn't reach the AI. Try again in a minute."
   }
+}
+
+// Some models hand back JSON replies already parsed, so normalise to text.
+async function run(env: Env, input: { max_tokens: number; messages: { role: string; content: string }[] }) {
+  const { response } = await env.AI.run(MODEL, input)
+  return typeof response === 'string' ? response : response == null ? '' : JSON.stringify(response)
 }
 
 async function reply(env: Env, chat_id: number, text: string) {
@@ -241,7 +248,7 @@ const clip = (s: string, n: number) => {
 
 async function classify(env: Env, url: string, meta: Meta): Promise<{ kind: BookmarkKind | null; tags: string[] }> {
   try {
-    const { response = '' } = await env.AI.run(MODEL, {
+    const response = await run(env, {
       max_tokens: 120,
       messages: [
         {
