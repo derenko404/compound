@@ -99,8 +99,8 @@ The UI is a design system: every page is built from the same tokens and componen
 
 ## AI access
 
-- Settings → AI access makes personal access tokens (`rl_…`, shown once; table `api_tokens` stores the SHA-256 hash). A token has full access to its owner's data.
-- `worker/api.ts` holds the operations (topics and lists CRUD, routines, notes, habits, focus), with input checks, ids and project codes assigned server-side, and updates that keep ticks when ids are sent back. `worker/routes.ts` serves them as REST at `/api/v1` (OpenAPI at `/api/v1/openapi.json`, CORS on) and as an MCP server at `/mcp` (streamable HTTP, JSON responses; `Authorization: Bearer <token>` or `/mcp/<token>`). Tool names, descriptions and input schemas are in `TOOLS`.
+- Settings → AI access makes personal access tokens (`rl_…`, shown once; table `api_tokens` stores the SHA-256 hash). A token can read, create and change its owner's data, never delete: there are no delete operations, and updates keep items they don't mention (`keep` in `worker/api.ts`). Deleting is only in the app.
+- `worker/api.ts` holds the operations (topics and lists: read, create, update; routines and notes: read, add; habits; focus), with input checks, ids and project codes assigned server-side, and updates that keep ticks when ids are sent back. `worker/routes.ts` serves them as REST at `/api/v1` (OpenAPI at `/api/v1/openapi.json`, CORS on) and as an MCP server at `/mcp` (streamable HTTP, JSON responses; `Authorization: Bearer <token>` or `/mcp/<token>`). Tool names, descriptions and input schemas are in `TOOLS`.
 - `public/llms.txt` tells AIs what a good topic and list look like; keep it in sync with the tools.
 
 ## Env and deploy

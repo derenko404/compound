@@ -6,17 +6,17 @@
 
 - MCP server (streamable HTTP): `/mcp` with the header `Authorization: Bearer <token>`. If you can't set headers, use `/mcp/<token>`.
 - REST API: `/api/v1` with the same header. Description: `/api/v1/openapi.json`.
-- The user makes the token in the app: Settings → AI access. It has full access to their data, so never show it back to them or put it anywhere else.
+- The user makes the token in the app: Settings → AI access. It can read, add and change their data, but never delete it. Still, never show it back to them or put it anywhere else.
 
 Tools (MCP) and routes (REST) are the same operations:
 
 | Tool | REST |
 | --- | --- |
 | list_topics, get_topic | GET /topics, GET /topics/{id} |
-| create_topic, update_topic, delete_topic | POST /topics, PATCH /topics/{id}, DELETE /topics/{id} |
+| create_topic, update_topic | POST /topics, PATCH /topics/{id} |
 | list_lists, get_list | GET /lists, GET /lists/{id} |
-| create_list, update_list, delete_list | POST /lists, PATCH /lists/{id}, DELETE /lists/{id} |
-| list_routines, add_routine, delete_routine | GET /routines, POST /routines, DELETE /routines/{id} |
+| create_list, update_list | POST /lists, PATCH /lists/{id} |
+| list_routines, add_routine | GET /routines, POST /routines |
 | list_notes, add_note | GET /notes, POST /notes |
 | list_habits | GET /habits |
 | get_focus, set_focus | GET /focus, PUT /focus |
@@ -57,7 +57,9 @@ A list is a set of things to get through: "100 films everyone should watch", "50
 
 ## Updating
 
-`update_topic` and `update_list` change only the fields you send. A list you send (skills, resources, projects, goals, items) replaces the old one. Get the topic or list first and send items back with their ids, or the user's ticks on them are lost.
+`update_topic` and `update_list` change only the fields you send. In a list you send (skills, resources, projects, goals, a skill's steps, items), items with an id that exists are changed, new ones are added, and items you leave out stay where they are, after the ones you sent. Get the topic or list first and keep the ids so ticks and notes stay on the right items. Sending items in a new order reorders them.
+
+Nothing can be deleted through the API or MCP: there are no delete tools, and updates never remove items. If something should go, tell the user to remove it in the app (Edit, then the red minus).
 
 ## Example: create_topic
 

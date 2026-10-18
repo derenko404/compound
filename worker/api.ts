@@ -70,6 +70,10 @@ const putList = async (c: Caller, l: ListDef) =>
 const str = (x: unknown, max = 2000) => (typeof x === 'string' ? x.trim().slice(0, max) : '')
 const strs = (x: unknown) => (Array.isArray(x) ? x.map((v) => str(v, 400)).filter(Boolean) : [])
 const arr = (x: unknown): Json[] => (Array.isArray(x) ? x.filter((v) => v && typeof v === 'object') : [])
+// The API never deletes: a list sent in an update adds and changes items (matched by id, or by text for goals),
+// and the items it leaves out stay, after the ones sent. Sending items in a new order reorders them.
+const keep = <T extends { id: string }>(sent: T[], old: T[]) => [...sent, ...old.filter((o) => !sent.some((s) => s.id === o.id))]
+const keepText = (sent: string[], old: string[]) => [...sent, ...old.filter((o) => !sent.includes(o))]
 
 // Steps may come as plain text or as { id, text }. Keeping an id keeps its tick.
 const skillsIn = (x: unknown): Skill[] => arr(x).map((k) => ({
@@ -156,28 +160,28 @@ export const ops = {
     return topicOut(t, new Set())
   },
 
-  // Only the fields given change. Lists given (skills, resources, projects, goals) replace the old ones;
-  // send items back with their ids to keep their ticks.
+  // Only the fields given change. Lists given (skills, resources, projects, goals, a skill's steps) add and
+  // change items but never drop them: anything not sent back stays, after the items sent (see keep).
   async update_topic(c: Caller, a: Json) {
     const all = await topics(c)
     const t = { ...findTopic(all, a.id) }
     if (a.name !== undefined) t.name = str(a.name, 60) || fail(400, 'A topic needs a name.')
     if (a.description !== undefined) t.description = str(a.description, 6000) || undefined
-    if (a.goals !== undefined) t.outcomes = strs(a.goals)
+    if (a.goals !== undefined) t.outcomes = keepText(strs(a.goals), t.outcomes)
     if (a.months !== undefined) t.months = Number.isInteger(a.months) && a.months > 0 ? a.months : undefined
     if (a.color !== undefined && (PALETTE as readonly string[]).includes(a.color)) t.color = a.color
-    if (a.skills !== undefined) t.skills = skillsIn(a.skills)
-    if (a.resources !== undefined) t.resources = resourcesIn(a.resources)
-    if (a.projects !== undefined) t.projects = projectsIn(a.projects, t, all)
+    if (a.skills !== undefined) {
+      // A skill sent back keeps the steps it didn't mention, like the lists around it.
+      const sent = skillsIn(a.skills).map((k) => {
+        const old = t.skills.find((o) => o.id === k.id)
+        return old ? { ...k, steps: keep(k.steps, old.steps) } : k
+      })
+      t.skills = keep(sent, t.skills)
+    }
+    if (a.resources !== undefined) t.resources = keep(resourcesIn(a.resources), t.resources)
+    if (a.projects !== undefined) t.projects = keep(projectsIn(a.projects, t, all), t.projects)
     await putTopic(c, t)
     return topicOut(t, await ticks(c))
-  },
-
-  async delete_topic(c: Caller, a: Json) {
-    const t = findTopic(await topics(c), a.id)
-    if (t.kind === 'general') fail(400, 'Personal is built in and can\'t be deleted.')
-    check(await c.db.from('topics').delete().eq('user_id', c.user).eq('id', t.id))
-    return { deleted: t.id }
   },
 
   async list_lists(c: Caller) {
@@ -205,21 +209,15 @@ export const ops = {
     return ops.get_list(c, { id: l.id })
   },
 
-  // Items given replace the old ones; send them back with their ids to keep ticks and notes.
+  // Items given are added or changed; items not sent back stay (see keep), with their ticks and notes.
   async update_list(c: Caller, a: Json) {
     const l = { ...((await lists(c)).find((x) => x.id === a.id) ?? fail(404, `No list with id "${String(a.id)}".`)) }
     if (a.name !== undefined) l.name = str(a.name, 60) || fail(400, 'A list needs a name.')
     if (a.title !== undefined) l.title = str(a.title, 200) || l.name
     if (a.detail_label !== undefined) l.sub_label = str(a.detail_label, 40)
-    if (a.items !== undefined) l.items = arr(a.items).map((it) => ({ id: str(it.id, 80) || uuid(), title: str(it.title, 300), sub: str(it.detail, 200) || undefined })).filter((it) => it.title)
+    if (a.items !== undefined) l.items = keep(arr(a.items).map((it) => ({ id: str(it.id, 80) || uuid(), title: str(it.title, 300), sub: str(it.detail, 200) || undefined })).filter((it) => it.title), l.items)
     await putList(c, l)
     return ops.get_list(c, { id: l.id })
-  },
-
-  async delete_list(c: Caller, a: Json) {
-    check(await c.db.from('list_progress').delete().eq('user_id', c.user).eq('list_id', a.id))
-    check(await c.db.from('lists').delete().eq('user_id', c.user).eq('id', a.id))
-    return { deleted: a.id }
   },
 
   async list_routines(c: Caller) {
@@ -239,10 +237,6 @@ export const ops = {
     return r
   },
 
-  async delete_routine(c: Caller, a: Json) {
-    check(await c.db.from('routines').delete().eq('user_id', c.user).eq('id', a.id))
-    return { deleted: a.id }
-  },
 
   async list_notes(c: Caller, a: Json) {
     let q = c.db.from('notes').select('id, type, body, url, context, tags, topic, created_at').eq('user_id', c.user)

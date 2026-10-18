@@ -52,13 +52,11 @@ export const TOOLS: { name: OpName; description: string; inputSchema: object }[]
   { name: 'list_topics', description: 'All topics (learning areas) with counts of skills, steps (and how many are done), resources and projects.', inputSchema: { type: 'object', properties: {} } },
   { name: 'get_topic', description: 'One topic in full: about, goals, skills with steps (and which are done), resources, projects.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
   { name: 'create_topic', description: 'Create a learning topic. Read /llms.txt for what a good topic looks like. Project codes are given automatically.', inputSchema: { type: 'object', properties: topicFields, required: ['name'] } },
-  { name: 'update_topic', description: 'Change a topic. Only fields you send change; a list you send (skills, resources, projects, goals) replaces the old one, so send items back with their ids to keep their ticks.', inputSchema: { type: 'object', properties: { id, ...topicFields }, required: ['id'] } },
-  { name: 'delete_topic', description: 'Delete a topic. Personal can\'t be deleted.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
+  { name: 'update_topic', description: 'Change a topic. Only fields you send change; items you send in a list (skills, resources, projects, goals, steps) are added or changed by id, and items you leave out stay. Nothing can be deleted through the API.', inputSchema: { type: 'object', properties: { id, ...topicFields }, required: ['id'] } },
   { name: 'list_lists', description: 'All lists (books to read, films to watch…) with how many items are done.', inputSchema: { type: 'object', properties: {} } },
   { name: 'get_list', description: 'One list with its items, ticks and notes.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
   { name: 'create_list', description: 'Create a list, e.g. "50 sci-fi films everyone should see", with its items.', inputSchema: { type: 'object', properties: listFields, required: ['name', 'items'] } },
-  { name: 'update_list', description: 'Change a list. Items you send replace the old ones; keep ids to keep ticks and notes.', inputSchema: { type: 'object', properties: { id, ...listFields }, required: ['id'] } },
-  { name: 'delete_list', description: 'Delete a list with its ticks and notes.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
+  { name: 'update_list', description: 'Change a list. Items you send are added or changed by id, and items you leave out stay. Nothing can be deleted through the API.', inputSchema: { type: 'object', properties: { id, ...listFields }, required: ['id'] } },
   { name: 'list_routines', description: 'Routines and one-off tasks shown on Today.', inputSchema: { type: 'object', properties: {} } },
   {
     name: 'add_routine', description: 'Add a routine to Today.',
@@ -71,7 +69,6 @@ export const TOOLS: { name: OpName; description: string; inputSchema: object }[]
       },
     },
   },
-  { name: 'delete_routine', description: 'Delete a routine.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
   { name: 'list_notes', description: 'Recent notebook entries (notes, ideas, links), newest first.', inputSchema: { type: 'object', properties: { query: { type: 'string' }, topic: { type: 'string' }, limit: { type: 'integer' } } } },
   { name: 'add_note', description: 'Save a note, an idea (tag "idea") or a link to the notebook.', inputSchema: { type: 'object', properties: { text: { type: 'string' }, url: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } }, topic: { type: 'string' } } } },
   { name: 'list_habits', description: 'Wellbeing habits (gym, water, quit smoking, new and broken habits).', inputSchema: { type: 'object', properties: {} } },
@@ -81,7 +78,7 @@ export const TOOLS: { name: OpName; description: string; inputSchema: object }[]
 
 /* ---------- Shared: auth and calling an operation ---------- */
 
-const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization, content-type, mcp-session-id, mcp-protocol-version', 'access-control-allow-methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS' }
+const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization, content-type, mcp-session-id, mcp-protocol-version', 'access-control-allow-methods': 'GET, POST, PATCH, PUT, OPTIONS' }
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body, null, 2), { status, headers: { 'content-type': 'application/json', ...cors } })
 
 // Authorization: Bearer <token>. Clients that can't send headers may put it in the path: /mcp/<token>.
@@ -96,10 +93,10 @@ async function run(c: Caller, name: OpName, args: unknown) {
 
 const ROUTES: [string, RegExp, OpName][] = [
   ['GET', /^\/topics$/, 'list_topics'], ['POST', /^\/topics$/, 'create_topic'],
-  ['GET', /^\/topics\/([^/]+)$/, 'get_topic'], ['PATCH', /^\/topics\/([^/]+)$/, 'update_topic'], ['DELETE', /^\/topics\/([^/]+)$/, 'delete_topic'],
+  ['GET', /^\/topics\/([^/]+)$/, 'get_topic'], ['PATCH', /^\/topics\/([^/]+)$/, 'update_topic'],
   ['GET', /^\/lists$/, 'list_lists'], ['POST', /^\/lists$/, 'create_list'],
-  ['GET', /^\/lists\/([^/]+)$/, 'get_list'], ['PATCH', /^\/lists\/([^/]+)$/, 'update_list'], ['DELETE', /^\/lists\/([^/]+)$/, 'delete_list'],
-  ['GET', /^\/routines$/, 'list_routines'], ['POST', /^\/routines$/, 'add_routine'], ['DELETE', /^\/routines\/([^/]+)$/, 'delete_routine'],
+  ['GET', /^\/lists\/([^/]+)$/, 'get_list'], ['PATCH', /^\/lists\/([^/]+)$/, 'update_list'],
+  ['GET', /^\/routines$/, 'list_routines'], ['POST', /^\/routines$/, 'add_routine'],
   ['GET', /^\/notes$/, 'list_notes'], ['POST', /^\/notes$/, 'add_note'],
   ['GET', /^\/habits$/, 'list_habits'],
   ['GET', /^\/focus$/, 'get_focus'], ['PUT', /^\/focus$/, 'set_focus'],
