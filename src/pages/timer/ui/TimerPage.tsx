@@ -17,7 +17,7 @@ const SOUNDS: { value: Ambient; label: string }[] = [
 
 /**
  * A focus timer: pick a length (short, long, or custom minutes), and a ring counts it down. Start and pause,
- * and reset. It keeps running on other pages (see src/fx/timer.ts).
+ * and reset. It keeps running on other pages (see src/features/timer/model/timer.ts).
  */
 export function Timer() {
   const { state, settings, now } = useTimer()
