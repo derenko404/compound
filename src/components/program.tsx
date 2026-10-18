@@ -1,5 +1,5 @@
 // Roadmap views for Today: the focus topic, and this week as a strip.
-import { topicOf } from '@core/domain/content'
+import { topicOf } from '@/core/domain/content'
 import { addDays, keyOf } from '@/lib/dates'
 import { Link } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'

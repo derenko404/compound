@@ -1,5 +1,5 @@
 // Wellbeing habits: the maths every skin shares, and each type's Today row. No UI here.
-import type { Habit, HabitData, HabitType, State } from '@core/domain/types'
+import type { Habit, HabitData, HabitType, State } from '@/core/domain/types'
 import { addDays, dayDiff, keyOf, parseKey } from './dates'
 import { t } from '@/i18n'
 

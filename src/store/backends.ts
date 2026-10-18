@@ -1,10 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { emptyState, type Topic, type ListDef, type Note, type Op, type State } from '@core/domain/types'
-import { normalizeState } from '@core/domain/content'
-import type { NotesFilter, Repos } from '@core/ports/repos'
-import { applyOp, loadState } from '@core/services/state'
-import { supabaseRepos } from '@adapters/supabase/repos'
-import { LOCAL_KEY, clearLocal, localRepos, readLocal } from '@adapters/local/repos'
+import { emptyState, type Topic, type ListDef, type Note, type Op, type State } from '@/core/domain/types'
+import { normalizeState } from '@/core/domain/content'
+import type { NotesFilter, Repositories } from '@/core/ports/repositories'
+import { StateService } from '@/core/services/state.service'
+import { SupabaseRepositories } from '@/adapters/supabase'
+import { LocalRepositories, LocalStore } from '@/adapters/local'
 
 export type { NotesFilter }
 
@@ -21,24 +21,28 @@ export interface Backend {
   countNotes(f: NotesFilter): Promise<number>
 }
 
-const backendOver = (kind: Backend['kind'], r: Repos): Backend => ({
+const backendOver = (kind: Backend['kind'], r: Repositories): Backend => {
+  const state = new StateService(r)
+  return {
   kind,
-  load: () => loadState(r),
-  save: (op, next) => applyOp(r, op, next),
+  load: () => state.load(),
+  save: (op, next) => state.apply(op, next),
   notes: (f, offset, limit) => r.notes.page(f, offset, limit),
   countNotes: (f) => r.notes.count(f),
-})
+  }
+}
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
 
 export const supabase: SupabaseClient | null = url && key ? createClient(url, key) : null
 
-export const localBackend: Backend = backendOver('local', localRepos())
-export const cloudBackend = (db: SupabaseClient): Backend => backendOver('cloud', supabaseRepos(db))
+const device = new LocalStore()
+export const localBackend: Backend = backendOver('local', LocalRepositories.create(device))
+export const cloudBackend = (db: SupabaseClient): Backend => backendOver('cloud', SupabaseRepositories.create(db))
 
-export const loadLocalSnapshot = async () => readLocal()
-export const clearLocalSnapshot = clearLocal
+export const loadLocalSnapshot = async () => device.read()
+export const clearLocalSnapshot = () => device.clear()
 
 // Rows outside the state (shares, tokens, Telegram) are still read here, untyped.
 const check = <T extends { error: unknown }>(r: T) => {
@@ -89,7 +93,7 @@ export async function importFile(backend: Backend, current: State, file: State) 
     routines: byId(current.routines, file.routines),
     habits: byId(current.habits, file.habits),
   }
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(merged))
+  device.write(merged)
 }
 
 /* ---------- Telegram: link one chat to the account ---------- */

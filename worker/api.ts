@@ -2,9 +2,9 @@
 // Every call runs as the user who owns the token. The worker's Supabase client uses the secret key (bypasses RLS),
 // so every query here filters on user_id itself.
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS, codePrefix, freshId, nextPosition, normalizeTopic } from '../core/domain/content'
-import { cleanTag, findUrls, kindFromUrl } from '../core/domain/finds'
-import type { Topic, ListDef, Project, Resource, ResourceKind, Routine, Skill, When } from '../core/domain/types'
+import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS, codePrefix, freshId, nextPosition, normalizeTopic } from '../src/core/domain/content'
+import { cleanTag, findUrls, kindFromUrl } from '../src/core/domain/finds'
+import type { Topic, ListDef, Project, Resource, ResourceKind, Routine, Skill, When } from '../src/core/domain/types'
 
 export interface Caller { db: SupabaseClient; user: string }
 

@@ -15,5 +15,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["worker", "core", "adapters"]
+  "include": ["worker", "src/core", "src/adapters"]
 }

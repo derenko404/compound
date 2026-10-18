@@ -26,18 +26,10 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@core/*": [
-        "./core/*"
-      ],
-      "@adapters/*": [
-        "./adapters/*"
       ]
     }
   },
   "include": [
-    "src",
-    "core",
-    "adapters"
+    "src"
   ]
 }

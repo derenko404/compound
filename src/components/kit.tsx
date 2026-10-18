@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Link, type LinkProps } from '@tanstack/react-router'
 import { Check as CheckIcon, ChevronDown, ChevronRight, Copy, Menu, Minus, Plus, Search, X } from 'lucide-react'
-import type { Topic, TopicId } from '@core/domain/types'
+import type { Topic, TopicId } from '@/core/domain/types'
 import { burst, toast } from '@/fx/fx'
 import { playTick, playUntick } from '@/fx/sound'
 import { Button } from '@/components/ui/button'

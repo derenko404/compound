@@ -9,7 +9,7 @@ import { toast } from '@/fx/fx'
 import { SHARE_DAYS, createShare, supabase, type ShareKind } from '@/store/backends'
 import { useStore } from '@/store/StoreProvider'
 import { t } from '@/i18n'
-import type { Topic, ListDef } from '@core/domain/types'
+import type { Topic, ListDef } from '@/core/domain/types'
 import { FormSheet } from './edit'
 import { CopyButton } from './kit'
 

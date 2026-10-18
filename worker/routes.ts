@@ -1,7 +1,7 @@
 // HTTP for AI access: the REST API at /api/v1 and the MCP server at /mcp, both over the operations in api.ts.
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ApiError, ops, userForToken, type Caller, type OpName } from './api'
-import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS } from '../core/domain/content'
+import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS } from '../src/core/domain/content'
 
 /* ---------- The tools: names, descriptions and input schemas (MCP), also the REST docs ---------- */
 

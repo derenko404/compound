@@ -1,8 +1,8 @@
 // Cloudflare Worker: serves the app from dist/, takes links from the Telegram bot at /tg, and serves AI access
 // (/api/v1 and /mcp). Only those paths reach this code (run_worker_first in wrangler.jsonc); the rest is static assets.
 import { createClient } from '@supabase/supabase-js'
-import { cleanTag, findUrls, kindFromUrl } from '../core/domain/finds'
-import type { LinkKind, Topic, TopicId } from '../core/domain/types'
+import { cleanTag, findUrls, kindFromUrl } from '../src/core/domain/finds'
+import type { LinkKind, Topic, TopicId } from '../src/core/domain/types'
 import { handleApi, handleMcp } from './routes'
 
 interface Env {

@@ -15,12 +15,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@core/*": [
-        "./core/*"
-      ],
-      "@adapters/*": [
-        "./adapters/*"
       ]
     }
   }
