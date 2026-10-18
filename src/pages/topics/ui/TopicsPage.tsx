@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
 import { Link, getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
 import { Crosshair, Info, Pencil, Share2, Trash2 } from 'lucide-react'
-import { usePageBar } from '@/shared/ui/page-bar'
+import {
+  usePageBar, Chip, ChipsList, Header, List, Meter, Row, SearchField, Section, SortList, Tabs, cvar, empty, ConfirmSheet, RemoveButton, moveTo, useSheet,
+} from '@/shared/ui'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/primitives/dialog'
 import { RESOURCE_KINDS, topicOf, topics, program, topicSnapshot } from '@/core/domain/content'
 import { ShareSheet } from '@/features/share-link'
@@ -11,10 +13,6 @@ import { useNoteCount, useNotes, useStore } from '@/shared/store/StoreProvider'
 import { lockOn } from '@/shared/fx/fx'
 import { playFocus } from '@/shared/fx/sound'
 import { currentLocale, t } from '@/shared/i18n'
-import {
-  Chip, ChipsList, Header, List, Meter, Row, SearchField, Section, SortList, Tabs, cvar, empty,
-} from '@/shared/ui/kit'
-import { ConfirmSheet, RemoveButton, moveTo, useSheet } from '@/shared/ui/form'
 import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/entities/topic'
 import { NoteCard } from '@/entities/note'
 import { NoteSheet } from '@/features/note-edit'

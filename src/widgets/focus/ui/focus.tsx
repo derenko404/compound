@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react'
 import { currentProject, dayProgress, focusOf, nextUp, topicProgress, weekdayShort } from '@/entities/today'
 import { t } from '@/shared/i18n'
 import { useStore } from '@/shared/store/StoreProvider'
-import { cvar } from '@/shared/ui/kit'
+import { cvar } from '@/shared/ui'
 
 // The focus topic: which skill you're on, the next few steps, and the project in progress.
 export function FocusCard() {

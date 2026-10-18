@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ChevronLeft, MoreHorizontal, type LucideIcon } from 'lucide-react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/primitives/dropdown-menu'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/primitives/dialog'
-import { PlusButton } from '@/shared/ui/form'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './primitives/dropdown-menu'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './primitives/dialog'
+import { PlusButton } from './plus-button'
 import { t } from '@/shared/i18n'
 
 export interface BarAction { label: string; icon?: LucideIcon; onSelect: () => void; danger?: boolean }

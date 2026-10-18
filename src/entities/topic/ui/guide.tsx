@@ -8,8 +8,7 @@ import type { Topic, TopicId, Project, ProjectStatus, Resource, ResourceKind, Sk
 import { useStore } from '@/shared/store/StoreProvider'
 import { burst, celebrate } from '@/shared/fx/fx'
 import { playTick, playUntick } from '@/shared/fx/sound'
-import { Check, Fold, InnerLink, Row, cvar } from '@/shared/ui/kit'
-import { RemoveButton } from '@/shared/ui/form'
+import { Check, Fold, InnerLink, Row, cvar, RemoveButton } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
 interface LinkIndex {

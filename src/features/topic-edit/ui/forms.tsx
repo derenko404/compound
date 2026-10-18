@@ -5,9 +5,7 @@ import type { Topic, TopicKind, Project, Resource, Skill } from '@/core/domain/t
 import { monthName, targetFinish } from '@/entities/today'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
-import {
-  AreaField, ColorField, FormSheet, LinesField, SelectField, SwitchField, TextField, cleanLines, fail, linesToItems,
-} from '@/shared/ui/form'
+import { AreaField, ColorField, FormSheet, LinesField, SelectField, SwitchField, TextField, cleanLines, fail, linesToItems } from '@/shared/ui'
 
 type SheetProps = { open: boolean; onOpenChange: (o: boolean) => void }
 

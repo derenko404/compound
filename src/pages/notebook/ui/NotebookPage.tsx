@@ -6,8 +6,7 @@ import { useNotes, useStore } from '@/shared/store/StoreProvider'
 import { useLoadMore } from '@/shared/lib/useLoadMore'
 import { NoteCard } from '@/entities/note'
 import { NoteSheet } from '@/features/note-edit'
-import { usePageBar } from '@/shared/ui/page-bar'
-import { Chip, ChipsList, Header, List, SearchField, useDebouncedValue } from '@/shared/ui/kit'
+import { usePageBar, Chip, ChipsList, Header, List, SearchField, useDebouncedValue } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
 

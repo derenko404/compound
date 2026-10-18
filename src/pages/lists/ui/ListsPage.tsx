@@ -1,14 +1,14 @@
 import { useState, type CSSProperties } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { MessageSquarePlus, MessageSquareText, Pencil, Share2, Trash2 } from 'lucide-react'
-import { usePageBar } from '@/shared/ui/page-bar'
+import {
+  usePageBar, Check, Chip, ChipsList, Header, LinkCard, List, Progress, Row, SortList, SearchField, AreaField, ConfirmSheet, FormSheet, RemoveButton, TextField, fail, moveTo, useSheet,
+} from '@/shared/ui'
 import { byPosition, freshId, listSnapshot, nextPosition, uid } from '@/core/domain/content'
 import { ShareSheet } from '@/features/share-link'
 import type { ListDef, ListDefItem, State } from '@/core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { celebrate } from '@/shared/fx/fx'
-import { Check, Chip, ChipsList, Header, LinkCard, List, Progress, Row, SortList, SearchField } from '@/shared/ui/kit'
-import { AreaField, ConfirmSheet, FormSheet, RemoveButton, TextField, fail, moveTo, useSheet } from '@/shared/ui/form'
 import { t } from '@/shared/i18n'
 
 type Filter = 'all' | 'todo' | 'done'

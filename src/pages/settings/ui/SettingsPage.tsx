@@ -17,8 +17,7 @@ import {
 import { useStore } from '@/shared/store/StoreProvider'
 import type { State } from '@/core/domain/types'
 import { keyOf } from '@/shared/lib/dates'
-import { CopyButton, Header, Panel, Section, SettingRow, SettingSelect } from '@/shared/ui/kit'
-import { ConfirmSheet, FormSheet, TextField, fail } from '@/shared/ui/form'
+import { CopyButton, Header, Panel, Section, SettingRow, SettingSelect, ConfirmSheet, FormSheet, TextField, fail } from '@/shared/ui'
 import { t, currentLocale, getLangPref, setLangPref, type LangPref } from '@/shared/i18n'
 
 const BOT = import.meta.env.VITE_TELEGRAM_BOT as string | undefined

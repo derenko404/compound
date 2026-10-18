@@ -5,8 +5,7 @@ import { hostOf, youtubeId } from '@/core/domain/finds'
 import type { Note } from '@/core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { Linkify } from '@/entities/topic/@x/note'
-import { RemoveButton } from '@/shared/ui/form'
-import { Dot, Entry } from '@/shared/ui/kit'
+import { RemoveButton, Dot, Entry } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
 // One entry: a link shows its page, an idea its title and details, a note its text. Tapping the card (not a link) edits it.

@@ -1,10 +1,8 @@
-import { usePageBar } from '@/shared/ui/page-bar'
 import {
-  TopicField, FormSheet, RemoveButton, SelectField, SwitchField, TextField, WeekdaysField, fail, moveTo, useSheet,
-} from '@/shared/ui/form'
+  usePageBar, TopicField, FormSheet, RemoveButton, SelectField, SwitchField, TextField, WeekdaysField, fail, moveTo, useSheet, Check, IconBadge, InnerLink, List, Meter, Row, SortList, Section, useDoneLastOnOpen,
+} from '@/shared/ui'
 import { TopicTag, Linkify } from '@/entities/topic'
 import { HABIT_UI } from '@/entities/habit'
-import { Check, IconBadge, InnerLink, List, Meter, Row, SortList, Section, useDoneLastOnOpen } from '@/shared/ui/kit'
 import { FocusCard, WeekStrip } from '@/widgets/focus'
 import { celebrate } from '@/shared/fx/fx'
 import { nextPosition, uid } from '@/core/domain/content'

@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { Pause, Play, RotateCcw, Settings2 } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
-import { usePageBar } from '@/shared/ui/page-bar'
-import { Dial, Header, Segmented, Stepper } from '@/shared/ui/kit'
-import { FormSheet, TextField, fail } from '@/shared/ui/form'
+import { usePageBar, Dial, Header, Segmented, Stepper, FormSheet, TextField, fail } from '@/shared/ui'
 import { requestPermission, supported } from '@/shared/fx/notify'
 import type { Ambient } from '@/shared/fx/sound'
 import {

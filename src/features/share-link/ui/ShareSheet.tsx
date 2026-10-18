@@ -10,8 +10,7 @@ import { SHARE_DAYS, createShare, supabase, type ShareKind } from '@/shared/api/
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
 import type { Topic, ListDef } from '@/core/domain/types'
-import { FormSheet } from '@/shared/ui/form'
-import { CopyButton } from '@/shared/ui/kit'
+import { FormSheet, CopyButton } from '@/shared/ui'
 
 // Makes the link on the first tap (a snapshot: editing later doesn't change it), then offers Copy.
 export function ShareSheet({ kind, name, data, open, onOpenChange }: {

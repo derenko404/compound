@@ -292,7 +292,7 @@
 }
 
 /* =====================================================================
-   Shared patterns. Components in src/components/kit.tsx and edit.tsx use these.
+   Shared patterns. Components in src/shared/ui use these.
    ===================================================================== */
 
 /* Surfaces: a list of rows, a padded panel, a fold. All share card colour, border, radius, shadow. */
@@ -418,7 +418,7 @@ details > summary::-webkit-details-marker { display: none; }
 
 
 
-/* Slim progress bar (Meter in kit.tsx). */
+/* Slim progress bar (Meter in src/shared/ui/meter.tsx). */
 .meter { height: var(--space-2); border-radius: 999px; background: var(--muted); overflow: hidden; }
 .meter-lg { height: var(--space-3); }
 .meter.is-empty { background: repeating-linear-gradient(-45deg, var(--muted) 0 var(--space-1), var(--border) var(--space-1) var(--space-2)); }
@@ -550,7 +550,7 @@ a.qbtn { color: inherit; text-decoration: none; }
 .bar-menu { min-width: var(--menu-w); }
 .bar-menu [data-slot="dropdown-menu-item"] { min-height: var(--control-md); padding: 0 var(--space-3); font-size: var(--text-body); color: var(--foreground); text-decoration: none; cursor: pointer; }
 .bar-menu [data-slot="dropdown-menu-item"] svg { width: var(--icon-md); height: var(--icon-md); }
-/* The ⋯ on phones: a bottom drawer as tall as its big full-width buttons (BarMenu in bar.tsx). */
+/* The ⋯ on phones: a bottom drawer as tall as its big full-width buttons (BarMenu in src/shared/ui/page-bar.tsx). */
 .action-list { display: grid; gap: var(--space-2); }
 /* No visible title: the header is only the drawer handle. Tap outside to close. */
 .action-sheet .sheet-head { border-bottom: 0; padding-bottom: 0; }
@@ -569,7 +569,7 @@ a.qbtn { color: inherit; text-decoration: none; }
 .list-label { padding: var(--space-2) var(--space-4); font-size: var(--text-caption); font-weight: var(--weight-bold); color: var(--muted-foreground); border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--c, var(--primary)) 6%, transparent); }
 
 
-/* Labelled facts in a row (Facts in kit.tsx). */
+/* Labelled facts in a row (Facts in src/shared/ui/facts.tsx). */
 .facts { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: var(--space-3) 0 0; }
 .facts dt { font-size: var(--text-caption); color: var(--muted-foreground); }
 .facts dd { margin: 0; font-weight: var(--weight-bold); }

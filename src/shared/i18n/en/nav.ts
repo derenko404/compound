@@ -1,4 +1,4 @@
-// The app shell (tabs, top bar, sync state) and the shared components in kit.tsx, edit.tsx and bar.tsx.
+// The app shell (tabs, top bar, sync state) and the shared components in src/shared/ui.
 export const nav = {
   tabs: {
     today: 'Today',
@@ -31,7 +31,7 @@ export const nav = {
     edit: 'Edit',
     done: 'Done',
   },
-  // kit.tsx
+  // Shared components (src/shared/ui)
   kit: {
     showMore: 'Show more',
     showLess: 'Show less',
@@ -45,7 +45,7 @@ export const nav = {
     search: 'Search',
     clearSearch: 'Clear search',
   },
-  // edit.tsx
+  // Forms (src/shared/ui/form)
   edit: {
     addTo: (label: string) => `Add to ${label}`,
     remove: (item: string) => `Remove ${item}`,

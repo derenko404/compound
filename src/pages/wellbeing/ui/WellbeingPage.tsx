@@ -9,9 +9,9 @@ import {
 } from '@/entities/habit'
 import type { Habit, HabitType, State } from '@/core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
-import { Chip, CountRow, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, SortList, Section, Stats } from '@/shared/ui/kit'
-import { FormSheet, RemoveButton, TextField, WeekdaysField, fail, moveTo, useSheet } from '@/shared/ui/form'
-import { usePageBar } from '@/shared/ui/page-bar'
+import {
+  Chip, CountRow, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, SortList, Section, Stats, FormSheet, RemoveButton, TextField, WeekdaysField, fail, moveTo, useSheet, usePageBar,
+} from '@/shared/ui'
 import { HABIT_ORDER, HABIT_UI } from '@/entities/habit'
 import { t } from '@/shared/i18n'
 

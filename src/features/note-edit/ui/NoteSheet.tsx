@@ -3,7 +3,7 @@ import { topicOf } from '@/core/domain/content'
 import { cleanTag, findUrls, kindFromUrl } from '@/core/domain/finds'
 import type { TopicId, Note } from '@/core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
-import { AreaField, TopicField, FormSheet, LinesField, fail } from '@/shared/ui/form'
+import { AreaField, TopicField, FormSheet, LinesField, fail } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
 // Offered under Tags: the tags you'd use most.
