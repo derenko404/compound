@@ -5,7 +5,7 @@
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
-const files = execSync("git ls-files 'src/**/*.ts' 'src/**/*.tsx' 'core/**/*.ts' 'adapters/**/*.ts' 'worker/**/*.ts' 'scripts/*.mjs'", { encoding: 'utf8' })
+const files = execSync("git ls-files 'src/**/*.ts' 'src/**/*.tsx' 'core/**/*.ts' 'adapters/**/*.ts' 'worker/**/*.ts' 'scripts/**/*.mjs'", { encoding: 'utf8' })
   .trim().split('\n').filter(Boolean)
 const directive = /^\/\/\s*(oxlint|eslint|@ts-|i18n-ok|layers-ok|\/)/
 const comment = (line) => line.match(/^(\s*)\/\/(?! ?(oxlint|eslint|@ts-|i18n-ok|layers-ok|\/))/)?.[1]

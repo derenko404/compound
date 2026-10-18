@@ -11,7 +11,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 
-const ROOT = resolve(new URL('..', import.meta.url).pathname)
+const ROOT = resolve(new URL('../..', import.meta.url).pathname)
 const LAYERS = ['core', 'adapters', 'shared', 'features', 'pages', 'app']
 const SLICED = new Set(['features', 'pages'])
 

@@ -5,7 +5,7 @@ Personal self-development PWA (formerly Roadmap Log): Today (routines, one-off t
 ## Commands
 
 - `npm run dev` / `npm run build` (runs `tsc -b` first) / `npm run lint` / `npm run preview`
-- `npm run lint` runs oxlint and three checks in `scripts/`: `check-i18n.mjs` (no raw user-facing text), `check-layers.mjs` (import rules, see Architecture) and `check-comments.mjs` (comment style). All must pass.
+- `npm run lint` runs oxlint and three checks in `scripts/`: `scripts/lint/i18n.mjs` (no raw user-facing text), `scripts/lint/layers.mjs` (import rules, see Architecture) and `scripts/lint/comments.mjs` (comment style). All must pass.
 - No test suite. To verify UI, build, run `vite preview`, and drive headless Chrome over CDP (`--remote-debugging-port`, Node's global `WebSocket`). Puppeteer/Playwright are not installed.
   - Use a fresh `--user-data-dir` each run, or an old service worker shows the "Updating the app" overlay.
   - Skip sign-in and seed data: on any page set `localStorage['roadmap-local-only'] = '1'` and `localStorage['roadmap-log-v2'] = JSON.stringify({ notes: [...], habits: [...], habitLogs: {...}, days: {...} })` (merged over `emptyState()`), then navigate. The starting content is added on first load (see Content).
@@ -39,14 +39,14 @@ src/           the app, lighter Feature-Sliced Design: app → pages → feature
   shared/      ui/ (one component per file + primitives/ from shadcn), store/, api/, lib/, i18n/
 ```
 
-- **Layers** (enforced by `scripts/check-layers.mjs`): imports only point down, core < adapters < shared < features < pages < app. Pages never import other pages. Another slice is imported through its public `index.ts` (`@/features/topics`), never a file inside it; features may use each other that way. Adapters are wired only in `src/shared/api` and `src/app` (and the worker). A line that must break a rule ends with `// layers-ok` and says why.
+- **Layers** (enforced by `scripts/lint/layers.mjs`): imports only point down, core < adapters < shared < features < pages < app. Pages never import other pages. Another slice is imported through its public `index.ts` (`@/features/topics`), never a file inside it; features may use each other that way. Adapters are wired only in `src/shared/api` and `src/app` (and the worker). A line that must break a rule ends with `// layers-ok` and says why.
 - **Where code goes:** a component used by one page stays in that page's `ui/`. Something reused, or with its own data (a Settings section, habit logging), becomes a feature. Shared UI pieces go to `src/shared/ui` and are exported from its `index.ts` (files inside `shared/ui` import each other relatively, never through the barrel).
 - **Core is object-oriented:** services are classes taking their ports (or a `Repositories` bundle) in the constructor. Ports are `XxxRepositoryPort`/`XxxPort` interfaces, adapters are `SupabaseXxxRepository`/`LocalXxxRepository` classes in `xxx.repository.ts`, services are `XxxService` in `xxx.service.ts`. Data stays plain typed objects (it's stored and sent as JSON). Errors callers should see are `AppError(status, message)` (`fail()`).
 
 ## Conventions
 
 - **Helper libraries export one namespace object**, not loose functions: `export const dates = { keyOf, parseKey, … }`, used as `dates.keyOf()`. Same for `links` (`core/domain/links.ts`) and `noteSearch`. Types and React components stay named exports. shadcn's `cn()` is the exception.
-- **Comments:** a comment over more than one line is a JSDoc block (`/** … */`, ` * ` per line); a single-line comment is `//`. Tool directives (`// oxlint-…`, `// i18n-ok`, `// layers-ok`) stay line comments. `check-comments.mjs` enforces it.
+- **Comments:** a comment over more than one line is a JSDoc block (`/** … */`, ` * ` per line); a single-line comment is `//`. Tool directives (`// oxlint-…`, `// i18n-ok`, `// layers-ok`) stay line comments. `scripts/lint/comments.mjs` enforces it.
 - Names say what things are: `getDbFrom(env)`, not `dbFor`; folders named after what they hold (`shared/lib/celebrate.ts`, not `fx/`).
 
 ## Data flow
@@ -88,7 +88,7 @@ A topic is a `Topic` everywhere (UI, code, API, table `topics`); the old "track"
 - English and Ukrainian. Every user-facing string comes from `t` (`import { t, plural, currentLocale } from '@/shared/i18n'`): `t.today.title`, `t.common.days(3)`. Dictionaries live in `src/shared/i18n/en/<area>.ts` (the shape) and `src/shared/i18n/uk/<area>.ts` (typed `typeof en['<area>']`, so a missing key fails `tsc`). Shared words (Save, Cancel, Delete…) are in `common`. Interpolation is a function in the dictionary. Plurals use `plural(n, { one, few, many, other })` (Ukrainian needs one/few/many). Dates and numbers use `currentLocale()`.
 - Settings → Language: Auto (the device's language, else English), English, Українська. Per device (`roadmap-lang`). Changing it reloads the app, so module-level strings are safe.
 - Never translated: what users type, the starting content once created, the brand "Compound", the Telegram bot, the API/MCP and `llms.txt`. `core/` never imports the app's i18n: translate its ids at the call site (`t.topics.resourceKinds[id]`).
-- `npm run lint` fails on raw text: `react/jsx-no-literals` catches text between tags, and `scripts/check-i18n.mjs` catches literals in user-facing props (`aria-label`, `title`, `placeholder`, `label`…) and in `toast()`/`fail()`. A line that must keep a literal ends with `// i18n-ok`.
+- `npm run lint` fails on raw text: `react/jsx-no-literals` catches text between tags, and `scripts/lint/i18n.mjs` catches literals in user-facing props (`aria-label`, `title`, `placeholder`, `label`…) and in `toast()`/`fail()`. A line that must keep a literal ends with `// i18n-ok`.
 - Ukrainian terms: Тема, Навичка, Крок, Ресурс, Проєкт, Нотатник, Список, Самопочуття, Звичка, Завдання, Таймер. Polite plural imperative ("Додайте"), sentence case, ʼ for the apostrophe.
 
 ## Design system

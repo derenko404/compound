@@ -7,7 +7,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
-const ROOT = new URL('..', import.meta.url).pathname
+const ROOT = new URL('../..', import.meta.url).pathname
 const SKIP = ['src/shared/ui/primitives', 'src/shared/i18n']
 const PROPS = ['aria-label', 'title', 'placeholder', 'label', 'alt', 'lead', 'sub', 'description', 'hint', 'empty', 'confirm', 'submit', 'aside', 'done', 'note', 'data-tip']
 // A word of two or more letters, in any script: punctuation and symbols alone are fine.
