@@ -19,20 +19,35 @@ Small steps, done daily, add up.
 
 ---
 
+## ✨ Highlights
+
+- 🎯 **One list a day.** Routines, habits and the next step of what you're learning, all on Today.
+- 🔥 **Streaks that are fair.** Days with nothing due don't break them, and a missed gym day can be made up later in the week.
+- 🧠 **Learning that builds itself.** Each topic suggests your next step, a project, a resource and a step to review from 7 or 30 days ago.
+- 📈 **Pace you can see.** Set a goal in months and Compound tells you when you're falling behind, then adds a catch-up step.
+- 🤖 **Telegram bot with AI.** Send a link or a thought and it's tagged and filed under the right topic. Ask `/ai` for a summary of any page.
+- 🪄 **Claude builds your plans.** Connect Claude Code over MCP and ask for a full learning topic or a reading list.
+- 🔔 **Reminders that know when to stop.** "Good morning ☀️" at your hour, a nudge in the evening, silence once you're done.
+- 💧 **Habits with personality.** Gym weeks, water glasses, quit-smoking health milestones, 21-day chains and clean-day counters.
+- 🎉 **Ticks feel good.** A pop and a particle burst on every tick, confetti and a fanfare when the day is complete.
+- 🔍 **Search everything** with <kbd>⌘</kbd> <kbd>K</kbd>: topics, steps, notes, lists, tasks and habits.
+- 🔗 **Share by link.** Send a topic or list to a friend, who can copy it into their own account in one tap.
+- 📱 **A real app on your phone.** Installs to the Home Screen, opens full screen and works offline.
+- 🌙 **Light and dark**, 🇬🇧 English and 🇺🇦 Українська.
+- 🔒 **Yours.** No ads, no tracking. Export everything any time, or use it with no account and keep it all on your device.
+
 ## What it does
 
 | | |
 |---|---|
-| **Today** | One short list: your routines, your habits and the next step from what you're learning. A streak counts the days you finish. |
-| **Topics** | Break a skill into steps. Keep resources and projects next to it, pick one topic as your focus and watch your pace. |
-| **Notebook** | Notes, ideas and links. Send them to the Telegram bot and an AI files them under the right topic with tags. |
-| **Wellbeing** | Gym, water, quitting smoking, any habit you build or break, and a daily mood. |
-| **Lists** | Films to watch, books to read, anything you tick off. |
-| **Reminders** | A "Good morning" push and an evening nudge, only while something is left. Works with the app closed. |
-| **Works with AI** | A personal token lets Claude (or any MCP client) build topics and lists for you. |
-| **Timer** | Short, long or custom focus sessions with optional background sound. |
-
-Every tick has a little sound and a burst of confetti. Search everything with <kbd>⌘</kbd> <kbd>K</kbd>.
+| ☀️ **Today** | One short list: your routines, your habits and the next step from what you're learning. A streak counts the days you finish. |
+| 📚 **Topics** | Break a skill into steps. Keep resources and projects next to it, pick one topic as your focus and watch your pace. |
+| 📝 **Notebook** | Notes, ideas and links. Send them to the Telegram bot and an AI files them under the right topic with tags. |
+| 💚 **Wellbeing** | Gym, water, quitting smoking, any habit you build or break, and a daily mood. |
+| ✅ **Lists** | Films to watch, books to read, anything you tick off, with a note on each. |
+| 🔔 **Reminders** | A "Good morning" push and an evening nudge, only while something is left. Works with the app closed. |
+| 🤖 **Works with AI** | A personal token lets Claude (or any MCP client) build topics and lists for you. |
+| ⏱️ **Timer** | Short, long or custom focus sessions with optional background sound. |
 
 ## Screenshots
 
