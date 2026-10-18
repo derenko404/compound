@@ -11,12 +11,13 @@
     "run_worker_first": ["/tg", "/api/*", "/mcp", "/mcp/*"],
   },
   "ai": { "binding": "AI" },
-  // Daily cleanup at 03:00 UTC: shared links older than 7 days, unused Telegram codes (worker scheduled()).
-  "triggers": { "crons": ["0 3 * * *"] },
+  // Daily cleanup at 03:00 UTC (shared links older than 7 days, unused Telegram codes) and hourly push reminders (worker scheduled()).
+  "triggers": { "crons": ["0 3 * * *", "0 * * * *"] },
   "observability": { "enabled": true },
   // The app gets VITE_* at build time (Cloudflare build variables); only the worker reads these.
   "vars": {
     "VITE_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_H8AJ7Aci8k0bMdfUAunhLQ_LnpMn8d8",
     "VITE_SUPABASE_URL": "https://sbdmiijoahyodmfnpqan.supabase.co",
+    "VAPID_SUBJECT": "https://roadmap.vasya-derenko.workers.dev",
   },
 }

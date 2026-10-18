@@ -10,6 +10,7 @@ import { settings } from '@/shared/i18n/en/settings'
 import { timer } from '@/shared/i18n/en/timer'
 import { search } from '@/shared/i18n/en/search'
 import { onboarding } from '@/shared/i18n/en/onboarding'
+import { push } from '@/shared/i18n/en/push'
 
-export const en = { common, nav, today, topics, lists, notebook, wellbeing, settings, timer, search, onboarding }
+export const en = { common, nav, today, topics, lists, notebook, wellbeing, settings, timer, search, onboarding, push }
 export type Dict = typeof en

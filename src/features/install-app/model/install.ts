@@ -59,7 +59,7 @@ const way = (): InstallWay => {
   return ios() ? 'ios' : null
 }
 
-export const install = { prompt, dismiss }
+export const install = { prompt, dismiss, standalone, ios }
 
 export const useInstallWay = () =>
   useSyncExternalStore((l) => {

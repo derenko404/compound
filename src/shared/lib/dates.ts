@@ -1,19 +1,7 @@
 // Date helpers. Day keys are local-time "YYYY-MM-DD" strings.
+import { days } from '@core/domain/days'
 import { currentLocale } from '@/shared/i18n/lang'
-const pad = (n: number) => String(n).padStart(2, '0')
-
-const keyOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-const parseKey = (k: string) => {
-  const [y, m, d] = k.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-const addDays = (d: Date, n: number) => {
-  const x = new Date(d)
-  x.setDate(x.getDate() + n)
-  return x
-}
-const dayDiff = (a: Date, b: Date) =>
-  Math.round((parseKey(keyOf(b)).getTime() - parseKey(keyOf(a)).getTime()) / 864e5)
+const { keyOf, parseKey, addDays, dayDiff } = days
 
 // Starts with a capital: Ukrainian writes weekdays in lowercase, but this opens a heading.
 const fmtLong = (d: Date) => {

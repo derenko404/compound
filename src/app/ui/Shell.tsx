@@ -12,6 +12,8 @@ import { PENDING_SHARE, SignIn } from '@/features/auth'
 import { t } from '@/shared/i18n'
 import { useSeed } from '@/app/seed/use-seed'
 import { SearchSheet } from '@/features/search'
+import { pushReminders } from '@/features/reminders'
+import { supabase } from '@/shared/api/backends'
 import { useFirstRunTour } from '@/features/tour'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
@@ -49,14 +51,20 @@ export function Shell() {
     }, 500)
     return () => clearTimeout(id)
   }, [])
+  // Signed in with push, the worker sends reminders; keep its copy of this device's time zone and language fresh.
+  const pushOn = mode === 'cloud' && !!supabase && pushReminders.supported()
+  useEffect(() => {
+    if (pushOn && ready) void pushReminders.sync(supabase!)
+  }, [pushOn, ready])
+  // Otherwise the open app reminds by itself.
   useEffect(
-    () =>
+    () => pushOn ? undefined :
       startReminderLoop(() => {
         const s = stateRef.current
         const done = new Set(s.days[dates.keyOf(new Date())]?.done ?? [])
         return todayItems(s, new Date()).filter((i) => !(i.done ?? done.has(i.id))).length
       }, () => dates.keyOf(new Date())),
-    [],
+    [pushOn],
   )
 
   return (

@@ -4,6 +4,7 @@ import type { NotesFilter, Repositories } from '@core/ports/repositories'
 import { ApiTokenService, BackupService, ShareService, StateService, TelegramConnectService } from '@core/services'
 import type { ShareKind } from '@core/ports/shares'
 import { SupabaseApiTokenRepository } from '@adapters/supabase/api-token.repository'
+import { SupabasePushSubscriptionRepository } from '@adapters/supabase/push-subscription.repository'
 import { SupabaseShareRepository } from '@adapters/supabase/share.repository'
 import { SupabaseTelegramAccountRepository } from '@adapters/supabase/telegram-account.repository'
 import { SupabaseRepositories } from '@adapters/supabase'
@@ -74,3 +75,7 @@ const tokens = (db: SupabaseClient) => new ApiTokenService(new SupabaseApiTokenR
 export const apiTokens = (db: SupabaseClient) => tokens(db).list()
 export const createApiToken = (db: SupabaseClient, name: string) => tokens(db).create(name)
 export const revokeApiToken = (db: SupabaseClient, id: string) => tokens(db).revoke(id)
+
+export type { PushDevice } from '@core/ports/push'
+// This device's push reminders (Settings → Notifications).
+export const pushDevices = (db: SupabaseClient) => new SupabasePushSubscriptionRepository(db)

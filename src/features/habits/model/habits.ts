@@ -1,7 +1,11 @@
 // Wellbeing habits: the maths every skin shares, and each type's Today row. No UI here.
 import type { Habit, HabitData, HabitType, State } from '@core/domain/types'
+import { DONE, SLIP, dueOn, gymMissedDay, gymStats, habitsOf, logOf, started, valueOn, waterStats } from '@core/domain/habits'
 import { dates } from '@/shared/lib/dates'
 import { t } from '@/shared/i18n'
+
+// The maths with no words lives in core, so the worker's reminders use it too.
+export { DONE, SLIP, dueOn, gymStats, habitsOf, logOf, started, valueOn, waterStats } from '@core/domain/habits'
 
 const W = t.wellbeing
 
@@ -14,10 +18,6 @@ export const MILESTONES = W.milestones.map((m, i) => ({ ...m, mins: MINS[i] }))
 
 export const CRAVING_TIPS = W.cravingTips
 
-// Values in habit_logs.
-export const DONE = 1
-export const SLIP = -1
-
 // What a fresh habit of each type starts with. Gym, water and smoking are one per account.
 export const HABIT_DEFAULTS: Record<HabitType, { name: string; days: number[]; data: HabitData; single?: boolean }> = {
   gym: {
@@ -28,13 +28,6 @@ export const HABIT_DEFAULTS: Record<HabitType, { name: string; days: number[]; d
   build: { name: '', days: [], data: { target: NEW_HABIT_DAYS } },
   break: { name: '', days: [], data: {} },
 }
-
-export const habitsOf = (s: State) => [...s.habits].sort((a, b) => a.position - b.position)
-export const logOf = (s: State, h: Habit) => s.habitLogs[h.id] ?? {}
-export const valueOn = (s: State, h: Habit, k: string) => logOf(s, h)[k]
-
-export const started = (h: Habit, today: Date) => !!h.start_date && dates.parseKey(h.start_date) <= today
-export const dueOn = (h: Habit, d: Date) => started(h, d) && (!h.days.length || h.days.includes(d.getDay()))
 
 export const weekOf = (today: Date) => {
   const monday = dates.addDays(today, -((today.getDay() + 6) % 7))
@@ -95,50 +88,10 @@ export function chain(s: State, h: Habit, today: Date) {
   return { run, day: doneToday ? run : run + 1, target, doneToday, complete: longest >= target }
 }
 
-/* ---------- Gym: workouts on chosen days, counted per week ---------- */
-
-export function gymStats(s: State, h: Habit, today: Date) {
-  const log = logOf(s, h)
-  const monday = dates.addDays(today, -((today.getDay() + 6) % 7))
-  const week = Array.from({ length: 7 }, (_, i) => log[dates.keyOf(dates.addDays(monday, i))] === DONE).filter(Boolean).length
-  return {
-    week, perWeek: h.days.length || 7,
-    total: Object.values(log).filter((v) => v === DONE).length,
-    month: Object.entries(log).filter(([d, v]) => v === DONE && d.startsWith(dates.keyOf(today).slice(0, 7))).length,
-  }
-}
-
-/**
- * The goal is per week: a gym day missed this week can be made up on any later day.
- * Returns the missed day ("Friday", in the form the catch-up phrases need) while the week is behind, else null.
- */
+// A missed gym day this week, as the weekday name the catch-up phrases need ("Friday"), else null.
 export function gymMakeUp(s: State, h: Habit, today: Date) {
-  if (!started(h, today) || !h.days.length) return null
-  const log = logOf(s, h)
-  const monday = dates.addDays(today, -((today.getDay() + 6) % 7))
-  const past = Array.from({ length: (today.getDay() + 6) % 7 }, (_, i) => dates.addDays(monday, i))
-  const scheduled = past.filter((d) => h.days.includes(d.getDay()))
-  const done = past.filter((d) => log[dates.keyOf(d)] === DONE).length
-  if (done >= scheduled.length || gymStats(s, h, today).week >= h.days.length) return null
-  const missed = scheduled.find((d) => log[dates.keyOf(d)] !== DONE)
+  const missed = gymMissedDay(s, h, today)
   return missed ? W.weekdays[missed.getDay()] : null
-}
-
-/* ---------- Water: glasses today against a target ---------- */
-
-export function waterStats(s: State, h: Habit, today: Date) {
-  const log = logOf(s, h)
-  const target = h.custom_data.target ?? 8
-  const monday = dates.addDays(today, -((today.getDay() + 6) % 7))
-  return {
-    today: log[dates.keyOf(today)] ?? 0,
-    target,
-    week: Array.from({ length: 7 }, (_, i) => {
-      const d = dates.addDays(monday, i)
-      return { day: d, value: log[dates.keyOf(d)] ?? 0, future: d > today }
-    }),
-    onTarget: Object.values(log).filter((v) => v >= target).length,
-  }
 }
 
 /* ---------- Today ---------- */

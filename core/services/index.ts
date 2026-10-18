@@ -11,6 +11,7 @@ export { BackupService } from './backup.service'
 export { ShareService } from './share.service'
 export { TelegramConnectService } from './telegram-connect.service'
 export { StateService } from './state.service'
+export { ReminderService, type ReminderPayload } from './reminder.service'
 export type * from './inputs'
 
 /** Every domain service for one user's repositories. */

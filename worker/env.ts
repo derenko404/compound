@@ -10,6 +10,10 @@ export interface Env {
   TELEGRAM_BOT_TOKEN: string
   // The secret_token passed to setWebhook.
   TELEGRAM_WEBHOOK_SECRET: string
+  // The P-256 private key for Web Push, as a JWK (scripts/vapid-keys.mjs). Unset: no reminders are sent.
+  VAPID_PRIVATE_KEY?: string
+  // Who sends the pushes, for push services: the app's URL.
+  VAPID_SUBJECT: string
 }
 
 export interface ExecutionContext {

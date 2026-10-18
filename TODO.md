@@ -8,16 +8,18 @@ Live. Left:
 
 ## Push reminders
 
-Goal: reminders reach the phone even when the app is closed (an installed iPhone app is suspended soon after you leave it, so today's in-app reminder rarely fires there).
+Built (uncommitted). Each device picks a morning hour ("Good morning", 6–11 or off, default 8) and an evening hour (16–22, default 20), repeated every 2 hours until 22:00, the last one a "last call". Only your own tasks and habits count, nothing is sent once they're done. Text is friendly and progress-aware ("3 of 5 done. Nice!"), in the device's language.
 
-Decisions: from the reminder time, every 2 hours until 22:00, only while items are left. Only **your own tasks and habits** trigger a reminder; topic suggestions are mentioned in the text but don't count. The message says what's left: "2 left: Gym, Water 3/8. Also 3 suggestions from your topics."
+- Core: `core/domain/days.ts`, `core/domain/habits.ts` (habit maths with no words, moved from the app), `core/domain/reminders.ts` (schedule, wall clock per time zone, what's left), `ReminderService`, ports in `core/ports/push.ts`.
+- Adapters: `WebPushClient` (VAPID + aes128gcm over Web Crypto, checked against `http_ece`), `SupabasePushSubscriptionRepository`.
+- Worker: hourly cron `0 * * * *` next to the daily one, told apart by `event.cron`. Skips reminders while `VAPID_PRIVATE_KEY` is unset.
+- App: `src/features/reminders` (subscribe, hours, sync of time zone and language on start), Settings → Notifications. Device-only mode keeps the in-app 20:00 reminder. The service worker words the push (`src/shared/i18n/*/push.ts`).
 
-- [ ] Check which Web Push library runs on Workers (VAPID ES256 + aes128gcm with Web Crypto); else write it (~100 lines).
-- [ ] VAPID keys as worker secrets (`npx wrangler secret put VAPID_PRIVATE_KEY`, public key in the app as a build variable).
-- [ ] Migration: `push_subscriptions` (user_id, endpoint, p256dh, auth, time zone, reminder time, created_at), RLS "own rows".
-- [ ] Settings → reminders: subscribe the device (permission asked from a tap; iOS needs the installed app, 16.4+), save the subscription, unsubscribe. Replaces `startReminderLoop` in `src/shared/lib/reminders.ts`.
-- [ ] Worker `scheduled()` (already runs the daily cleanup): add an hourly cron in `wrangler.jsonc` and tell the two apart by `event.cron`. Hourly: per subscription, at the user's local reminder times, load their data, work out what's left with the pure logic from `src/features/today/model/derive.ts` / `src/features/habits/model/habits.ts`, send the push; drop subscriptions that return 404/410.
-- [ ] `src/app/sw.ts` already shows `push` and opens the app on `notificationclick`; check it opens Today.
+To ship:
+- [ ] Run `supabase/migrations/0005_push_subscriptions.sql` in the SQL Editor.
+- [ ] `npx wrangler secret put VAPID_PRIVATE_KEY` with the JWK from `node scripts/vapid-keys.mjs <file>`.
+- [ ] `VITE_VAPID_PUBLIC_KEY` in `.env` and Cloudflare build variables.
+- [ ] Deploy, then turn it on from the installed app on iPhone and check a real push (try `--test-scheduled` with an hour that matches).
 
 ## AI access: test with real clients
 
