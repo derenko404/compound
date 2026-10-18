@@ -2,8 +2,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "roadmap",
   "main": "worker/index.ts",
-  // The app's address. The workers.dev one keeps working for installs made before.
-  "routes": [{ "pattern": "derenko.online", "custom_domain": true }],
+  // The app's address is compound.derenko.online. derenko.online and workers.dev keep working for links and installs made before.
+  "routes": [
+    { "pattern": "compound.derenko.online", "custom_domain": true },
+    { "pattern": "derenko.online", "custom_domain": true },
+  ],
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./dist",
