@@ -54,7 +54,7 @@ export function SignIn() {
 
   return (
     <div className="mx-auto max-w-md py-16">
-      <div className="brand mb-6"><span className="brand-mark" aria-hidden="true" />Roadmap Log</div>
+      <div className="brand mb-6"><span className="brand-mark" aria-hidden="true" />Compound</div>
       <h1 className="day-date mb-3">{mode === 'signin' ? 'Sign in to sync' : 'Create your account'}</h1>
       <p className="lead">Your progress, notes and ideas are saved to your account and follow you to every device.</p>
       <div className="mt-6 grid gap-4">

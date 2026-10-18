@@ -28,5 +28,5 @@ self.addEventListener('notificationclick', (e) => {
 // Ready for server-sent Web Push (e.g. a Cloudflare cron) later.
 self.addEventListener('push', (e) => {
   const data = e.data?.json() ?? {}
-  e.waitUntil(self.registration.showNotification(data.title ?? 'Roadmap Log', { body: data.body ?? '', icon: '/pwa-192x192.png', tag: 'roadmap-daily' }))
+  e.waitUntil(self.registration.showNotification(data.title ?? 'Compound', { body: data.body ?? '', icon: '/pwa-192x192.png', tag: 'roadmap-daily' }))
 })

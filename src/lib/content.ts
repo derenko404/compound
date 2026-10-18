@@ -1,5 +1,5 @@
 // Helpers over the editable content in State. Shared with the Telegram worker, so keep it free of DOM and app imports.
-import type { Chapter, ChapterId, ChapterKind, Note, Program, ProjectSize, ResourceKind, State, When } from './types'
+import type { Chapter, ChapterId, ChapterKind, ListDef, Note, Program, ProjectSize, ResourceKind, State, When } from './types'
 
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -93,6 +93,32 @@ export function nextProjectCode(c: Chapter, all: Chapter[]) {
   return `${prefix}${Math.max(0, ...used) + 1}`
 }
 
+
+/* ---------- Share by link ---------- */
+
+// What a share holds: the content only. Ticks, notes and progress live in other tables and never go along.
+export const trackSnapshot = (c: Chapter): Chapter => {
+  const { position: _p, created_at: _c, archived: _a, ...rest } = c
+  return { ...rest, position: 0 }
+}
+export const listSnapshot = (l: ListDef): ListDef => ({ ...l, position: 0 })
+
+// Someone else's shared track as a new track of mine: fresh ids everywhere, a free id and colour, codes from my tracks.
+export function trackFromShare(shared: Chapter, mine: Chapter[]): Chapter {
+  const c: Chapter = {
+    ...normalizeChapter(shared), kind: 'learn', id: freshId(shared.name, mine.map((x) => x.id)), position: nextPosition(mine),
+    created_at: new Date().toISOString(), archived: undefined,
+  }
+  c.skills = c.skills.map((k) => ({ ...k, id: uid(), topics: k.topics.map((t) => ({ ...t, id: uid() })) }))
+  c.resources = c.resources.map((r) => ({ ...r, id: uid() }))
+  const prefix = codePrefix(c, [...mine, c])
+  c.projects = c.projects.map((p, i) => ({ ...p, id: uid(), code: `${prefix}${i + 1}` }))
+  return c
+}
+
+export const listFromShare = (shared: ListDef, mine: ListDef[]): ListDef => ({
+  ...shared, id: freshId(shared.name, mine.map((x) => x.id)), position: nextPosition(mine),
+})
 
 // Tracks are stored as JSON, so one saved in an older shape could break a page. Every loaded track is brought to the
 // current shape: missing lists become empty, entries in an old format (skills as plain names, checklists) are dropped.

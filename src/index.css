@@ -7,7 +7,7 @@
    motion value in the app comes from here; components never hard-code them.
    ===================================================================== */
 
-/* Colours: shadcn token names, Roadmap Log palette. Chapter colours are information:
+/* Colours: shadcn token names, Compound palette. Chapter colours are information:
    every task carries its chapter's colour through --c. */
 :root {
   --background: #eef2ee;
@@ -572,7 +572,7 @@ a.qbtn { color: inherit; text-decoration: none; }
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); border-bottom: 1px solid var(--border);
 }
 .brand { font-family: var(--font-display); font-weight: var(--weight-black); font-size: var(--text-title); display: flex; align-items: center; gap: var(--space-2); }
-.brand-mark { width: var(--icon-lg); height: var(--icon-lg); border-radius: 50%; background: conic-gradient(var(--p-blue) 0 60deg, var(--p-orange) 0 120deg, var(--p-purple) 0 180deg, var(--p-green) 0 240deg, var(--p-pink) 0 300deg, var(--p-amber) 0 360deg); }
+.brand-mark { width: var(--icon-lg); height: var(--icon-lg); border-radius: var(--radius-sm); background: url('/favicon.svg') center / cover; flex: none; }
 .sync { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); color: var(--muted-foreground); background: none; border: 0; padding: 0; cursor: default; }
 .sync svg { width: var(--icon-md); height: var(--icon-md); }
 .sync[data-state="saving"] svg, .sync[data-state="loading"] svg { animation: blink 1s ease-in-out infinite; }
@@ -623,6 +623,9 @@ a.qbtn { color: inherit; text-decoration: none; }
 .sheet-delete { color: var(--destructive); border-color: color-mix(in srgb, var(--destructive) 45%, transparent); background: color-mix(in srgb, var(--destructive) 8%, transparent); }
 .sheet-foot .sheet-delete { margin-right: auto; }
 .sheet-delete-row { display: none; }
+/* ShareSheet: the link with Copy on its right. */
+.share-actions { display: flex; gap: var(--space-2); }
+.share-actions input { flex: 1; min-width: 0; }
 .sheet-overlay { z-index: var(--z-overlay); }
 @media (max-width: 560px) {
   .sheet, .sheet.sheet-wide { left: 0; right: 0; top: auto; bottom: 0; transform: none; max-width: none; max-height: 92vh; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); animation: sheet-up var(--dur-base) var(--ease-out); }

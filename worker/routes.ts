@@ -139,7 +139,7 @@ function openapi(origin: string) {
   }
   return {
     openapi: '3.1.0',
-    info: { title: 'Roadmap Log API', version: '1', description: `Build tracks and lists in Roadmap Log. Guide: ${origin}/llms.txt` },
+    info: { title: 'Compound API', version: '1', description: `Build tracks and lists in Compound. Guide: ${origin}/llms.txt` },
     servers: [{ url: origin }],
     components: { securitySchemes: { token: { type: 'http', scheme: 'bearer' } } },
     security: [{ token: [] }],
@@ -172,8 +172,8 @@ async function answer(m: Rpc, c: Caller, origin: string) {
       return ok({
         protocolVersion: m.params?.protocolVersion ?? '2025-06-18',
         capabilities: { tools: {} },
-        serverInfo: { name: 'roadmap-log', version: '1' },
-        instructions: `Roadmap Log is a self-development app: learning tracks (skills with topics, resources, projects), lists, routines, a notebook and habits. Before building a track or list, read ${origin}/llms.txt for what a good one looks like.`,
+        serverInfo: { name: 'compound', version: '1' },
+        instructions: `Compound is a self-development app: learning tracks (skills with topics, resources, projects), lists, routines, a notebook and habits. Before building a track or list, read ${origin}/llms.txt for what a good one looks like.`,
       })
     case 'ping':
       return ok({})

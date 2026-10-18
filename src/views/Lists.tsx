@@ -1,8 +1,9 @@
 import { useState, type CSSProperties } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
-import { NotebookPen, Pencil, Trash2 } from 'lucide-react'
+import { NotebookPen, Pencil, Share2, Trash2 } from 'lucide-react'
 import { usePageBar } from '@/components/bar'
-import { byPosition, freshId, nextPosition, uid } from '@/lib/content'
+import { byPosition, freshId, listSnapshot, nextPosition, uid } from '@/lib/content'
+import { ShareSheet } from '@/components/share'
 import type { ListDef, ListDefItem, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { celebrate, toast } from '@/fx/fx'
@@ -122,10 +123,12 @@ export function ListPage() {
   const itemSheet = useSheet<ListDefItem>()
   const noteSheet = useSheet<ListDefItem>()
   const [deleting, setDeleting] = useState(false)
+  const [sharing, setSharing] = useState(false)
   usePageBar({
     back: { to: '/lists', label: 'Lists' },
     actions: L ? [
       { label: 'Edit', icon: Pencil, onSelect: () => setEdit(true) },
+      { label: 'Share', icon: Share2, onSelect: () => setSharing(true) },
       { label: 'Delete list', icon: Trash2, onSelect: () => setDeleting(true), danger: true },
     ] : [],
     done: edit ? () => setEdit(false) : undefined,
@@ -182,6 +185,7 @@ export function ListPage() {
         </ChipsList>
       )}
       <List empty={L.items.length ? 'Nothing here with this filter.' : 'This list is empty. Tap + to add items.'}>{rows}</List>
+      {sharing && <ShareSheet open onOpenChange={setSharing} kind="list" name={L.name} data={listSnapshot(L)} />}
       <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={`Delete ${L.name}?`}
         description="Its items, ticks and notes go with it. This can't be undone."
         onConfirm={() => {

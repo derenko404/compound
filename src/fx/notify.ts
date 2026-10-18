@@ -43,7 +43,7 @@ export function startReminderLoop(getLeft: () => number, today: () => string) {
     if (hm < r.time || localStorage.getItem(SENT) === today()) return
     const left = getLeft()
     localStorage.setItem(SENT, today())
-    if (left > 0) void show('Roadmap Log', `${left} task${left === 1 ? '' : 's'} left today. Keep the streak alive.`)
+    if (left > 0) void show('Compound', `${left} task${left === 1 ? '' : 's'} left today. Keep the streak alive.`)
   }
   check()
   const id = setInterval(check, 60_000)

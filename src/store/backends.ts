@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { emptyState, type ChapterId, type Note, type Op, type ProjectStatus, type State } from '@/lib/types'
+import { emptyState, type Chapter, type ChapterId, type ListDef, type Note, type Op, type ProjectStatus, type State } from '@/lib/types'
 import { normalizeState } from '@/lib/content'
 
 // What the Notebook asks for. q may hold #tags (matched exactly) and words (matched in the text, AI context and link).
@@ -205,14 +205,15 @@ export async function exportAll(backend: Backend, s: State) {
     notes.push(...page)
     if (page.length < 500) break
   }
-  return { app: 'roadmap-log', exported_at: new Date().toISOString(), state: { ...s, notes } }
+  return { app: 'compound', exported_at: new Date().toISOString(), state: { ...s, notes } }
 }
 
 // Reads a file made by exportAll; the state is merged over the current one, item by item.
 export function parseExport(text: string): State {
   const j = JSON.parse(text)
-  const s = j?.app === 'roadmap-log' ? j.state : j
-  if (!s || typeof s !== 'object' || !('days' in s)) throw new Error('Not a Roadmap Log export')
+  // Files from before the rename say 'roadmap-log'.
+  const s = j?.app === 'compound' || j?.app === 'roadmap-log' ? j.state : j
+  if (!s || typeof s !== 'object' || !('days' in s)) throw new Error('Not a Compound export')
   return normalizeState({ ...emptyState(), ...s })
 }
 
@@ -256,6 +257,38 @@ export async function telegramCode(db: SupabaseClient) {
 export async function disconnectTelegram(db: SupabaseClient) {
   // RLS keeps this to the signed-in account's row; the filter only satisfies "no delete without a filter".
   check(await db.from('telegram_links').delete().not('chat_id', 'is', null))
+}
+
+/* ---------- Share by link ---------- */
+
+export type ShareKind = 'track' | 'list'
+export interface Share { id: string; kind: ShareKind; name: string; created_at: string }
+export interface SharedContent { kind: ShareKind; name: string; data: Chapter | ListDef; created_at: string; mine: boolean | null }
+
+// Saves a snapshot under a random id and returns the id (the link is /share/<id>).
+export async function createShare(db: SupabaseClient, kind: ShareKind, name: string, data: Chapter | ListDef) {
+  const abc = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  const id = [...crypto.getRandomValues(new Uint8Array(12))].map((b) => abc[b % abc.length]).join('')
+  check(await db.from('shares').insert({ id, kind, name, data }))
+  return id
+}
+
+// Links work for 7 days: get_share stops serving them then, and a daily cron in the worker deletes them.
+export const SHARE_DAYS = 7
+
+export async function myShares(db: SupabaseClient): Promise<Share[]> {
+  const cutoff = new Date(Date.now() - SHARE_DAYS * 86_400_000).toISOString()
+  return (await rows(db.from('shares').select('id, kind, name, created_at').gt('created_at', cutoff).order('created_at', { ascending: false }))) ?? []
+}
+
+export async function deleteShare(db: SupabaseClient, id: string) {
+  check(await db.from('shares').delete().eq('id', id))
+}
+
+// Anyone with the link can read it, signed in or not.
+export async function getShare(db: SupabaseClient, id: string): Promise<SharedContent | null> {
+  const data = await rows(db.rpc('get_share', { share_id: id }))
+  return (data as SharedContent[] | null)?.[0] ?? null
 }
 
 /* ---------- AI access: personal access tokens ---------- */

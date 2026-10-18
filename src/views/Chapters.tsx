@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
 import { Link, getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
-import { Crosshair, Info, Pencil, Trash2 } from 'lucide-react'
+import { Crosshair, Info, Pencil, Share2, Trash2 } from 'lucide-react'
 import { usePageBar } from '@/components/bar'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { RESOURCE_KINDS, chapterOf, chapters, program } from '@/lib/content'
+import { RESOURCE_KINDS, chapterOf, chapters, program, trackSnapshot } from '@/lib/content'
+import { ShareSheet } from '@/components/share'
 import { focusOf, monthName, targetFinish, nextUp, pace, trackProgress } from '@/lib/derive'
 import type { Chapter, Note, Project, Resource, ResourceKind, Skill } from '@/lib/types'
 import { useNoteCount, useNotes, useStore } from '@/store/StoreProvider'
@@ -146,6 +147,7 @@ function ChapterPage({ c }: { c: Chapter }) {
   const save = useChapterSave()
   const nav = useNavigate()
   const [deleting, setDeleting] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const { hash } = useLocation()
   const empty0 = !c.projects.length && !c.resources.length && !c.skills.length
   // A fresh chapter opens in edit mode, ready to fill. A link to a project (#T1) opens the Projects tab.
@@ -194,6 +196,7 @@ function ChapterPage({ c }: { c: Chapter }) {
     back: { to: '/tracks', label: 'Tracks' },
     actions: [
       { label: 'Edit', icon: Pencil, onSelect: () => setEdit(true) },
+      ...(c.kind === 'learn' ? [{ label: 'Share', icon: Share2, onSelect: () => setSharing(true) }] : []),
       // Personal is the built-in default track (new notes and routines go there), so it can't be deleted.
       ...(c.kind === 'general' ? [] : [{ label: 'Delete track', icon: Trash2, onSelect: () => setDeleting(true), danger: true }]),
     ],
@@ -279,6 +282,7 @@ function ChapterPage({ c }: { c: Chapter }) {
       )}
 
       <AboutSheet c={c} open={about} onOpenChange={setAbout} />
+      {sharing && <ShareSheet open onOpenChange={setSharing} kind="track" name={c.name} data={trackSnapshot(c)} />}
       <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={`Delete ${c.name}?`}
         description={`Its skills, resources and projects go with it. Notes filed under it stay in your notebook. This can't be undone.`}
         onConfirm={() => {

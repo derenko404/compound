@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, Outlet, createRootRoute, createRoute, createRouter, redirect, useLocation } from '@tanstack/react-router'
+import { Link, Outlet, createRootRoute, createRoute, createRouter, redirect, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   CalendarCheck, CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, HeartPulse, ListChecks, Route as RouteIcon, MoreHorizontal, NotebookPen,
   Settings as SettingsIcon, type LucideIcon,
@@ -20,6 +20,7 @@ import { Wellbeing } from '@/views/Wellbeing'
 import { ListPage, Lists } from '@/views/Lists'
 import { Notebook } from '@/views/Notebook'
 import { Settings } from '@/views/Settings'
+import { PENDING_SHARE, SharePage } from '@/views/Share'
 import { SignIn } from '@/views/SignIn'
 import { Today } from '@/views/Today'
 
@@ -98,7 +99,7 @@ function TopBar({ sync, mode }: { sync: string; mode: string }) {
   return (
     <header className="top">
       <div className="flex min-w-0 items-center gap-2">
-        {bar?.back ? <BarBack {...bar.back} /> : <Link to="/today" className="brand text-foreground no-underline"><span className="brand-mark" aria-hidden="true" />Roadmap Log</Link>}
+        {bar?.back ? <BarBack {...bar.back} /> : <Link to="/today" className="brand text-foreground no-underline"><span className="brand-mark" aria-hidden="true" />Compound</Link>}
         {!bar?.back && <SyncIcon sync={sync} mode={mode} />}
       </div>
       {/* Keeps the bar the same height on pages without a ⋯. */}
@@ -111,6 +112,17 @@ function TopBar({ sync, mode }: { sync: string; mode: string }) {
 
 function Shell() {
   const { mode, sync, ready, state } = useStore()
+  const { pathname } = useLocation()
+  const nav = useNavigate()
+  // A shared link opens without an account. Signing in from it (Google lands on /today) comes back to finish adding.
+  const sharing = pathname.startsWith('/share/')
+  useEffect(() => {
+    if (mode === 'signin' || !ready) return
+    const id = localStorage.getItem(PENDING_SHARE)
+    if (!id) return
+    localStorage.removeItem(PENDING_SHARE)
+    if (pathname !== `/share/${id}`) void nav({ to: '/share/$id', params: { id } })
+  }, [mode, ready, pathname, nav])
   const seeding = useSeed()
   const fx = useRef<HTMLCanvasElement>(null)
   const stateRef = useRef(state)
@@ -141,7 +153,7 @@ function Shell() {
     <>
       <canvas id="fx" ref={fx} aria-hidden="true" />
       <div className="wrap">
-        {mode === 'signin' ? <SignIn /> : (
+        {mode === 'signin' ? (sharing ? <main><Outlet /></main> : <SignIn />) : (
           <>
             <TopBar sync={sync} mode={mode} />
             <nav className="tabs" aria-label="Views">
@@ -173,6 +185,7 @@ const routeTree = root.addChildren([
   page('/lists/$id', ListPage),
   page('/wellbeing', Wellbeing),
   page('/settings', Settings),
+  page('/share/$id', SharePage),
 ])
 
 export const router = createRouter({ routeTree, defaultNotFoundComponent: () => <div className="empty">Page not found.</div> })

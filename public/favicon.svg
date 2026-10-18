@@ -1,13 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Compound: small things that snowball. -->
   <rect width="512" height="512" rx="112" fill="#17212b"/>
-  <g transform="translate(256 256)">
-    <path d="M0 0 L0 -150 A150 150 0 0 1 129.9 -75 Z" fill="#7b9bff"/>
-    <path d="M0 0 L129.9 -75 A150 150 0 0 1 129.9 75 Z" fill="#f08a5a"/>
-    <path d="M0 0 L129.9 75 A150 150 0 0 1 0 150 Z" fill="#b28cff"/>
-    <path d="M0 0 L0 150 A150 150 0 0 1 -129.9 75 Z" fill="#4cc48d"/>
-    <path d="M0 0 L-129.9 75 A150 150 0 0 1 -129.9 -75 Z" fill="#f07aa5"/>
-    <path d="M0 0 L-129.9 -75 A150 150 0 0 1 0 -150 Z" fill="#e3b44f"/>
-    <circle r="62" fill="#17212b"/>
-    <path d="M-28 2 L-6 24 L32 -20" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
+  <g><circle cx="120" cy="392" r="22" fill="#7b9bff"/><circle cx="186" cy="362" r="34" fill="#b28cff"/><circle cx="270" cy="306" r="52" fill="#f07aa5"/><circle cx="370" cy="200" r="78" fill="#e3b44f"/></g>
 </svg>

@@ -11,6 +11,8 @@
     "run_worker_first": ["/tg", "/api/*", "/mcp", "/mcp/*"],
   },
   "ai": { "binding": "AI" },
+  // Daily cleanup at 03:00 UTC: shared links older than 7 days, unused Telegram codes (worker scheduled()).
+  "triggers": { "crons": ["0 3 * * *"] },
   "observability": { "enabled": true },
   // The app gets VITE_* at build time (Cloudflare build variables); only the worker reads these.
   "vars": {

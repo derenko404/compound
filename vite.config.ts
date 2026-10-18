@@ -28,9 +28,9 @@ export default defineConfig({
       filename: 'sw.ts',
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: 'Roadmap Log',
-        short_name: 'Roadmap',
-        description: 'Daily tasks, plan, notes and lists for the 18-month roadmap.',
+        name: 'Compound',
+        short_name: 'Compound',
+        description: 'Daily routines, learning tracks, habits, notes and lists.',
         theme_color: '#17212b',
         background_color: '#eef2ee',
         display: 'standalone',

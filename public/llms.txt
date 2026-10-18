@@ -1,4 +1,4 @@
-# Roadmap Log
+# Compound
 
 > A personal self-development app. People learn in **tracks** (skills with topics to tick, resources, projects), keep **lists** (books to read, films to watch…), plan **routines** for Today, save notes, ideas and links in a **notebook**, and keep **habits** on Wellbeing. You can read and build all of this for the user through the API or the MCP server.
 

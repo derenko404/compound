@@ -6,10 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>Roadmap Log</title>
+    <title>Compound</title>
     <meta
       name="description"
-      content="Daily tasks, plan, notes and lists for the 18-month roadmap."
+      content="Daily routines, learning tracks, habits, notes and lists."
     />
     <meta
       name="theme-color"
@@ -47,22 +47,29 @@
           15px system-ui,
           sans-serif;
       }
+      /* The logo's four growing dots (positions and sizes from favicon.svg, as % of its 512 box),
+         popping in one after another, small to big, like a snowball. */
       .splash-mark {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: conic-gradient(
-          #2b55e0 0 60deg,
-          #c4501a 0 120deg,
-          #7a3fd6 0 180deg,
-          #12855c 0 240deg,
-          #c93a6f 0 300deg,
-          #a8740f 0 360deg
-        );
-        animation: splash-spin 1.1s linear infinite;
-        -webkit-mask: radial-gradient(circle, transparent 11px, #000 12px);
-        mask: radial-gradient(circle, transparent 11px, #000 12px);
+        position: relative;
+        width: 72px;
+        height: 72px;
       }
+      .splash-mark i {
+        position: absolute;
+        left: calc(var(--x) / 512 * 100%);
+        top: calc(var(--y) / 512 * 100%);
+        width: calc(var(--r) / 256 * 100%);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: var(--c);
+        translate: -50% -50%;
+        animation: splash-grow 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+        animation-delay: var(--d);
+      }
+      .splash-mark i:nth-child(1) { --x: 120; --y: 392; --r: 22; --c: #7b9bff; --d: 0s; }
+      .splash-mark i:nth-child(2) { --x: 186; --y: 362; --r: 34; --c: #b28cff; --d: 0.15s; }
+      .splash-mark i:nth-child(3) { --x: 270; --y: 306; --r: 52; --c: #f07aa5; --d: 0.3s; }
+      .splash-mark i:nth-child(4) { --x: 370; --y: 200; --r: 78; --c: #e3b44f; --d: 0.45s; }
       .splash-over {
         background: color-mix(in srgb, #eef2ee 86%, transparent);
         backdrop-filter: blur(6px);
@@ -70,10 +77,11 @@
       .splash[hidden] {
         display: none;
       }
-      @keyframes splash-spin {
-        to {
-          transform: rotate(360deg);
-        }
+      @keyframes splash-grow {
+        0% { scale: 0; opacity: 0; }
+        20% { scale: 1; opacity: 1; }
+        70% { scale: 1; opacity: 1; }
+        90%, 100% { scale: 0.6; opacity: 0; }
       }
       @media (prefers-color-scheme: dark) {
         .splash {
@@ -85,8 +93,8 @@
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .splash-mark {
-          animation-duration: 3s;
+        .splash-mark i {
+          animation: none;
         }
       }
     </style>
@@ -95,7 +103,7 @@
     <!-- Shown until React renders (it replaces #root's contents), and while an update installs. -->
     <div id="root">
       <div class="splash" role="status">
-        <span class="splash-mark"></span
+        <span class="splash-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span
         ><span class="splash-text">Loading…</span>
       </div>
     </div>
@@ -106,7 +114,7 @@
       aria-live="polite"
       hidden
     >
-      <span class="splash-mark"></span
+      <span class="splash-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span
       ><span class="splash-text">Updating the app…</span>
     </div>
     <script type="module" src="/src/main.tsx"></script>

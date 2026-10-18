@@ -12,7 +12,7 @@ import { getTheme, setTheme, type Theme } from '@/fx/theme'
 import { toast } from '@/fx/fx'
 import {
   clearLocalSnapshot, disconnectTelegram, exportAll, importFile, importLocal, loadLocalSnapshot, parseExport, supabase,
-  telegramCode, telegramLink, apiTokens, createApiToken, revokeApiToken, type ApiToken,
+  telegramCode, telegramLink, apiTokens, createApiToken, revokeApiToken, myShares, deleteShare, SHARE_DAYS, type ApiToken, type Share,
 } from '@/store/backends'
 import { useStore } from '@/store/StoreProvider'
 import type { State } from '@/lib/types'
@@ -37,11 +37,45 @@ async function copy(text: string, what: string) {
 const aiPrompt = (token: string) => {
   const o = location.origin
   return [
-    'Connect to my Roadmap Log, a self-development app.',
+    'Connect to my Compound account, a self-development app.',
     `MCP server: ${o}/mcp with the header "Authorization: Bearer ${token}" (or the URL ${o}/mcp/${token} if you can't set headers).`,
     `Or the REST API: ${o}/api/v1 with the same header. Docs: ${o}/api/v1/openapi.json.`,
     `Read ${o}/llms.txt first, then build me a track for <topic>.`,
   ].join('\n')
+}
+
+// "works 5 more days", "works until tonight"
+const expiresIn = (created: string) => {
+  const days = Math.ceil((new Date(created).getTime() + SHARE_DAYS * 86_400_000 - Date.now()) / 86_400_000)
+  return days <= 1 ? 'works until tomorrow' : `works ${days} more days`
+}
+
+// Links you've shared (tracks and lists): copy one again, or delete it so the link stops working.
+function SharedLinksRows() {
+  const qc = useQueryClient()
+  const shares = useQuery({ queryKey: ['shares'], queryFn: () => myShares(supabase!) })
+  const [removing, setRemoving] = useState<Share | null>(null)
+  if (!shares.data?.length) return <SettingRow title="No shared links yet" sub="Share a track or a list from its ⋯ menu." />
+  return (
+    <>
+      {shares.data.map((s) => (
+        <SettingRow key={s.id} title={s.name} sub={`${s.kind === 'track' ? 'Track' : 'List'} · ${expiresIn(s.created_at)}`}>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => void copy(`${location.origin}/share/${s.id}`, 'Link')}><Copy aria-hidden="true" />Copy</Button>
+            <Button variant="outline" size="icon" aria-label={`Delete the link to ${s.name}`} onClick={() => setRemoving(s)}><Trash2 aria-hidden="true" /></Button>
+          </div>
+        </SettingRow>
+      ))}
+      <ConfirmSheet open={!!removing} onOpenChange={(o) => !o && setRemoving(null)}
+        title={`Delete the link to ${removing?.name ?? 'this'}?`} description="Anyone who opens it sees that it's gone. Copies people already added stay theirs."
+        onConfirm={async () => {
+          if (!removing) return
+          await deleteShare(supabase!, removing.id)
+          await qc.invalidateQueries({ queryKey: ['shares'] })
+          toast('Link deleted.')
+        }} />
+    </>
+  )
 }
 
 // AI access: personal access tokens for the API and MCP server. A token is shown once, right after it's made.
@@ -173,7 +207,7 @@ export function Settings() {
   const download = async () => {
     const data = await exportAll(backend!, state)
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
-    const a = Object.assign(document.createElement('a'), { href: url, download: `roadmap-log-${keyOf(new Date())}.json` })
+    const a = Object.assign(document.createElement('a'), { href: url, download: `compound-${keyOf(new Date())}.json` })
     a.click()
     URL.revokeObjectURL(url)
     toast('Exported.')
@@ -184,7 +218,7 @@ export function Settings() {
     try {
       setIncoming(parseExport(await f.text()))
     } catch {
-      toast.error("That file isn't a Roadmap Log export.")
+      toast.error("That file isn't a Compound export.")
     }
     if (fileRef.current) fileRef.current.value = ''
   }
@@ -234,6 +268,12 @@ export function Settings() {
             : <SettingRow title="AI access" sub="Sign in first, then make a token so an AI can build tracks and lists for you." />}
         </Panel>
       </Section>
+
+      {mode === 'cloud' && supabase && (
+        <Section title="Shared links">
+          <Panel><SharedLinksRows /></Panel>
+        </Section>
+      )}
 
       {BOT && (
         <Section title="Telegram">

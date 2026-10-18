@@ -56,7 +56,7 @@ async function loadChapters(env: Env, user: string): Promise<Ch[]> {
 
 const chapterList = (chs: Ch[]) => chs.map((c) => `${c.id} = ${c.name}${c.hint ? `: ${c.hint}` : ''}`).join('\n')
 const chapterIn = (chs: Ch[], id: unknown) => chs.find((c) => c.id === id) ?? null
-const UA = 'Mozilla/5.0 (compatible; RoadmapFinds/1.0)'
+const UA = 'Mozilla/5.0 (compatible; CompoundBot/1.0)'
 const HELP = [
   'Send me a link, with a note if you like, and I\'ll save it to your notebook. Reply to a link later to add a note to it.',
   'Any other text is saved as a note. Start it with a track to pick one, e.g. "english practise th sounds"; otherwise the AI picks. The AI also adds tags and spots ideas (or add #idea); #tags you type are kept too.',
@@ -65,7 +65,24 @@ const HELP = [
 
 const dbFor = (env: Env) => createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
 
+const DAY_MS = 86_400_000
+
+// Daily cleanup (cron in wrangler.jsonc): shared links older than 7 days (get_share already hides them) and
+// Telegram codes nobody used within a day (Settings makes one each time it shows Connect).
+async function cleanup(env: Env) {
+  const db = dbFor(env)
+  const ago = (days: number) => new Date(Date.now() - days * DAY_MS).toISOString()
+  const shares = await db.from('shares').delete({ count: 'exact' }).lt('created_at', ago(7))
+  const codes = await db.from('telegram_codes').delete({ count: 'exact' }).lt('created_at', ago(1))
+  for (const r of [shares, codes]) if (r.error) console.error('cleanup', r.error)
+  console.log(`cleanup: ${shares.count ?? 0} shares, ${codes.count ?? 0} telegram codes`)
+}
+
 export default {
+  async scheduled(_event: unknown, env: Env, ctx: Ctx) {
+    ctx.waitUntil(cleanup(env))
+  },
+
   async fetch(req: Request, env: Env, ctx: Ctx): Promise<Response> {
     const { pathname, origin } = new URL(req.url)
     // AI access: the REST API and the MCP server, both with a token from Settings → AI access.
@@ -81,7 +98,7 @@ export default {
   },
 }
 
-const NOT_LINKED = 'Open Roadmap Log, then Settings → Connect Telegram, to link this chat to your account.'
+const NOT_LINKED = 'Open Compound, then Settings → Connect Telegram, to link this chat to your account.'
 
 // Each chat is linked to one account (table telegram_links); everything it sends is saved for that account.
 async function userFor(env: Env, chat: number): Promise<string | null> {
@@ -99,13 +116,11 @@ async function connect(env: Env, chat: number, username: string | null, code: st
   await db.from('telegram_links').delete().eq('chat_id', chat)
   const { error } = await db.from('telegram_links').upsert({ user_id: data.user_id, chat_id: chat, username }, { onConflict: 'user_id' })
   await db.from('telegram_codes').delete().eq('user_id', data.user_id)
-  // Settings makes a code each time it shows Connect; drop the unused ones after a day.
-  await db.from('telegram_codes').delete().lt('created_at', new Date(Date.now() - 86_400_000).toISOString())
   if (error) {
     console.error('connect', error)
     return `Couldn't connect: ${error.message}`
   }
-  return `Connected to Roadmap Log.\n\n${HELP}`
+  return `Connected to Compound.\n\n${HELP}`
 }
 
 async function handle(msg: TgMessage, env: Env) {
