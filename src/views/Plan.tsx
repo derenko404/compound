@@ -1,53 +1,147 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { CH, CH_ORDER, DEFAULT_START, QUARTERS, TASKS } from '@/data/plan'
-import { programPos, quarterTasks } from '@/lib/derive'
+import { Link } from '@tanstack/react-router'
+import { ChevronDown, CircleHelp } from 'lucide-react'
+import { DEFAULT_START, chapterOf, chapters, describeWhen, monthLabel, monthRange, program, HOW_IT_WORKS } from '@/lib/content'
+import { allTasks, programPos, quarterPlan, startDate, tasksInQuarter } from '@/lib/derive'
+import type { ChapterId, Program, QuarterPlan } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { celebrate, praise, toast } from '@/fx/fx'
-import { Bullets, ChapterTag, Linkify } from '@/components/guide'
-import { OVERVIEW } from '@/data/guides'
-import { Link } from '@tanstack/react-router'
-import { Check, Header, Row, Section, cvar, empty } from '@/components/kit'
+import { ChapterTag, Linkify } from '@/components/guide'
+import { Banner, Check, Chip, Dot, Header, LinkCard, List, Row, Section, cvar } from '@/components/kit'
+import { AreaField, ChapterField, EditToggle, FormSheet, RowEdit, SelectField, TextField, useSheet } from '@/components/edit'
 
 export function usePlanToggle() {
   const { state, dispatch } = useStore()
   return (id: string, on: boolean) => {
     dispatch({ type: 'plan', taskId: id, doneAt: on ? new Date().toISOString() : null })
     if (!on) return
-    const t = TASKS.find((x) => x.id === id)!
-    if (quarterTasks(t.q).every((x) => x.id === id || state.plan[x.id])) {
+    const t = allTasks(state).find((x) => x.id === id)
+    const q = t ? Math.floor(t.to / 3) + 1 : 0
+    if (t && tasksInQuarter(state, q).every((x) => x.id === id || state.plan[x.id])) {
       setTimeout(celebrate, 200)
-      toast(`Q${t.q} complete. Huge.`)
+      toast(`Q${q} complete. Huge.`)
     } else toast('Plan task done. ' + praise())
   }
 }
 
-export function Plan() {
+function QuarterSheet({ q, plan, open, onOpenChange }: { q: number; plan: QuarterPlan; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { state, dispatch } = useStore()
+  const [focus, setFocus] = useState<ChapterId | null>(plan.focus)
+  const [project, setProject] = useState(plan.project)
+  return (
+    <FormSheet open={open} onOpenChange={onOpenChange} title={`Q${q}`} description="The focus chapter gets the study sessions and the weekend project block."
+      onSubmit={() => {
+        const p = program(state)
+        const quarters = Array.from({ length: Math.max(p.quarters.length, q) }, (_, i) => p.quarters[i] ?? { focus: null, project: '' })
+        quarters[q - 1] = { focus, project: project.trim() }
+        dispatch({ type: 'settings', patch: { program: { ...p, quarters } } })
+        toast('Quarter saved.')
+      }}>
+      <ChapterField label="Focus chapter" value={focus} onChange={setFocus} allowNone="No focus" />
+      <TextField label="Weekend project" value={project} onChange={setProject} placeholder="T1: URL shortener on AWS" full />
+    </FormSheet>
+  )
+}
+
+function ProgramSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { state, dispatch } = useStore()
+  const p0 = program(state)
+  const [start, setStart] = useState(state.settings.start_date || DEFAULT_START)
+  const [months, setMonths] = useState(String(p0.months))
+  const [motivation, setMotivation] = useState(p0.motivation ?? '')
+  return (
+    <FormSheet open={open} onOpenChange={onOpenChange} wide title="Program" description="Quarters, months and day numbers follow the start date."
+      onSubmit={() => {
+        const program: Program = { ...p0, months: Number(months), motivation: motivation.trim() || undefined }
+        dispatch({ type: 'settings', patch: { start_date: start, program } })
+        toast('Program saved.')
+      }}>
+      <div className="grid2">
+        <TextField label="Start date" type="date" value={start} onChange={setStart} required />
+        <SelectField label="Length" value={months} onChange={setMonths}
+          options={[3, 6, 9, 12, 18, 24, 36].map((m) => ({ value: String(m), label: `${m} months` }))} />
+      </div>
+      <AreaField label="Motivation" value={motivation} onChange={setMotivation} rows={4} hint="Why you're doing this. Shown under the plan's title." />
+    </FormSheet>
+  )
+}
+
+function Timeline({ sel, onSelect }: { sel: number; onSelect: (q: number) => void }) {
+  const { state } = useStore()
+  const pos = programPos(state, new Date())
+  const len = program(state).months
+  const start = startDate(state)
+  const pct = (m: number) => `${(m / len) * 100}%`
+  const quarters = Array.from({ length: pos.quarters }, (_, i) => i + 1)
+  return (
+    <div className="panel timeline">
+      <div className="tl-row">
+        <span />
+        <div className="tl-head">{quarters.map((q) => <span key={q} style={{ left: pct((q - 1) * 3 + 1.5) }} title={monthLabel(start, (q - 1) * 3)}>Q{q}</span>)}</div>
+      </div>
+      {chapters(state, 'learn').map((c) => (
+        <div key={c.id} className="tl-row" style={cvar(c.id)}>
+          <Link to="/chapters/$ch" params={{ ch: c.id }} className="tl-name"><Dot />{c.short}</Link>
+          <div className="tl-track">
+            <div className="tl-bar" style={{ left: pct(c.start), width: pct(Math.min(c.months, len - c.start)) }} />
+            {quarters.filter((q) => quarterPlan(state, q).focus === c.id).map((q) => (
+              <button key={q} className={`tl-focus${q === sel ? ' sel' : ''}`} style={{ left: pct((q - 1) * 3), width: pct(3) }}
+                aria-label={`Q${q} focus: ${c.name}`} onClick={() => onSelect(q)} />
+            ))}
+            {!pos.before && !pos.finished && <span className="tl-now" style={{ left: pct(pos.m + 0.5) }} />}
+          </div>
+        </div>
+      ))}
+      <p className="mt-1 text-caption text-muted-foreground">Solid blocks are focus quarters. The line marks this month.</p>
+    </div>
+  )
+}
+
+export function Plan() {
+  const { state } = useStore()
   const toggle = usePlanToggle()
   const pos = programPos(state, new Date())
+  const start = startDate(state)
   const [selQ, setSelQ] = useState<number | null>(null)
-  const [start, setStart] = useState(state.settings.start_date || DEFAULT_START)
-  const q = selQ ?? pos.q
-  const Qs = QUARTERS[q - 1]
+  const [edit, setEdit] = useState(false)
+  const sheet = useSheet<'program' | number>()
+  const p = program(state)
+  const q = Math.min(selQ ?? pos.q, pos.quarters)
+  const Qs = quarterPlan(state, q)
   const plan = state.plan
+  const quarters = Array.from({ length: pos.quarters }, (_, i) => i + 1)
+  const order = new Map(chapters(state, 'learn').map((c, i) => [c.id, i]))
 
-  const next = TASKS.filter((t) => !plan[t.id] && (t.q > pos.q || (t.q === pos.q && (t.m === null || t.m >= pos.mi))))
-    .sort((a, b) => a.q - b.q || (a.m ?? 1) - (b.m ?? 1))
+  const next = allTasks(state)
+    .filter((t) => !plan[t.id] && t.to >= pos.m)
+    .sort((a, b) => a.from - b.from || a.to - b.to)
     .slice(0, 5)
+  const qTasks = tasksInQuarter(state, q).sort((a, b) => (order.get(a.ch) ?? 0) - (order.get(b.ch) ?? 0) || a.from - b.from)
 
   return (
     <>
-      <Header title="The plan" lead={OVERVIEW.intro} />
+      <Header title="The plan" lead={p.motivation ? <Linkify text={p.motivation} /> : undefined}>
+        <EditToggle on={edit} onChange={setEdit} />
+      </Header>
+
+      {edit && (
+        <Banner actions={<Chip onClick={() => sheet.open('program')}>Program settings</Chip>}>
+          Set the start date and length, the focus of each quarter, and your motivation. Chapter dates and tasks are edited on each chapter.
+        </Banner>
+      )}
+
+      <Section title="Timeline" aside={`${p.months} months from ${start.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}`}>
+        <Timeline sel={q} onSelect={setSelQ} />
+      </Section>
+
       <div className="strip">
-        {QUARTERS.map((Q) => {
-          const ts = quarterTasks(Q.q)
+        {quarters.map((n) => {
+          const ts = tasksInQuarter(state, n)
           const d = ts.filter((t) => plan[t.id]).length
+          const f = quarterPlan(state, n).focus
           return (
-            <button key={Q.q} className={`qbtn${Q.q === pos.q ? ' now' : ''}`} style={cvar(Q.focus)} aria-pressed={Q.q === q} onClick={() => setSelQ(Q.q)}>
-              <b>Q{Q.q}</b><span>{Q.months}</span><span>{CH[Q.focus].short}</span>
+            <button key={n} className={`qbtn${n === pos.q ? ' now' : ''}`} style={cvar(f)} aria-pressed={n === q} onClick={() => setSelQ(n)}>
+              <b>Q{n}</b><span>{monthRange(start, (n - 1) * 3, Math.min(n * 3, p.months) - 1)}</span><span>{chapterOf(state, f)?.short ?? 'No focus'}</span>
               <div className="qbar"><i style={{ width: `${ts.length ? (d / ts.length) * 100 : 0}%` }} /></div>
             </button>
           )
@@ -55,68 +149,57 @@ export function Plan() {
       </div>
 
       <Section title="Next up" aside="Your closest open tasks">
-        <div className="list">
-          {next.length ? next.map((t) => (
-            <Row key={t.id} ch={t.ch} title={<Linkify text={t.text} />} sub={`Q${t.q}${t.m !== null ? `, month ${t.m + 1}` : ''}`} tag={<ChapterTag ch={t.ch} />}
+        <List empty="Everything ahead is done.">
+          {next.map((t) => (
+            <Row key={t.id} ch={t.ch} title={<Linkify text={t.text} />} sub={monthRange(start, t.from, t.to)} tag={<ChapterTag ch={t.ch} />}
               check={<Check on={false} label={t.text} onToggle={(on) => toggle(t.id, on)} />} />
-          )) : empty('Everything ahead is done.')}
-        </div>
+          ))}
+        </List>
       </Section>
 
-      <Section title={`Q${q}, ${Qs.months}`} aside={`Focus: ${CH[Qs.focus].name}. Weekend project: ${Qs.project}`}>
-        <div className="list">
-          {CH_ORDER.flatMap((ch) => quarterTasks(q, ch)).map((t) => (
+      <Section title={`Q${q}, ${monthRange(start, (q - 1) * 3, Math.min(q * 3, p.months) - 1)}`}
+        aside={edit
+          ? <RowEdit label={`Q${q}`} onEdit={() => sheet.open(q)} />
+          : `Focus: ${chapterOf(state, Qs.focus)?.name ?? 'none'}${Qs.project ? `. Weekend project: ${Qs.project}` : ''}`}>
+        <List empty="No tasks in this quarter yet. Add them on a chapter page.">
+          {qTasks.map((t) => (
             <Row key={t.id} ch={t.ch} done={!!plan[t.id]} title={<Linkify text={t.text} />}
-              sub={`${CH[t.ch].name}${t.m !== null ? `, month ${t.m + 1}` : ''}`} tag={<ChapterTag ch={t.ch} label={t.ch === Qs.focus ? 'Focus' : 'Light'} />}
+              sub={`${chapterOf(state, t.ch)?.name}, ${monthRange(start, t.from, t.to)}`} tag={<ChapterTag ch={t.ch} label={t.ch === Qs.focus ? 'Focus' : 'Light'} />}
               check={<Check on={!!plan[t.id]} label={t.text} onToggle={(on) => toggle(t.id, on)} />} />
           ))}
-        </div>
+        </List>
       </Section>
 
-
-      <Section title="Weekly rhythm" aside="About 6–7 hours a week">
-        <div className="list">
-          {OVERVIEW.schedule?.map((r) => (
-            <div key={r.day} className="row" style={{ gridTemplateColumns: '110px 1fr' }}>
-              <b>{r.day}</b><div className="row-sub mt-0"><Linkify text={r.what} /></div>
-            </div>
+      <Section title="Weekly rhythm" aside={<Link to="/today">Edit on Today</Link>}>
+        <List empty="No routines yet.">
+          {[...state.routines].filter((r) => r.when.kind !== 'once').sort((a, b) => a.position - b.position).map((r) => (
+            <Row key={r.id} ch={r.fill ? Qs.focus : r.chapter} title={r.title} sub={describeWhen(r.when)}
+              tag={r.fill ? { focus: 'Focus chapter', light: 'Other chapters', project: 'Quarter project' }[r.fill] : <ChapterTag ch={r.chapter} />} />
           ))}
-        </div>
+        </List>
       </Section>
 
       <Section title="Skills by chapter" aside="Re-score 1 to 5 each month">
-        <div className="skill-grid">
-          {OVERVIEW.skills?.map((s) => (
-            <Link key={s.chapter} to="/chapters/$ch" params={{ ch: s.chapter }} className="skill-card" style={cvar(s.chapter)}>
-              <span className="skill-title"><span className="dot" />{CH[s.chapter].name}</span>
-              <span className="skill-list">{s.skills.join(' · ')}</span>
-            </Link>
+        <div className="card-grid">
+          {chapters(state, 'learn').filter((c) => c.skills.length).map((c) => (
+            <LinkCard key={c.id} to="/chapters/$ch" params={{ ch: c.id }} ch={c.id} title={c.name} sub={c.skills.join(' · ')} />
           ))}
         </div>
       </Section>
 
-      <Section title="How it works">
-        <div className="panel"><Bullets items={OVERVIEW.principles ?? []} /></div>
-      </Section>
+      <section>
+        <details className="faq">
+          <summary>
+            <CircleHelp aria-hidden="true" />
+            <span>How it works</span>
+            <ChevronDown className="chev" aria-hidden="true" />
+          </summary>
+          <ul className="faq-list">{HOW_IT_WORKS.map((t, i) => <li key={i}>{t}</li>)}</ul>
+        </details>
+      </section>
 
-      <Section title="Program start">
-        <div className="panel">
-          <div className="grid2">
-            <div className="field">
-              <Label htmlFor="start-date">Start date</Label>
-              <Input type="date" id="start-date" value={start} onChange={(e) => setStart(e.target.value)} />
-            </div>
-          </div>
-          <div className="actions">
-            <Button size="sm" onClick={() => {
-              if (!start) return toast('Pick a date first.')
-              dispatch({ type: 'settings', patch: { start_date: start } })
-              toast('Start date saved.')
-            }}>Save start date</Button>
-            <span className="muted">Quarters, months and day numbers follow this date.</span>
-          </div>
-        </div>
-      </Section>
+      {sheet.value === 'program' && <ProgramSheet {...sheet.props} />}
+      {typeof sheet.value === 'number' && <QuarterSheet key={sheet.value} {...sheet.props} q={sheet.value} plan={quarterPlan(state, sheet.value)} />}
     </>
   )
 }

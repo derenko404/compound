@@ -1,5 +1,7 @@
 import type { Op, State } from '@/lib/types'
 
+const put = <T extends { id: string }>(xs: T[], x: T) => (xs.some((y) => y.id === x.id) ? xs.map((y) => (y.id === x.id ? x : y)) : [...xs, x])
+
 export function reduce(s: State, op: Op): State {
   switch (op.type) {
     case 'settings':
@@ -20,10 +22,6 @@ export function reduce(s: State, op: Op): State {
       return { ...s, notes: [op.note, ...s.notes] }
     case 'deleteNote':
       return { ...s, notes: s.notes.filter((n) => n.id !== op.id) }
-    case 'addTask':
-      return { ...s, tasks: [op.task, ...s.tasks] }
-    case 'deleteTask':
-      return { ...s, tasks: s.tasks.filter((t) => t.id !== op.id) }
     case 'addIdea':
       return { ...s, ideas: [op.idea, ...s.ideas] }
     case 'deleteIdea':
@@ -33,15 +31,32 @@ export function reduce(s: State, op: Op): State {
         ...s,
         ideas: s.ideas.map((i) => (i.id === op.note.idea_id ? { ...i, notes: [...i.notes, op.note] } : i)),
       }
-    case 'listItem': {
-      const list = { ...s.lists[op.list] }
-      if (op.item.done_at || op.item.note) list[op.idx] = op.item
-      else delete list[op.idx]
-      return { ...s, lists: { ...s.lists, [op.list]: list } }
-    }
     case 'addBookmark':
       return { ...s, bookmarks: [op.bookmark, ...s.bookmarks] }
     case 'deleteBookmark':
       return { ...s, bookmarks: s.bookmarks.filter((b) => b.id !== op.id) }
+    case 'putChapter':
+      return { ...s, chapters: put(s.chapters, op.chapter) }
+    case 'deleteChapter':
+      return { ...s, chapters: s.chapters.filter((c) => c.id !== op.id) }
+    case 'putList':
+      return { ...s, lists: put(s.lists, op.list) }
+    case 'deleteList': {
+      const listProgress = { ...s.listProgress }
+      delete listProgress[op.id]
+      return { ...s, lists: s.lists.filter((l) => l.id !== op.id), listProgress }
+    }
+    case 'listItem': {
+      const list = { ...s.listProgress[op.list] }
+      if (op.progress.done_at || op.progress.note) list[op.item] = op.progress
+      else delete list[op.item]
+      return { ...s, listProgress: { ...s.listProgress, [op.list]: list } }
+    }
+    case 'putRoutine':
+      return { ...s, routines: put(s.routines, op.routine) }
+    case 'deleteRoutine':
+      return { ...s, routines: s.routines.filter((r) => r.id !== op.id) }
+    case 'batch':
+      return op.ops.reduce(reduce, s)
   }
 }

@@ -3,7 +3,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { ALL_CHAPTERS, CH } from '../src/data/plan'
 import { findUrls, kindFromUrl } from '../src/lib/finds'
-import type { BookmarkKind, ChapterId } from '../src/lib/types'
+import type { BookmarkKind, Chapter, ChapterId } from '../src/lib/types'
 
 interface Env {
   ASSETS: { fetch(req: Request): Promise<Response> }
@@ -43,8 +43,8 @@ const linksIn = (m: TgMessage, text = m.text ?? m.caption ?? '') => [
 // 70B: the 8B models picked note chapters badly and can't be held to a JSON schema. About 7 neurons a call.
 const MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
 
-// What each chapter covers, so the AI can file notes; ids and names come from src/data/plan.ts.
-const CHAPTER_HINTS: Record<ChapterId, string> = {
+// Chapters are edited in the app (table chapters). Until that table has rows, the original ones from plan.ts are used.
+const CHAPTER_HINTS: Record<string, string> = {
   tech: 'system design, backend, cloud, databases, code, AI engineering',
   product: 'product sense, UI/UX design, metrics, A/B tests',
   mgmt: 'teams, 1:1s, hiring, project management',
@@ -55,7 +55,19 @@ const CHAPTER_HINTS: Record<ChapterId, string> = {
   gym: 'workouts, food, weight, sleep',
   own: 'anything personal that fits nothing above',
 }
-const chapterList = ALL_CHAPTERS.map((c) => `${c} = ${CH[c].name}: ${CHAPTER_HINTS[c]}`).join('\n')
+
+interface Ch { id: ChapterId; name: string; short: string; hint: string }
+const FALLBACK: Ch[] = ALL_CHAPTERS.map((id) => ({ id, name: CH[id].name, short: CH[id].short, hint: CHAPTER_HINTS[id] ?? '' }))
+
+async function loadChapters(env: Env): Promise<Ch[]> {
+  const { data, error } = await dbFor(env).from('chapters').select('data').eq('user_id', env.OWNER_USER_ID)
+  if (error) console.error('chapters', error)
+  const live = ((data ?? []) as { data: Chapter }[]).map((r) => r.data).filter((c) => !c.archived)
+  return live.length ? live.map((c) => ({ id: c.id, name: c.name, short: c.short, hint: c.hint || c.description?.slice(0, 120) || '' })) : FALLBACK
+}
+
+const chapterList = (chs: Ch[]) => chs.map((c) => `${c.id} = ${c.name}${c.hint ? `: ${c.hint}` : ''}`).join('\n')
+const chapterIn = (chs: Ch[], id: unknown) => chs.find((c) => c.id === id) ?? null
 const UA = 'Mozilla/5.0 (compatible; RoadmapFinds/1.0)'
 const HELP = [
   'Send me a link, with a note if you like, and I\'ll save it to Finds. Reply to a link later to add a note to it.',
@@ -104,10 +116,11 @@ async function handle(msg: TgMessage, env: Env) {
   note = note.replace(/\s+/g, ' ').trim()
 
   const db = dbFor(env)
+  const chs = await loadChapters(env)
   const lines: string[] = []
   for (const url of urls) {
     const meta = await pageMeta(url)
-    const ai = await classify(env, url, meta)
+    const ai = await classify(env, url, meta, chs)
     const kind = kindFromUrl(url) ?? ai.kind ?? meta.kind ?? 'site'
     // With /ai the summary replaces the page's own description, and the text after the link is the question.
     const summary = isAi ? await analyze(env, url, meta, note) : ''
@@ -118,7 +131,7 @@ async function handle(msg: TgMessage, env: Env) {
     if (error) {
       console.error('save', error)
       lines.push(`Couldn't save ${url}: ${error.message}`)
-    } else lines.push(`Saved as ${kind}${ai.chapter ? ` in ${CH[ai.chapter].short}` : ''}: ${meta.title || url}\n${url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
+    } else lines.push(`Saved as ${kind}${ai.chapter ? ` in ${chapterIn(chs, ai.chapter)?.short}` : ''}: ${meta.title || url}\n${url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
   }
   await say(lines.join('\n\n'))
 }
@@ -140,39 +153,40 @@ async function noteOnLinks(env: Env, urls: string[], text: string) {
 /* ---------- Notes: plain text for the Notes tab ---------- */
 
 // "english text": the first word picks the chapter when it names one (id or short name).
-function chapterWord(word: string): ChapterId | null {
+function chapterWord(chs: Ch[], word: string): Ch | null {
   const w = word.toLowerCase()
-  return ALL_CHAPTERS.find((c) => c === w || CH[c].short.toLowerCase() === w) ?? null
+  return chs.find((c) => c.id === w || c.short.toLowerCase() === w) ?? null
 }
 
 async function saveNote(env: Env, text: string) {
+  const chs = await loadChapters(env)
   const [first, ...rest] = text.split(/\s+/)
-  const named = rest.length ? chapterWord(first) : null
+  const named = rest.length ? chapterWord(chs, first) : null
   const body = named ? text.slice(first.length).trim() : text
-  const chapter = named ?? (await pickChapter(env, body)) ?? 'own'
-  const { error } = await dbFor(env).from('notes').insert({ user_id: env.OWNER_USER_ID, chapter, body })
+  const chapter = named ?? (await pickChapter(env, body, chs)) ?? chapterIn(chs, 'own') ?? chs[0]
+  const { error } = await dbFor(env).from('notes').insert({ user_id: env.OWNER_USER_ID, chapter: chapter?.id ?? 'own', body })
   if (error) {
     console.error('note', error)
     return `Couldn't save the note: ${error.message}`
   }
-  return `Noted in ${CH[chapter].name}.`
+  return `Noted in ${chapter?.name ?? 'Notes'}.`
 }
 
-async function pickChapter(env: Env, body: string): Promise<ChapterId | null> {
+async function pickChapter(env: Env, body: string, chs: Ch[]): Promise<Ch | null> {
   try {
     const response = await run(env, {
       max_tokens: 30,
-      response_format: { type: 'json_schema', json_schema: { type: 'object', properties: { chapter: { type: 'string', enum: ALL_CHAPTERS } }, required: ['chapter'] } },
+      response_format: { type: 'json_schema', json_schema: { type: 'object', properties: { chapter: { type: 'string', enum: chs.map((c) => c.id) } }, required: ['chapter'] } },
       messages: [
         {
           role: 'system',
-          content: `File a personal note under one chapter of a self-development roadmap. Chapters:\n${chapterList}\nReply with JSON: {"chapter": "<id>"}.`,
+          content: `File a personal note under one chapter of a self-development roadmap. Chapters:\n${chapterList(chs)}\nReply with JSON: {"chapter": "<id>"}.`,
         },
         { role: 'user', content: body },
       ],
     })
     const { chapter } = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { chapter?: string }
-    return ALL_CHAPTERS.find((c) => c === chapter) ?? null
+    return chapterIn(chs, chapter)
   } catch (e) {
     console.error('ai', e)
     return null
@@ -290,7 +304,7 @@ const clip = (s: string, n: number) => {
 
 /* ---------- Kind and tags from Workers AI ---------- */
 
-async function classify(env: Env, url: string, meta: Meta): Promise<{ kind: BookmarkKind | null; tags: string[]; chapter: ChapterId | null }> {
+async function classify(env: Env, url: string, meta: Meta, chs: Ch[]): Promise<{ kind: BookmarkKind | null; tags: string[]; chapter: ChapterId | null }> {
   try {
     const response = await run(env, {
       max_tokens: 120,
@@ -301,7 +315,7 @@ async function classify(env: Env, url: string, meta: Meta): Promise<{ kind: Book
           properties: {
             kind: { type: 'string', enum: ['video', 'post', 'site'] },
             tags: { type: 'array', items: { type: 'string' }, maxItems: 3 },
-            chapter: { type: 'string', enum: ALL_CHAPTERS },
+            chapter: { type: 'string', enum: chs.map((c) => c.id) },
           },
           required: ['kind', 'tags', 'chapter'],
         },
@@ -312,7 +326,7 @@ async function classify(env: Env, url: string, meta: Meta): Promise<{ kind: Book
           content:
             'You file links into a personal bookmark list. Reply with JSON: {"kind": "video" | "post" | "site", "tags": [1 to 3 short lowercase topic words], "chapter": "<id>"}. ' +
             'video = a video or talk to watch; post = one article, blog post, thread or social post; site = a whole site, tool, product, course or docs. ' +
-            `chapter = the part of the owner's self-development roadmap it helps with:\n${chapterList}`,
+            `chapter = the part of the owner's self-development roadmap it helps with:\n${chapterList(chs)}`,
         },
         { role: 'user', content: `URL: ${url}\nTitle: ${meta.title}\nDescription: ${meta.description}` },
       ],
@@ -322,7 +336,7 @@ async function classify(env: Env, url: string, meta: Meta): Promise<{ kind: Book
     const tags = Array.isArray(j.tags)
       ? [...new Set(j.tags.filter((t): t is string => typeof t === 'string').map((t) => t.toLowerCase().replace(/^#/, '').trim().replace(/\s+/g, '-')).filter(Boolean))].slice(0, 3)
       : []
-    return { kind, tags, chapter: ALL_CHAPTERS.find((c) => c === j.chapter) ?? null }
+    return { kind, tags, chapter: chapterIn(chs, j.chapter)?.id ?? null }
   } catch (e) {
     console.error('ai', e)
     return { kind: null, tags: [], chapter: null }

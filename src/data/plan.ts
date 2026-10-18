@@ -1,8 +1,7 @@
-// Plan content, from the Engineer Skills Roadmap doc.
+// Seed only (see seed.ts): the original plan content from the Engineer Skills Roadmap doc. The bot falls back to CH until chapters are seeded.
 import type { ChapterId } from '../lib/types'
 
 export const DOC_URL = 'https://claude.ai/code/artifact/61482468-7024-4621-a941-2a770a3df94d'
-export const DEFAULT_START = '2026-11-01'
 
 export interface Chapter {
   name: string
@@ -167,4 +166,3 @@ export const LIST_META = {
   places: { name: 'Places', title: '100 places everyone should visit', sub: 'Country' },
 } as const
 
-export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']

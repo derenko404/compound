@@ -1,12 +1,24 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
-import { CH } from '@/data/plan'
-import type { ChapterId } from '@/lib/types'
+// The app's shared building blocks. Pages compose these instead of repeating markup;
+// their look comes from the tokens and patterns in src/index.css.
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { Link, type LinkProps } from '@tanstack/react-router'
+import { ChevronDown } from 'lucide-react'
+import type { Chapter, ChapterId } from '@/lib/types'
 import { burst } from '@/fx/fx'
 import { playTick, playUntick } from '@/fx/sound'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
-export const cvar = (ch: ChapterId | string): CSSProperties =>
-  ({ '--c': `var(${CH[ch as ChapterId]?.color ?? '--c-own'})` }) as CSSProperties
+// Rows read their colour from --c; each chapter's --c-<id> is set by <ChapterColors>.
+export const cvar = (ch: ChapterId | null | undefined): CSSProperties =>
+  ({ '--c': ch ? `var(--c-${ch}, var(--p-gray))` : 'var(--p-gray)' }) as CSSProperties
+
+// Maps every chapter id to its palette colour, for light and dark themes alike.
+export function ChapterColors({ chapters }: { chapters: Chapter[] }) {
+  const css = chapters.filter((c) => /^[a-z0-9-]+$/.test(c.id)).map((c) => `--c-${c.id}: var(--p-${c.color});`).join(' ')
+  return <style>{`:root { ${css} }`}</style>
+}
 
 // Round tick button. Plays the bounce, row pop and particle burst when turned on.
 export function Check({ on, label, onToggle }: { on: boolean; label: string; onToggle: (on: boolean) => void }) {
@@ -49,7 +61,7 @@ export function Check({ on, label, onToggle }: { on: boolean; label: string; onT
 }
 
 export function Row({ ch, done, check, title, sub, tag, children, style }: {
-  ch?: ChapterId | string
+  ch?: ChapterId | null
   done?: boolean
   check?: ReactNode
   title: ReactNode
@@ -121,14 +133,38 @@ export function Section({ title, aside, children, style }: { title: ReactNode; a
   )
 }
 
+// Long text folded to a few lines, with "Show more" only when it actually overflows.
+export function MoreText({ children, lines = 2 }: { children: ReactNode; lines?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [overflows, setOverflows] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const check = () => setOverflows(el.scrollHeight > el.clientHeight + 1)
+    check()
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [children])
+  return (
+    <div className="more-text">
+      <div ref={ref} className={open ? undefined : 'clamp'} style={{ WebkitLineClamp: lines }}>{children}</div>
+      {(overflows || open) && (
+        <button type="button" className="more-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Show less' : 'Show more'}</button>
+      )}
+    </div>
+  )
+}
+
 export function Header({ title, lead, children }: { title: ReactNode; lead?: ReactNode; children?: ReactNode }) {
   return (
     <div className="day">
       <div>
         <h1 className="day-date">{title}</h1>
-        {lead ? <p className="lead">{lead}</p> : null}
+        {lead ? <div className="lead"><MoreText lines={3}>{lead}</MoreText></div> : null}
       </div>
-      {children}
+      {children ? <div className="day-aside">{children}</div> : null}
     </div>
   )
 }
@@ -161,3 +197,104 @@ export function useDebounced<T>(fn: (v: T) => void, ms = 800) {
 }
 
 export const empty = (text: string) => <div className="empty">{text}</div>
+
+/* ---------- Surfaces ---------- */
+
+// A card of rows (Row, Entry, ProjectCard…), with a message when there's nothing in it.
+export function List({ children, empty: emptyText, ch }: { children?: ReactNode; empty?: string; ch?: ChapterId | null }) {
+  const has = Array.isArray(children) ? children.some(Boolean) : !!children
+  return <div className="list" style={ch ? cvar(ch) : undefined}>{has ? children : emptyText ? empty(emptyText) : null}</div>
+}
+
+export const Panel = ({ children, ch, className }: { children: ReactNode; ch?: ChapterId | null; className?: string }) => (
+  <div className={`panel${className ? ` ${className}` : ''}`} style={ch ? cvar(ch) : undefined}>{children}</div>
+)
+
+// A collapsible card: title, an optional counter or controls on the right, and its body.
+export function Fold({ title, meta, icon, ch, open, children }: {
+  title: ReactNode; meta?: ReactNode; icon?: ReactNode; ch?: ChapterId | null; open?: boolean; children: ReactNode
+}) {
+  return (
+    <details className="fold" open={open} style={ch ? cvar(ch) : undefined}>
+      <summary>
+        {icon}
+        <span className="fold-title">{title}</span>
+        {meta != null && <span className="fold-meta">{meta}</span>}
+        <ChevronDown className="chev" aria-hidden="true" />
+      </summary>
+      <div className="fold-body">{children}</div>
+    </details>
+  )
+}
+
+// One entry in a list of notes, ideas or finds: a meta line, then the content.
+export const Entry = ({ ch, meta, children }: { ch?: ChapterId | null; meta?: ReactNode; children: ReactNode }) => (
+  <div className="note" style={ch ? cvar(ch) : { '--c': 'var(--primary)' } as CSSProperties}>
+    {meta && <div className="note-meta">{meta}</div>}
+    {children}
+  </div>
+)
+
+export function Banner({ children, actions, ch }: { children: ReactNode; actions?: ReactNode; ch?: ChapterId | null }) {
+  return (
+    <div className="banner" style={ch ? cvar(ch) : undefined}>
+      <p>{children}</p>
+      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+    </div>
+  )
+}
+
+export const Stats = ({ items, ch }: { items: { value: ReactNode; label: ReactNode }[]; ch?: ChapterId | null }) => (
+  <div className="stats" style={ch ? cvar(ch) : undefined}>
+    {items.map((it, i) => <div key={i} className="stat"><b>{it.value}</b><span>{it.label}</span></div>)}
+  </div>
+)
+
+// A card that links to a page: chapters, skills.
+export const LinkCard = ({ ch, title, sub, ...link }: { ch?: ChapterId | null; title: ReactNode; sub?: ReactNode } & LinkProps) => (
+  <Link {...link} className="link-card" style={ch ? cvar(ch) : undefined}>
+    <span className="link-card-title">{ch && <Dot />}{title}</span>
+    {sub && <span className="link-card-sub">{sub}</span>}
+  </Link>
+)
+
+/* ---------- Chips ---------- */
+
+// A chapter's colour dot. Without ch it uses the surrounding --c.
+export const Dot = ({ ch }: { ch?: ChapterId | null }) => <span className="dot" style={ch ? cvar(ch) : undefined} aria-hidden="true" />
+
+export const Chips = ({ children, className }: { children: ReactNode; className?: string }) => (
+  <div className={`chips${className ? ` ${className}` : ''}`}>{children}</div>
+)
+
+// A toggle pill for filters and pickers, with an optional count and chapter dot.
+export function Chip({ pressed, onClick, count, ch, children }: {
+  pressed?: boolean; onClick: () => void; count?: number | string; ch?: ChapterId | null; children: ReactNode
+}) {
+  return (
+    <button type="button" className="chbtn" aria-pressed={pressed} onClick={onClick} style={ch ? cvar(ch) : undefined}>
+      {ch && <Dot />}{children}{count != null && <span className="count">{count}</span>}
+    </button>
+  )
+}
+
+// Same look as Chip, but navigates.
+export const ChipLink = ({ ch, pressed, children, ...link }: { ch?: ChapterId | null; pressed?: boolean; children: ReactNode } & LinkProps) => (
+  <Link {...link} className="chbtn text-foreground no-underline" aria-pressed={pressed} style={ch ? cvar(ch) : undefined}>
+    {ch && <Dot />}{children}
+  </Link>
+)
+
+/* ---------- Inputs ---------- */
+
+export function SearchField({ value, onChange, placeholder, label = 'Search', className }: {
+  value: string; onChange: (v: string) => void; placeholder?: string; label?: string; className?: string
+}) {
+  const id = useId()
+  return (
+    <div className={`field${className ? ` ${className}` : ''}`}>
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    </div>
+  )
+}

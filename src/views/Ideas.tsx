@@ -8,7 +8,8 @@ import { fmtShort, fmtStamp } from '@/lib/dates'
 import type { Idea } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { burst, toast } from '@/fx/fx'
-import { ConfirmButton, Header, Section, empty } from '@/components/kit'
+import { AreaField, Field, FormSheet, PlusButton, TextField, fail } from '@/components/edit'
+import { Chip, Chips, ConfirmButton, Entry, Header, List, SearchField, Section } from '@/components/kit'
 
 const hay = (it: Idea) => [it.title, it.body, it.labels.join(' '), ...it.notes.map((n) => n.body)].join(' ').toLowerCase()
 
@@ -16,17 +17,16 @@ function IdeaCard({ idea, open, onOpen }: { idea: Idea; open: boolean; onOpen: (
   const { dispatch } = useStore()
   const [note, setNote] = useState('')
   return (
-    <div className="note" style={{ '--c': 'var(--primary)' } as React.CSSProperties}>
-      <div className="note-meta">
-        <span>{fmtShort(new Date(idea.created_at))}</span>
-        {idea.notes.length > 0 && <span>{idea.notes.length} note{idea.notes.length === 1 ? '' : 's'}</span>}
-      </div>
+    <Entry meta={<>
+      <span>{fmtShort(new Date(idea.created_at))}</span>
+      {idea.notes.length > 0 && <span>{idea.notes.length} note{idea.notes.length === 1 ? '' : 's'}</span>}
+    </>}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="row-title font-display text-lg">{idea.title}</div>
+          <div className="row-title font-display text-title">{idea.title}</div>
           {idea.body && !open && <div className="row-sub line-clamp-2">{idea.body}</div>}
           {idea.labels.length > 0 && (
-            <div className="mt-1.5 flex flex-wrap gap-1">
+            <div className="mt-2 flex flex-wrap gap-1">
               {idea.labels.map((l) => <Badge key={l} variant="outline">#{l}</Badge>)}
             </div>
           )}
@@ -37,8 +37,8 @@ function IdeaCard({ idea, open, onOpen }: { idea: Idea; open: boolean; onOpen: (
         <div className="mt-3">
           {idea.body && <div className="note-text mb-3">{idea.body}</div>}
           {idea.notes.map((n) => (
-            <div key={n.id} className="mb-2 border-l-[3px] border-border py-1 pl-2.5">
-              <div className="text-[13px] text-muted-foreground">{fmtStamp(n.created_at)}</div>
+            <div key={n.id} className="mb-2 border-l-[3px] border-border py-1 pl-3">
+              <div className="text-caption text-muted-foreground">{fmtStamp(n.created_at)}</div>
               <div className="note-text">{n.body}</div>
             </div>
           ))}
@@ -57,15 +57,39 @@ function IdeaCard({ idea, open, onOpen }: { idea: Idea; open: boolean; onOpen: (
           </div>
         </div>
       )}
-    </div>
+    </Entry>
+  )
+}
+
+function IdeaSheet({ open, onOpenChange, labels }: { open: boolean; onOpenChange: (o: boolean) => void; labels: string[] }) {
+  const { dispatch } = useStore()
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [labelText, setLabelText] = useState('')
+  return (
+    <FormSheet open={open} onOpenChange={onOpenChange} title="New idea" submit="Save idea"
+      onSubmit={() => {
+        if (!title.trim()) return fail('Write the idea first.')
+        const ls = [...new Set(labelText.split(',').map((s) => s.trim().toLowerCase().replace(/^#/, '')).filter(Boolean))]
+        dispatch({ type: 'addIdea', idea: { id: crypto.randomUUID(), title: title.trim(), body: body.trim(), labels: ls, created_at: new Date().toISOString(), notes: [] } })
+        if (document.activeElement) burst(document.activeElement, 16)
+        toast('Idea saved.')
+      }}>
+      <TextField label="Idea" value={title} onChange={setTitle} placeholder="A Chrome extension that summarizes Jira tickets" required full />
+      <AreaField label="Details (optional)" value={body} onChange={setBody} rows={3} placeholder="Who it's for, why it matters, first step" />
+      <Field label="Labels, separated by commas">
+        {(id) => <>
+          <Input id={id} list="label-options" value={labelText} onChange={(e) => setLabelText(e.target.value)} placeholder="startup, adtech, ai" />
+          <datalist id="label-options">{labels.map((l) => <option key={l} value={l} />)}</datalist>
+        </>}
+      </Field>
+    </FormSheet>
   )
 }
 
 export function Ideas() {
-  const { state, dispatch } = useStore()
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
-  const [labelText, setLabelText] = useState('')
+  const { state } = useStore()
+  const [adding, setAdding] = useState(false)
   const [query, setQuery] = useState('')
   const [label, setLabel] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
@@ -82,56 +106,22 @@ export function Ideas() {
 
   return (
     <>
-      <Header title="Ideas" lead="Catch ideas fast, label them, and add notes as they grow." />
-      <Section title="New idea">
-        <div className="panel grid gap-3">
-          <div className="field">
-            <Label htmlFor="idea-title">Idea</Label>
-            <Input id="idea-title" className="bg-background" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="For example: a Chrome extension that summarizes Jira tickets" />
-          </div>
-          <div className="field">
-            <Label htmlFor="idea-text">Details (optional)</Label>
-            <Textarea id="idea-text" rows={3} className="bg-background" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Who it's for, why it matters, first step" />
-          </div>
-          <div className="field">
-            <Label htmlFor="idea-labels">Labels, separated by commas</Label>
-            <Input id="idea-labels" className="bg-background" list="label-options" value={labelText} onChange={(e) => setLabelText(e.target.value)} placeholder="startup, adtech, ai" />
-            <datalist id="label-options">{labels.map((l) => <option key={l} value={l} />)}</datalist>
-          </div>
-          <div>
-            <Button onClick={(e) => {
-              if (!title.trim()) return toast('Write the idea first.')
-              const ls = [...new Set(labelText.split(',').map((s) => s.trim().toLowerCase().replace(/^#/, '')).filter(Boolean))]
-              dispatch({ type: 'addIdea', idea: { id: crypto.randomUUID(), title: title.trim(), body: body.trim(), labels: ls, created_at: new Date().toISOString(), notes: [] } })
-              burst(e.currentTarget, 16)
-              setTitle(''); setBody(''); setLabelText('')
-              toast('Idea saved.')
-            }}>Save idea</Button>
-          </div>
-        </div>
-      </Section>
-
+      <Header title="Ideas" lead="Catch ideas fast, label them, and add notes as they grow.">
+        <PlusButton label="New idea" onClick={() => setAdding(true)} />
+      </Header>
       <Section title="Your ideas" aside={state.ideas.length}>
-        <div className="field mb-3">
-          <Label htmlFor="idea-search">Search ideas</Label>
-          <Input id="idea-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Words in the title, details, labels or notes" />
-        </div>
+        <SearchField className="mb-3" label="Search ideas" value={query} onChange={setQuery} placeholder="Words in the title, details, labels or notes" />
         {labels.length > 0 && (
-          <div className="chips">
-            <button className="chbtn" aria-pressed={!activeLabel} onClick={() => setLabel(null)}>All <span className="font-normal text-muted-foreground">{state.ideas.length}</span></button>
-            {labels.map((l) => (
-              <button key={l} className="chbtn" aria-pressed={activeLabel === l} onClick={() => setLabel(l)}>
-                #{l} <span className="font-normal text-muted-foreground">{counts[l]}</span>
-              </button>
-            ))}
-          </div>
+          <Chips>
+            <Chip pressed={!activeLabel} onClick={() => setLabel(null)} count={state.ideas.length}>All</Chip>
+            {labels.map((l) => <Chip key={l} pressed={activeLabel === l} onClick={() => setLabel(l)} count={counts[l]}>#{l}</Chip>)}
+          </Chips>
         )}
-        <div className="list">
-          {shown.length
-            ? shown.map((it) => <IdeaCard key={it.id} idea={it} open={openId === it.id} onOpen={() => setOpenId(openId === it.id ? null : it.id)} />)
-            : empty(state.ideas.length ? 'No ideas match.' : 'No ideas yet. Save your first one above.')}
-        </div>
+        <List empty={state.ideas.length ? 'No ideas match.' : 'No ideas yet. Add your first one with +.'}>
+          {shown.map((it) => <IdeaCard key={it.id} idea={it} open={openId === it.id} onOpen={() => setOpenId(openId === it.id ? null : it.id)} />)}
+        </List>
       </Section>
+      {adding && <IdeaSheet open={adding} onOpenChange={setAdding} labels={labels} />}
     </>
   )
 }

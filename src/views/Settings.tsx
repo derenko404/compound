@@ -9,12 +9,12 @@ import { playTick, setSoundOn, soundOn } from '@/fx/sound'
 import { toast } from '@/fx/fx'
 import { clearLocalSnapshot, importLocal, loadLocalSnapshot, supabase } from '@/store/backends'
 import { useStore } from '@/store/StoreProvider'
-import { Header, Section } from '@/components/kit'
+import { Header, Panel, Section } from '@/components/kit'
 
 function Line({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 border-t border-border py-3 first:border-t-0 first:pt-0 last:pb-0">
-      <div className="min-w-0"><div className="font-bold">{title}</div>{sub && <div className="text-sm text-muted-foreground">{sub}</div>}</div>
+      <div className="min-w-0"><div className="font-bold">{title}</div>{sub && <div className="text-small text-muted-foreground">{sub}</div>}</div>
       {children}
     </div>
   )
@@ -40,7 +40,7 @@ export function Settings() {
     <>
       <Header title="Settings" />
       <Section title="Account">
-        <div className="panel">
+        <Panel>
           {mode === 'cloud' ? (
             <>
               <Line title={session?.user.email ?? 'Signed in'} sub="Your data syncs to your account on every device.">
@@ -69,19 +69,19 @@ export function Settings() {
               {supabase && <Button size="sm" onClick={signOut}>Sign in</Button>}
             </Line>
           )}
-        </div>
+        </Panel>
       </Section>
 
       <Section title="Feedback">
-        <div className="panel">
+        <Panel>
           <Line title="Sounds" sub="A pop on every tick, a chime when the day is done.">
             <Switch checked={sound} onCheckedChange={(v) => { setSound(v); setSoundOn(v); if (v) playTick(0.5) }} />
           </Line>
-        </div>
+        </Panel>
       </Section>
 
       <Section title="Daily reminder">
-        <div className="panel">
+        <Panel>
           {supported() ? (
             <>
               <Line title="Remind me" sub="If today's tasks aren't done by this time. Works while the app is open or installed and running.">
@@ -102,7 +102,7 @@ export function Settings() {
           ) : (
             <p className="text-muted-foreground">This browser doesn't support notifications. On iPhone, add the app to your Home Screen first.</p>
           )}
-        </div>
+        </Panel>
       </Section>
     </>
   )

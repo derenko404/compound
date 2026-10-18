@@ -35,9 +35,20 @@ Deploy order: the user runs a migration before you push code that reads or write
 - `DAILY` items feed `CORE_IDS`, which drives the streak; a new core item breaks every past streak. Prefer extending an existing item's `sub`. The `plan-creator` skill (`.claude/skills/plan-creator/`) covers adding content.
 - `Linkify` (`src/components/guide.tsx`) auto-links project codes (`T1`…`F4`) to `/chapters/<ch>#<code>`, "Chapter N" to that chapter, and any resource title from `guides.ts` to its URL. Keep codes verbatim in content so links work.
 
+## Design system
+
+The UI is a design system: every page is built from the same tokens and components. Follow it for every change, however small.
+
+- **Tokens only.** All values come from the token layer at the top of `src/index.css`: colours (`--primary`, `--muted-foreground`, …, chapter palette `--p-*`), type scale (`--text-micro|caption|small|body|title|heading|stat|dial|page|hero`, also `text-*` classes), spacing (`--space-*`, a 4px grid; Tailwind `p-3`, `gap-2`… are the same steps), radii (`--radius-xs…xl`, `rounded-*`), shadow (`--shadow-card`), layers (`--z-*`), motion (`--dur-*`, `--ease-*`), sizes (`--icon-*`, `--control-*`). Never write a raw `px`, hex, `text-[13px]`, half step (`mb-3.5`) or Tailwind default size (`text-sm`). If no token fits, add one there rather than a one-off value.
+- **Components first.** Build pages from `src/components/kit.tsx` (Header, Section, List, Row, Entry, Panel, Fold, Banner, Stats, LinkCard, Chip/ChipLink/Chips, Dot, SearchField, MoreText, Check, Dial…) and `src/components/edit.tsx` (FormSheet, fields, RowEdit, PlusButton, EditToggle). Don't rebuild their markup by hand. When a pattern shows up a second time, promote it into kit/edit with a class in `index.css`.
+- **Change the shared piece.** To restyle something, change its token or component so every use follows; don't override it in one page.
+- **Product copy vs user data.** Text that explains the app (help, "How it works", empty states, labels) is fixed in code and the same for everyone. Users only fill in what the app lets them edit (chapters, tasks, routines, lists, trackers, motivation). Don't make system copy editable or store it per user.
+- **Patterns:** create forms open from a `+` (PlusButton) in a FormSheet (centred dialog on desktop, bottom drawer on phones), never inline on the page; editing content is behind an Edit toggle; long text folds with MoreText.
+- Chapter colours: each chapter picks a palette key; `ChapterColors` maps `--c-<id>` to it, and rows read `--c` (use `cvar(ch)`).
+- Breakpoints (media queries can't use variables): phone ≤ 560px, compact ≤ 720px (bottom navigation instead of top tabs).
+
 ## UI
 
-- Palette and all custom styles live in `src/index.css`. shadcn tokens (`--background`, `--primary`, …) are mapped to the app palette; chapter colours are `--c-<chapter>` and rows read them through `--c` (use `cvar(ch)` from `src/components/kit.tsx`).
 - `src/components/ui/*` is shadcn-generated. When adding components with `npx shadcn@latest add …`, the CLI writes `import { cn } from "cn"`: change it to `@/lib/utils`. Sonner must not use `next-themes` (not installed).
 - Feedback is part of the product: `Check` plays a sound and particle burst, `celebrate()` throws confetti and plays a fanfare (`src/fx/`). Keep these on new tick-style interactions. Respect `prefers-reduced-motion`.
 

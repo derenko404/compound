@@ -1,5 +1,5 @@
-// 100-item starter lists: [title, secondary] where secondary is author, year, artist or country.
-import type { ListKey } from '@/lib/types'
+// Seed only (see seed.ts): 100-item starter lists: [title, secondary] where secondary is author, year, artist or country.
+export type ListKey = 'books' | 'films' | 'songs' | 'places'
 
 export const LISTS: Record<ListKey, [string, string][]> = {
   books: [

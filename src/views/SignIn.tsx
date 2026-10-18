@@ -66,7 +66,7 @@ export function SignIn() {
         </svg>
         Continue with Google
       </Button>
-      <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground"><span className="h-px flex-1 bg-border" />or with a password<span className="h-px flex-1 bg-border" /></div>
+      <div className="mb-4 flex items-center gap-3 text-small text-muted-foreground"><span className="h-px flex-1 bg-border" />or with a password<span className="h-px flex-1 bg-border" /></div>
       <form className="panel grid gap-3" onSubmit={submit}>
         <div className="field">
           <Label htmlFor="email">Email</Label>
@@ -77,8 +77,8 @@ export function SignIn() {
           <Input id="password" type="password" required minLength={6} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
             className="bg-background" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
-        {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-        {info && <p className="text-sm text-muted-foreground" role="status">{info}</p>}
+        {error && <p className="text-small text-destructive" role="alert">{error}</p>}
+        {info && <p className="text-small text-muted-foreground" role="status">{info}</p>}
         <Button type="submit" disabled={busy}>{busy ? 'One moment…' : mode === 'signin' ? 'Sign in' : 'Create account'}</Button>
         <Button type="button" variant="link" className="px-0" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setInfo('') }}>
           {mode === 'signin' ? 'No account yet? Create one' : 'Have an account? Sign in'}
