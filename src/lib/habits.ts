@@ -1,9 +1,29 @@
 // Wellbeing habits: the maths every skin shares, and each type's Today row. No UI here.
 import type { Habit, HabitData, HabitType, State } from './types'
 import { addDays, dayDiff, keyOf, parseKey } from './dates'
-import { CRAVING_TIPS, MILESTONES } from '@/data/plan'
 
 export const NEW_HABIT_DAYS = 21
+
+// Quit smoking: health milestones by minutes since the quit day, and tips shown on Today.
+const DAY = 60 * 24
+export const MILESTONES = [
+  { mins: 20, label: '20 minutes', text: 'Heart rate and blood pressure drop' },
+  { mins: 720, label: '12 hours', text: 'Carbon monoxide in your blood drops to normal' },
+  { mins: DAY * 14, label: '2 weeks', text: 'Circulation improves and lung function increases (2–12 weeks)' },
+  { mins: DAY * 30, label: '1 month', text: 'Coughing and shortness of breath start to decrease (1–9 months)' },
+  { mins: DAY * 365, label: '1 year', text: "Coronary heart disease risk is about half a smoker's" },
+  { mins: DAY * 365 * 5, label: '5 years', text: "Stroke risk falls toward a nonsmoker's (5–15 years)" },
+  { mins: DAY * 365 * 10, label: '10 years', text: "Lung cancer risk falls to about half a smoker's" },
+  { mins: DAY * 365 * 15, label: '15 years', text: "Coronary heart disease risk is a nonsmoker's" },
+]
+
+export const CRAVING_TIPS = [
+  'Craving? Delay 10 minutes. It usually fades first.',
+  'Breathe in for 4, out for 6, ten times.',
+  'Drink a full glass of water, slowly.',
+  'Walk, do push-ups or message a friend.',
+  'Say "I don\'t smoke", not "I\'m trying to quit".',
+]
 
 // Values in habit_logs.
 export const DONE = 1

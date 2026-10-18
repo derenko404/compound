@@ -803,12 +803,11 @@ a.res-title:hover .res-ext { color: var(--c); }
    ===================================================================== */
 
 .widget { display: grid; gap: var(--space-3); }
-/* Habit widgets: one column on phones and tablets, two side by side wider (above the compact breakpoint). */
-.widgets { display: grid; gap: var(--space-4); align-items: start; }
-@media (min-width: 721px) { .widgets { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Habit cards: one full-width column. */
+.widgets { display: grid; gap: var(--space-4); }
 .widget-sub { font-size: var(--text-small); color: var(--muted-foreground); }
 /* A habit card: folded it shows the icon, name, main number, one line and today's action; tapped, the details. */
-.hcard { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.hcard { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
 .hcard-head { display: flex; align-items: center; gap: var(--space-2); }
 .hcard-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-3); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .hcard-text { display: grid; min-width: 0; }
@@ -820,10 +819,10 @@ a.res-title:hover .res-ext { color: var(--c); }
 .hcard-line { padding-left: calc(var(--icon-sm) + 2 * var(--space-1) + 2px + var(--space-3)); font-size: var(--text-small); color: var(--muted-foreground); }
 /* Gym: this week, Monday first; gym days ringed, done ones filled. */
 .gym-days { display: flex; gap: var(--space-1); }
+.gym-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .gym-days i { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); border-radius: 50%; border: 2px solid transparent; font-style: normal; font-size: var(--text-micro); font-weight: var(--weight-bold); }
 .gym-days i.due { border-color: var(--c); color: var(--foreground); }
 .gym-days i.on { background: var(--c); border-color: var(--c); color: var(--card); }
-.hcard-next { font-size: var(--text-caption); color: var(--muted-foreground); white-space: nowrap; }
 .hcard-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .hcard-foot > * { flex: 1 1 0; min-height: var(--control-md); }
 /* Mood not logged yet today: the card asks for attention. */
@@ -835,7 +834,20 @@ a.res-title:hover .res-ext { color: var(--c); }
 .pick-group { display: grid; gap: var(--space-1); }
 .pick-label { font-size: var(--text-caption); color: var(--muted-foreground); }
 .pick .chips { margin: 0; }
-.hcard-body { display: grid; gap: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); }
+/* DoneButton: today's tick as a full-width button in the card's colour; filled once done. */
+.done-btn { display: flex; align-items: center; justify-content: center; gap: var(--space-2); width: 100%; height: var(--control-md); border: 1px solid var(--c); border-radius: var(--radius-md); background: none; color: var(--c); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
+.done-btn svg { width: var(--icon-sm); height: var(--icon-sm); opacity: 0.5; }
+.done-btn:hover { background: color-mix(in srgb, var(--c) 12%, transparent); }
+.done-btn.on { background: var(--c); color: var(--card); }
+.done-btn.on svg { opacity: 1; }
+/* Wide screens: the done button sits on the right of the card's header instead of spanning the card. */
+@media (min-width: 721px) {
+  .hcard:has(> .done-btn) { grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-5); }
+  .hcard > .hcard-head, .hcard > .hcard-line { grid-column: 1; }
+  .hcard > .done-btn { grid-column: 2; grid-row: 1 / span 2; align-self: center; width: auto; min-width: calc(6 * var(--control-md)); padding-inline: var(--space-5); }
+  .hcard > .hcard-body { grid-column: 1 / -1; }
+}
+.hcard-body { display: grid; gap: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
 .hcard .stats { margin-bottom: 0; }
 .hcard .meter i { background: var(--c); }
 .mile { display: grid; grid-template-columns: var(--space-6) 1fr; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); font-size: var(--text-small); }
@@ -855,7 +867,24 @@ a.res-title:hover .res-ext { color: var(--c); }
 .counter { display: flex; align-items: center; gap: var(--space-3); }
 .counter .icon-btn { border: 1px solid var(--border); border-radius: 50%; }
 /* Mood: five faces, then the week. */
-.moods { display: flex; justify-content: space-between; gap: var(--space-2); max-width: calc(5 * var(--control-md) + 8 * var(--space-4)); }
+/* The faces and the week share one width, so they line up on wide screens too. */
+.moods, .mood-week { max-width: calc(5 * var(--control-md) + 8 * var(--space-4)); }
+.moods { display: flex; justify-content: space-between; gap: var(--space-2); }
+/* The answered mood card: on wide screens this week's faces fill the right side; phones show them when opened. */
+.mood-side { display: none; }
+@media (min-width: 721px) {
+  .mood-card { grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-5); }
+  .mood-card > .hcard-head { grid-column: 1; }
+  .mood-card > .mood-side { display: block; grid-column: 2; grid-row: 1; align-self: center; }
+  .mood-card > .mood-side .mood-week { width: calc(6 * var(--control-md)); }
+  .mood-card > .hcard-body { grid-column: 1 / -1; }
+  .mood-card > .hcard-body .mood-week { display: none; }
+}
+/* Wide screens: the question, the faces and the week sit in the middle of the card. */
+@media (min-width: 721px) {
+  .moods, .mood-week { width: 100%; margin-inline: auto; }
+  .mood-ask { justify-items: center; text-align: center; }
+}
 .mood-btn { display: grid; place-items: center; width: var(--control-md); height: var(--control-md); padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; transform: scale(0.82); transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-fast); }
 .mood-btn:hover { transform: scale(0.92); }
 .mood-btn[aria-pressed="true"] { transform: scale(1.08); box-shadow: 0 0 0 var(--space-1) color-mix(in srgb, var(--c) 40%, transparent); }

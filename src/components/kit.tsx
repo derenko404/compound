@@ -2,7 +2,7 @@
 // their look comes from the tokens and patterns in src/index.css.
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
 import { Link, type LinkProps } from '@tanstack/react-router'
-import { ChevronDown, Search, X } from 'lucide-react'
+import { Check as CheckIcon, ChevronDown, Search, X } from 'lucide-react'
 import type { Chapter, ChapterId } from '@/lib/types'
 import { burst } from '@/fx/fx'
 import { playTick, playUntick } from '@/fx/sound'
@@ -361,6 +361,29 @@ export const IconBadge = ({ icon: Icon, label, color }: { icon: ComponentType<{ 
     <Icon aria-hidden />
   </span>
 )
+
+// A full-width "done" toggle at the bottom of a card (a habit's tick for today). Coloured by --c; filled when done.
+// Same feedback as Check: the tick sound and a burst. repeat: every press counts up (a glass of water) instead of
+// toggling; it fills once `on` (the target is reached). icon replaces the check mark.
+export function DoneButton({ on, label, done = 'Done today', onToggle, repeat, icon: Icon = CheckIcon }: {
+  on: boolean; label: string; done?: string; onToggle: (on: boolean) => void; repeat?: boolean
+  icon?: ComponentType<{ 'aria-hidden'?: boolean }>
+}) {
+  const ref = useRef<HTMLButtonElement>(null)
+  return (
+    <button ref={ref} type="button" className={`done-btn${on ? ' on' : ''}`} aria-pressed={repeat ? undefined : on}
+      onClick={() => {
+        const next = repeat || !on
+        if (next && ref.current) {
+          playTick(1)
+          burst(ref.current, 20)
+        } else playUntick()
+        onToggle(next)
+      }}>
+      <Icon aria-hidden />{on ? done : label}
+    </button>
+  )
+}
 
 // One setting in a Panel: title and explanation on the left, its control on the right. Rows are divided by lines.
 export const SettingRow = ({ title, sub, children }: { title: ReactNode; sub?: ReactNode; children?: ReactNode }) => (

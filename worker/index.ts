@@ -1,7 +1,6 @@
 // Cloudflare Worker: serves the app from dist/ and takes links from the Telegram bot at /tg.
 // Only /tg reaches this code (run_worker_first in wrangler.jsonc); everything else goes straight to assets.
 import { createClient } from '@supabase/supabase-js'
-import { ALL_CHAPTERS, CH } from '../src/data/plan'
 import { cleanTag, findUrls, kindFromUrl } from '../src/lib/finds'
 import type { LinkKind, Chapter, ChapterId } from '../src/lib/types'
 
@@ -42,19 +41,10 @@ const linksIn = (m: TgMessage, text = m.text ?? m.caption ?? '') => [
 // 70B: the 8B models picked note chapters badly and can't be held to a JSON schema. About 7 neurons a call.
 const MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
 
-// Chapters are edited in the app (table chapters). Until that table has rows, the original ones from plan.ts are used.
-const CHAPTER_HINTS: Record<string, string> = {
-  tech: 'system design, backend, cloud, databases, code, AI engineering',
-  product: 'product sense, UI/UX design, metrics, A/B tests',
-  mgmt: 'teams, 1:1s, hiring, project management',
-  biz: 'startups, adtech, how companies work, strategy',
-  eng: 'pronunciation, speaking, writing, public speaking',
-  money: 'budget, savings, investing',
-  own: 'anything personal that fits nothing above',
-}
-
+// Tracks come from the account's chapters table. A new account always has Personal, so the fallback only covers
+// an account that hasn't opened the app yet.
 interface Ch { id: ChapterId; name: string; hint: string }
-const FALLBACK: Ch[] = ALL_CHAPTERS.map((id) => ({ id, name: CH[id].short, hint: CHAPTER_HINTS[id] ?? '' }))
+const FALLBACK: Ch[] = [{ id: 'own', name: 'Personal', hint: 'anything personal' }]
 
 async function loadChapters(env: Env, user: string): Promise<Ch[]> {
   const { data, error } = await dbFor(env).from('chapters').select('data').eq('user_id', user)

@@ -7,21 +7,25 @@ Goal: someone who wants to learn a topic asks their AI (Claude, ChatGPT, Gemini�
 Decisions: tokens have **full access** (read, write, delete) to their owner's data. Built after the page rework, on the final data shape.
 
 ### 1. Personal access tokens
+
 - [ ] Migration: `api_tokens` (id, user_id, name, token_hash, created_at, last_used_at), RLS "own rows". Store only a hash (SHA-256); the token is shown once.
 - [ ] Settings → **AI access**: create a token (name it, copy once), list tokens with last used, revoke.
 - [ ] Copyable prompt next to the token: "Use the Roadmap Log API at … with this token to build me a track for <topic>…".
 
 ### 2. API in the Worker
+
 - [ ] Route `/api/*` and `/mcp` through the Worker (`run_worker_first` in `wrangler.jsonc`).
 - [ ] Auth: `Authorization: Bearer <token>` → hash → `api_tokens` → user_id; update `last_used_at`. Every query scoped to that user_id (the Worker uses the secret key, which bypasses RLS).
 - [ ] REST `/api/v1`: tracks (list, get, create with full content, update, delete), routines, notes, finds, lists, settings/program. Validate input against the `types.ts` shapes; assign ids and project codes (`nextProjectCode`) server-side.
 - [ ] OpenAPI description at `/api/v1/openapi.json`.
 
 ### 3. MCP server
+
 - [ ] Remote MCP (streamable HTTP) at `/mcp` on the same handlers. Tools: `list_tracks`, `get_track`, `create_track`, `update_track`, `delete_track`, `list_lists`, `create_list`, `update_list`, `add_routine`, `add_note`, `add_find`, …
 - [ ] Test with Claude (custom connector), ChatGPT connectors, Gemini CLI.
 
 ### 4. Instructions for AIs
+
 - [ ] `/llms.txt`: what a track is, the data shape, what a good track looks like (outcomes → month-by-month tasks → projects → resources by type → tips with "Topic: …" and "a → b → c" chains), project codes, limits.
 - [ ] Link it from the Settings prompt and the OpenAPI description.
 
@@ -57,6 +61,7 @@ Decisions: from the reminder time, every 2 hours until 22:00, only while items a
 - [ ] `src/sw.ts` already shows `push` and opens the app on `notificationclick`; check it opens Today.
 
 ## Page rework (in progress)
+
 - [x] Today
 - [x] Tracks (index, track page with tabs)
 - [x] Wellbeing (mood, habit trackers as skins over one data shape; migration 0006)
@@ -66,6 +71,11 @@ Decisions: from the reminder time, every 2 hours until 22:00, only while items a
 - [ ] Settings
 
 ## Later
+
 - [ ] Desktop top bar: logo and tabs in one row with a Settings gear; back link above the page title; page actions (Edit, Done) as buttons on the title row instead of the ⋯ menu. Phones keep the ⋯.
 - [ ] Refill the account from `backup/roadmap-backup-2026-10-18.json` when asked.
 - [ ] Update CLAUDE.md and README once the rework is done.
+
+# Modal
+
+- Remove delete button from edit modals and replace with separate delete buttons + confirmation

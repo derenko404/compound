@@ -10,7 +10,7 @@ import {
 import type { Habit, HabitType, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { praise, toast } from '@/fx/fx'
-import { Check, Chip, Chips, Fold, Header, IconBadge, List, Meter, Row, Section, Stats } from '@/components/kit'
+import { Chip, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, Section, Stats } from '@/components/kit'
 import { FormSheet, PlusButton, RowEdit, TextField, WeekdaysField, fail, move, useSheet } from '@/components/edit'
 import { usePageBar } from '@/components/bar'
 import { HABIT_ORDER, HABIT_UI } from '@/components/habits'
@@ -70,10 +70,23 @@ function MoodWidget() {
       ))}
     </div>
   )
+  const week = (
+    <div className="mood-week">
+      {weekOf(today).map((d) => {
+        const v = state.days[keyOf(d)]?.mood
+        return (
+          <div key={keyOf(d)}>
+            <span>{WEEKDAYS_SHORT[d.getDay()]}</span>
+            {v ? <MoodFace value={v} label={MOODS[v - 1].label} /> : <span className="mood-empty" role="img" aria-label="Not logged" />}
+          </div>
+        )
+      })}
+    </div>
+  )
   // Not answered today: the question and the faces, highlighted. Answered: one short row; open it to change or see the week.
   if (!now) return (
     <section>
-      <div className="hcard ask">
+      <div className="hcard ask mood-ask">
         <span className="hcard-name">How do you feel today?</span>
         {faces}
       </div>
@@ -81,7 +94,7 @@ function MoodWidget() {
   )
   return (
     <section>
-      <div className="hcard">
+      <div className="hcard mood-card">
         <div className="hcard-head">
           <button type="button" className="hcard-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
             <span className="hcard-mood"><MoodFace value={now.value} /></span>
@@ -91,20 +104,12 @@ function MoodWidget() {
             </span>
           </button>
         </div>
+        {/* Wide screens show the week beside the header; phones keep it inside, under the faces. */}
+        <div className="mood-side">{week}</div>
         {open && (
           <div className="hcard-body">
             {faces}
-            <div className="mood-week">
-              {weekOf(today).map((d) => {
-                const v = state.days[keyOf(d)]?.mood
-                return (
-                  <div key={keyOf(d)}>
-                    <span>{WEEKDAYS_SHORT[d.getDay()]}</span>
-                    {v ? <MoodFace value={v} label={MOODS[v - 1].label} /> : <span className="mood-empty" role="img" aria-label="Not logged" />}
-                  </div>
-                )
-              })}
-            </div>
+            {week}
           </div>
         )}
       </div>
@@ -124,9 +129,9 @@ function useHabitLog(h: Habit) {
 }
 
 // Today's tick for a habit, with the app's sound and burst.
-function DoneCheck({ h, label }: { h: Habit; label: string }) {
+function HabitDone({ h, label, done }: { h: Habit; label: string; done?: string }) {
   const log = useHabitLog(h)
-  return <Check on={log.value === DONE} label={label} onToggle={(v) => { log.set(v ? DONE : null); if (v) toast(praise()) }} />
+  return <DoneButton on={log.value === DONE} label={label} done={done} onToggle={(v) => { log.set(v ? DONE : null); if (v) toast(praise()) }} />
 }
 
 function SlipButton({ h }: { h: Habit }) {
@@ -137,7 +142,8 @@ function SlipButton({ h }: { h: Habit }) {
   )
 }
 
-function WaterButtons({ h }: { h: Habit }) {
+// Today's glasses for a water habit, and a way to change them.
+function useWaterLog(h: Habit) {
   const { state } = useStore()
   const log = useHabitLog(h)
   const { today: n, target } = waterStats(state, h, new Date())
@@ -146,16 +152,24 @@ function WaterButtons({ h }: { h: Habit }) {
     log.set(v || null)
     if (d > 0 && v === target) toast('Target reached.')
   }
-  return (
-    <div className="counter">
-      <button type="button" className="icon-btn" aria-label="Remove a glass" disabled={!n} onClick={() => add(-1)}><Minus aria-hidden="true" /></button>
-      <button type="button" className="icon-btn" aria-label="Add a glass" onClick={() => add(1)}><Plus aria-hidden="true" /></button>
-    </div>
-  )
+  return { add, n, target }
+}
+
+// Header: take one back if you tapped too many.
+function WaterUndo({ h }: { h: Habit }) {
+  const { add, n } = useWaterLog(h)
+  return <button type="button" className="icon-btn" aria-label="Remove a glass" disabled={!n} onClick={() => add(-1)}><Minus aria-hidden="true" /></button>
+}
+
+// Bottom: one press, one glass. Fills once the day's target is reached.
+function WaterAdd({ h }: { h: Habit }) {
+  const { add, n, target } = useWaterLog(h)
+  return <DoneButton repeat icon={Plus} on={n >= target} label="Add a glass" done="Add a glass" onToggle={() => add(1)} />
 }
 
 // What a card shows folded (value, one line, today's action) and unfolded (details).
-interface Skin { value: ReactNode; line?: ReactNode; quick?: ReactNode; details?: ReactNode; actions?: ReactNode }
+// quick: a small control or hint in the header. done: today's full-width tick at the bottom.
+interface Skin { value: ReactNode; line?: ReactNode; quick?: ReactNode; done?: ReactNode; details?: ReactNode; actions?: ReactNode }
 
 function skinOf(s: State, h: Habit, today: Date): Skin {
   switch (h.type) {
@@ -164,7 +178,7 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
       return {
         value: <>{st.clean}<small> clean {st.clean === 1 ? 'day' : 'days'}</small></>,
         line: `${st.saved.toFixed(0)} saved${st.next ? ` · next: ${st.next.label}` : ''}`,
-        quick: <DoneCheck h={h} label="Smoke-free today" />,
+        done: <HabitDone h={h} label="Mark smoke-free today" done="Smoke-free today" />,
         details: <>
           <Stats items={[
             { value: st.saved.toFixed(0), label: 'money saved' },
@@ -189,7 +203,7 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
       return {
         value: <>{st.clean}<small> clean {st.clean === 1 ? 'day' : 'days'}</small></>,
         line: `Longest run ${st.best} · ${st.slips} ${st.slips === 1 ? 'slip' : 'slips'}`,
-        quick: <DoneCheck h={h} label="Clean today" />,
+        done: <HabitDone h={h} label="Mark clean today" done="Clean today" />,
         details: <>
           <Stats items={[
             { value: st.run, label: 'current run' },
@@ -209,7 +223,7 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
             {Array.from({ length: c.target }, (_, i) => <i key={i} className={i < c.run ? 'on' : i === c.run ? 'now' : ''} />)}
           </span>
         ),
-        quick: <DoneCheck h={h} label="Done today" />,
+        done: <HabitDone h={h} label="Mark today done" />,
         details: <div className="widget-sub">A missed day starts the chain again. After {c.target} days in a row the habit counts as built.</div>,
       }
     }
@@ -219,19 +233,19 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
       return {
         value: <>{st.week}/{st.perWeek}<small> this week</small></>,
         line: (
-          <span className="gym-days">
-            {weekOf(today).map((d) => {
-              const gym = h.days.includes(d.getDay())
-              const done = valueOn(s, h, keyOf(d)) === DONE
-              return <i key={keyOf(d)} className={done ? 'on' : gym ? 'due' : undefined} title={WEEKDAYS_SHORT[d.getDay()]}>{WEEKDAYS_SHORT[d.getDay()][0]}</i>
-            })}
+          <span className="gym-line">
+            <span className="gym-days">
+              {weekOf(today).map((d) => {
+                const gym = h.days.includes(d.getDay())
+                const done = valueOn(s, h, keyOf(d)) === DONE
+                return <i key={keyOf(d)} className={done ? 'on' : gym ? 'due' : undefined} title={WEEKDAYS_SHORT[d.getDay()]}>{WEEKDAYS_SHORT[d.getDay()][0]}</i>
+              })}
+            </span>
+            {!dueOn(h, today) && !makeUp && <span>Next: {nextGymDay(h, today)}</span>}
           </span>
         ),
         // Any day can be logged: the goal is per week, so a missed day can be made up later.
-        quick: <>
-          {!dueOn(h, today) && <span className="hcard-next">{makeUp ? `Missed ${makeUp.slice(0, 3)}, go today?` : `Next: ${nextGymDay(h, today)}`}</span>}
-          <DoneCheck h={h} label="Workout done today" />
-        </>,
+        done: <HabitDone h={h} label={makeUp ? `Catch up on ${makeUp}` : 'Mark workout done'} done="Workout done" />,
         details: <Stats items={[
           { value: st.month, label: 'this month' },
           { value: st.total, label: 'in total' },
@@ -243,7 +257,8 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
       const st = waterStats(s, h, today)
       return {
         value: <>{st.today}/{st.target}<small> glasses</small></>,
-        quick: <WaterButtons h={h} />,
+        quick: <WaterUndo h={h} />,
+        done: <WaterAdd h={h} />,
         details: <>
           <div className="bars">
             {st.week.map((d) => (
@@ -300,6 +315,7 @@ function HabitCard({ h }: { h: Habit }) {
         {skin?.quick}
       </div>
       {skin?.line && <div className="hcard-line">{skin.line}</div>}
+      {skin?.done}
       {open && (
         <div className="hcard-body">
           {h.why && <div className="widget-sub">{h.why}</div>}
