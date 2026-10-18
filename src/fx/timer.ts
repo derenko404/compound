@@ -5,6 +5,7 @@ import { useSyncExternalStore } from 'react'
 import { celebrate } from './fx'
 import { playAmbient, playFanfare, type Ambient } from './sound'
 import { show } from './notify'
+import { t } from '@/i18n'
 
 export type Length = 'short' | 'long' | 'custom'
 // Minutes for each length, and the background sound while it runs.
@@ -12,7 +13,7 @@ export type TimerSettings = Record<Length, number> & { sound: Ambient }
 // endsAt while running; left (ms) while paused.
 export interface TimerState { length: Length; endsAt: number | null; left: number }
 
-export const LENGTH_LABEL: Record<Length, string> = { short: 'Short', long: 'Long', custom: 'Custom' }
+export const LENGTH_LABEL: Record<Length, string> = t.timer.lengths
 export const TIMER_DEFAULTS: TimerSettings = { short: 5, long: 30, custom: 15, sound: 'off' }
 export const CUSTOM_MAX = 180
 // Custom minutes go 1 to 5 one at a time, then in fives.
@@ -62,7 +63,7 @@ function emit() {
   snapshot = { state, settings, now: Date.now() }
   listeners.forEach((l) => l())
   // While running, the tab shows the time left, as timer apps do.
-  document.title = state.endsAt ? `${clock(remaining(state))} · Timer` : TITLE
+  document.title = state.endsAt ? `${clock(remaining(state))} · ${t.timer.title}` : TITLE
 }
 
 function set(next: TimerState) {
@@ -91,7 +92,7 @@ function finish(loud: boolean) {
   if (!loud) return
   playFanfare()
   celebrate()
-  void show("Time's up", `${settings[state.length]} minutes done.`)
+  void show(t.timer.timesUp, t.timer.minutesDone(settings[state.length]))
 }
 
 // A countdown that ended while the app was closed resets quietly.

@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { ChevronDown, GlassWater } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { WEEKDAYS_SHORT, nextPosition, uid } from '@/lib/content'
+import { nextPosition, uid } from '@/lib/content'
 import { addDays, dayDiff, fmtShort, keyOf, parseKey } from '@/lib/dates'
 import {
   DONE, HABIT_DEFAULTS, SLIP, chain, cleanStats, dueOn, gymMakeUp, gymStats, habitsOf, smokingStats, started, valueOn, waterStats,
@@ -13,6 +13,10 @@ import { Chip, CountRow, DoneButton, Chips, Fold, Header, IconBadge, List, Meter
 import { FormSheet, RemoveButton, TextField, WeekdaysField, fail, moveTo, useSheet } from '@/components/edit'
 import { usePageBar } from '@/components/bar'
 import { HABIT_ORDER, HABIT_UI } from '@/components/habits'
+import { t } from '@/i18n'
+
+const W = t.wellbeing
+const WEEKDAYS_SHORT = t.nav.weekdaysShort
 
 const tone = (token: string) => ({ '--c': `var(${token})` }) as CSSProperties
 
@@ -25,11 +29,11 @@ const weekOf = (today: Date) => {
 
 // Each face: the mouth (and brows for awful) on a round face filled with the mood's colour.
 const MOODS = [
-  { value: 1, label: 'Awful', mouth: 'M11.5 26.5 Q18 20 24.5 26.5', brows: 'M9 10.5 L14.5 12.5 M27 10.5 L21.5 12.5' },
-  { value: 2, label: 'Bad', mouth: 'M12 25 Q18 21.5 24 25' },
-  { value: 3, label: 'Okay', mouth: 'M12.5 23.5 H23.5' },
-  { value: 4, label: 'Good', mouth: 'M11.5 21.5 Q18 28 24.5 21.5' },
-  { value: 5, label: 'Great', mouth: 'M10.5 20.5 Q18 32 25.5 20.5 Z', filled: true },
+  { value: 1, label: W.mood.labels[0], mouth: 'M11.5 26.5 Q18 20 24.5 26.5', brows: 'M9 10.5 L14.5 12.5 M27 10.5 L21.5 12.5' },
+  { value: 2, label: W.mood.labels[1], mouth: 'M12 25 Q18 21.5 24 25' },
+  { value: 3, label: W.mood.labels[2], mouth: 'M12.5 23.5 H23.5' },
+  { value: 4, label: W.mood.labels[3], mouth: 'M11.5 21.5 Q18 28 24.5 21.5' },
+  { value: 5, label: W.mood.labels[4], mouth: 'M10.5 20.5 Q18 32 25.5 20.5 Z', filled: true },
 ]
 
 function MoodFace({ value, label }: { value: number; label?: string }) {
@@ -59,7 +63,7 @@ function MoodWidget() {
   const [open, setOpen] = useState(false)
   const now = day.mood ? MOODS[day.mood - 1] : null
   const faces = (
-    <div className="moods" role="group" aria-label="Today's mood">
+    <div className="moods" role="group" aria-label={W.mood.group}>
       {MOODS.map((m) => (
         <button key={m.value} type="button" className="mood-btn" aria-pressed={day.mood === m.value} aria-label={m.label} title={m.label}
           style={tone(`--mood-${m.value}`)} onClick={() => { set(m.value); setOpen(false) }}>
@@ -75,7 +79,7 @@ function MoodWidget() {
         return (
           <div key={keyOf(d)}>
             <span>{WEEKDAYS_SHORT[d.getDay()]}</span>
-            {v ? <MoodFace value={v} label={MOODS[v - 1].label} /> : <span className="mood-empty" role="img" aria-label="Not logged" />}
+            {v ? <MoodFace value={v} label={MOODS[v - 1].label} /> : <span className="mood-empty" role="img" aria-label={W.mood.notLogged} />}
           </div>
         )
       })}
@@ -85,7 +89,7 @@ function MoodWidget() {
   if (!now) return (
     <section>
       <div className="hcard ask mood-ask">
-        <span className="hcard-name">How do you feel today?</span>
+        <span className="hcard-name">{W.mood.ask}</span>
         {faces}
       </div>
     </section>
@@ -97,8 +101,8 @@ function MoodWidget() {
           <button type="button" className="hcard-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
             <span className="hcard-mood"><MoodFace value={now.value} /></span>
             <span className="hcard-text">
-              <span className="hcard-name">Mood<ChevronDown className={open ? 'rotate-180' : undefined} aria-hidden="true" /></span>
-              <span className="hcard-sub" style={tone(`--mood-${now.value}`)}>{now.label} today</span>
+              <span className="hcard-name">{W.mood.title}<ChevronDown className={open ? 'rotate-180' : undefined} aria-hidden="true" /></span>
+              <span className="hcard-sub" style={tone(`--mood-${now.value}`)}>{W.mood.today(now.label)}</span>
             </span>
           </button>
         </div>
@@ -134,9 +138,9 @@ function HabitDone({ h, label, done }: { h: Habit; label: string; done?: string 
 
 function SlipButton({ h }: { h: Habit }) {
   const log = useHabitLog(h)
-  if (log.value === SLIP) return <Button variant="outline" onClick={() => log.set(null)}>Undo today's slip</Button>
+  if (log.value === SLIP) return <Button variant="outline" onClick={() => log.set(null)}>{W.slip.undo}</Button>
   return (
-    <Button variant="outline" onClick={() => log.set(SLIP)}>Log a slip today</Button>
+    <Button variant="outline" onClick={() => log.set(SLIP)}>{W.slip.log}</Button>
   )
 }
 
@@ -145,7 +149,7 @@ function WaterCount({ h }: { h: Habit }) {
   const { state } = useStore()
   const log = useHabitLog(h)
   const { today: n, target } = waterStats(state, h, new Date())
-  return <CountRow n={n} target={target} onSet={(v) => log.set(v || null)} icon={GlassWater} unit={['glass', 'glasses']} />
+  return <CountRow n={n} target={target} onSet={(v) => log.set(v || null)} icon={GlassWater} unit={W.water.unit} />
 }
 
 // What a card shows folded (value, one line, today's action) and unfolded (details).
@@ -157,22 +161,22 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
     case 'smoking': {
       const st = smokingStats(s, h, today)
       return {
-        value: <>{st.clean}<small> clean {st.clean === 1 ? 'day' : 'days'}</small></>,
-        line: `${st.saved.toFixed(0)} saved${st.next ? ` · next: ${st.next.label}` : ''}`,
-        done: <HabitDone h={h} label="Mark smoke-free today" done="Smoke-free today" />,
+        value: <>{st.clean}<small> {W.clean.days(st.clean)}</small></>,
+        line: W.smoking.line(st.saved.toFixed(0), st.next?.label),
+        done: <HabitDone h={h} label={W.smoking.mark} done={W.smoking.today} />,
         details: <>
           <Stats items={[
-            { value: st.saved.toFixed(0), label: 'money saved' },
-            { value: st.avoided, label: 'cigarettes avoided' },
-            { value: st.slips, label: st.slips === 1 ? 'slip' : 'slips' },
+            { value: st.saved.toFixed(0), label: W.smoking.saved },
+            { value: st.avoided, label: W.smoking.avoided },
+            { value: st.slips, label: W.slip.word(st.slips) },
           ]} />
           {st.next && (
             <div className="grid gap-2">
-              <div><b>Next: {st.next.label}</b> <span className="text-muted-foreground">{st.next.text}</span></div>
-              <Meter value={st.toNext} label={`Progress to ${st.next.label}`} />
+              <div><b>{W.next(st.next.label)}</b> <span className="text-muted-foreground">{st.next.text}</span></div>
+              <Meter value={st.toNext} label={W.smoking.progressTo(st.next.label)} />
             </div>
           )}
-          <Fold title="Health milestones" meta={`${st.milestones.filter((m) => m.hit).length}/${st.milestones.length}`}>
+          <Fold title={W.smoking.milestones} meta={`${st.milestones.filter((m) => m.hit).length}/${st.milestones.length}`}>
             <div>{st.milestones.map((m) => <div key={m.label} className={`mile${m.hit ? ' hit' : ''}`}><i /><div><b>{m.label}</b> <span className="text-muted-foreground">{m.text}</span></div></div>)}</div>
           </Fold>
         </>,
@@ -182,14 +186,14 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
     case 'break': {
       const st = cleanStats(s, h, today)
       return {
-        value: <>{st.clean}<small> clean {st.clean === 1 ? 'day' : 'days'}</small></>,
-        line: `Longest run ${st.best} · ${st.slips} ${st.slips === 1 ? 'slip' : 'slips'}`,
-        done: <HabitDone h={h} label="Mark clean today" done="Clean today" />,
+        value: <>{st.clean}<small> {W.clean.days(st.clean)}</small></>,
+        line: W.clean.line(st.best, st.slips),
+        done: <HabitDone h={h} label={W.clean.mark} done={W.clean.today} />,
         details: <>
           <Stats items={[
-            { value: st.run, label: 'current run' },
-            { value: st.best, label: 'longest run' },
-            { value: st.slips, label: st.slips === 1 ? 'slip' : 'slips' },
+            { value: st.run, label: W.clean.run },
+            { value: st.best, label: W.clean.best },
+            { value: st.slips, label: W.slip.word(st.slips) },
           ]} />
         </>,
         actions: <SlipButton h={h} />,
@@ -198,21 +202,21 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
     case 'build': {
       const c = chain(s, h, today)
       return {
-        value: c.complete ? <>Built<small> {c.run}-day streak</small></> : <>{Math.min(c.day, c.target)}<small> of {c.target} days</small></>,
-        line: c.complete ? 'You did it. Keep the chain going.' : (
-          <span className="chain" role="img" aria-label={`${c.run} of ${c.target} days in a row`}>
+        value: c.complete ? <>{W.build.built}<small> {W.build.streak(c.run)}</small></> : <>{Math.min(c.day, c.target)}<small> {W.build.ofDays(c.target)}</small></>,
+        line: c.complete ? W.build.didIt : (
+          <span className="chain" role="img" aria-label={W.build.chain(c.run, c.target)}>
             {Array.from({ length: c.target }, (_, i) => <i key={i} className={i < c.run ? 'on' : i === c.run ? 'now' : ''} />)}
           </span>
         ),
-        done: <HabitDone h={h} label="Mark today done" />,
-        details: <div className="widget-sub">A missed day starts the chain again. After {c.target} days in a row the habit counts as built.</div>,
+        done: <HabitDone h={h} label={W.build.mark} />,
+        details: <div className="widget-sub">{W.build.details(c.target)}</div>,
       }
     }
     case 'gym': {
       const st = gymStats(s, h, today)
       const makeUp = gymMakeUp(s, h, today)
       return {
-        value: <>{st.week}/{st.perWeek}<small> this week</small></>,
+        value: <>{st.week}/{st.perWeek}<small> {W.gym.thisWeek}</small></>,
         line: (
           <span className="gym-line">
             <span className="gym-days">
@@ -222,33 +226,33 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
                 return <i key={keyOf(d)} className={done ? 'on' : gym ? 'due' : undefined} title={WEEKDAYS_SHORT[d.getDay()]}>{WEEKDAYS_SHORT[d.getDay()][0]}</i>
               })}
             </span>
-            {!dueOn(h, today) && !makeUp && <span>Next: {nextGymDay(h, today)}</span>}
+            {!dueOn(h, today) && !makeUp && <span>{W.next(nextGymDay(h, today))}</span>}
           </span>
         ),
         // Any day can be logged: the goal is per week, so a missed day can be made up later.
-        done: <HabitDone h={h} label={makeUp ? `Catch up on ${makeUp}` : 'Mark workout done'} done="Workout done" />,
+        done: <HabitDone h={h} label={makeUp ? W.gym.catchUp(makeUp) : W.gym.mark} done={W.gym.done} />,
         details: <Stats items={[
-          { value: st.month, label: 'this month' },
-          { value: st.total, label: 'in total' },
-          { value: h.days.length, label: 'days a week' },
+          { value: st.month, label: W.gym.month },
+          { value: st.total, label: W.gym.total },
+          { value: h.days.length, label: W.gym.perWeek },
         ]} />,
       }
     }
     case 'water': {
       const st = waterStats(s, h, today)
       return {
-        value: <>{st.today}/{st.target}<small> glasses</small></>,
+        value: <>{st.today}/{st.target}<small> {W.water.glasses}</small></>,
         done: <WaterCount h={h} />,
         details: <>
           <div className="bars">
             {st.week.map((d) => (
               <div key={keyOf(d.day)} className={d.future ? 'future' : undefined}>
-                <i style={{ '--pct': `${Math.min(1, d.value / st.target) * 100}%` } as CSSProperties} aria-label={`${d.value} glasses`} />
+                <i style={{ '--pct': `${Math.min(1, d.value / st.target) * 100}%` } as CSSProperties} aria-label={W.water.bar(d.value)} />
                 <span>{WEEKDAYS_SHORT[d.day.getDay()]}</span>
               </div>
             ))}
           </div>
-          <div className="widget-sub">{st.onTarget} {st.onTarget === 1 ? 'day' : 'days'} on target</div>
+          <div className="widget-sub">{W.water.onTarget(st.onTarget)}</div>
         </>,
       }
     }
@@ -264,9 +268,7 @@ const nextGymDay = (h: Habit, today: Date) => {
   return ''
 }
 
-const START_LABEL: Record<HabitType, string> = {
-  smoking: 'Quit day', break: 'First clean day', build: 'Day 1', gym: 'First week from', water: 'Start',
-}
+const START_LABEL: Record<HabitType, string> = W.start
 
 // A short card: icon, name, the main number and today's action. Tap it for the details.
 // Wide screens (above the compact breakpoint) have room for the details, so cards start open there.
@@ -280,8 +282,8 @@ function HabitCard({ h }: { h: Habit }) {
   const on = started(h, today)
   const skin = on ? skinOf(state, h, today) : null
   const waiting = h.start_date
-    ? `${START_LABEL[h.type]} ${fmtShort(parseKey(h.start_date))}, in ${dayDiff(today, parseKey(h.start_date))} days`
-    : 'Not started'
+    ? W.waiting(START_LABEL[h.type], fmtShort(parseKey(h.start_date)), dayDiff(today, parseKey(h.start_date)))
+    : W.notStarted
   return (
     <div className="hcard" style={tone(ui.color)}>
       <div className="hcard-head">
@@ -314,7 +316,7 @@ const singleTaken = (s: State, except?: string) =>
 
 function newHabit(s: State): Habit {
   const taken = singleTaken(s)
-  const type = HABIT_ORDER.find((t) => !taken.has(t)) ?? 'build'
+  const type = HABIT_ORDER.find((ty) => !taken.has(ty)) ?? 'build'
   const d = HABIT_DEFAULTS[type]
   return {
     id: uid(), type, name: d.name, why: null, start_date: keyOf(new Date()), days: d.days, position: nextPosition(s.habits),
@@ -324,8 +326,8 @@ function newHabit(s: State): Habit {
 
 // The + picker: ready-made trackers (one each, with their own screens and content), then the ones you name yourself.
 const PICK_GROUPS: { label: string; types: HabitType[] }[] = [
-  { label: 'Ready-made', types: ['gym', 'water', 'smoking'] },
-  { label: 'Your own', types: ['build', 'break'] },
+  { label: W.form.readyMade, types: ['gym', 'water', 'smoking'] },
+  { label: W.form.yourOwn, types: ['build', 'break'] },
 ]
 
 const num = (v: string) => (v === '' ? undefined : Number(v))
@@ -343,25 +345,25 @@ function HabitSheet({ habit, ...sheet }: { habit: Habit; open: boolean; onOpenCh
   const taken = singleTaken(state, habit.id)
 
   return (
-    <FormSheet {...sheet} title={isNew ? 'New tracker' : `Edit ${habit.name}`} submit={isNew ? 'Add tracker' : 'Save'}
+    <FormSheet {...sheet} title={isNew ? W.form.new : t.common.editNamed(habit.name)} submit={isNew ? W.form.addTracker : t.common.save}
       onSubmit={() => {
-        if (!h.name.trim()) return fail('Give it a name first.')
-        if (h.type === 'gym' && !h.days.length) return fail('Pick at least one day.')
+        if (!h.name.trim()) return fail(W.form.nameFirst)
+        if (h.type === 'gym' && !h.days.length) return fail(W.form.pickDay)
         dispatch({ type: 'putHabit', habit: { ...h, name: h.name.trim(), why: h.why?.trim() || null } })
       }}>
       {isNew && (
         <div className="field span-all">
-          <Label>Tracker</Label>
+          <Label>{W.form.tracker}</Label>
           <div className="pick">
             {PICK_GROUPS.map((g) => {
-              const types = g.types.filter((t) => !taken.has(t))
+              const types = g.types.filter((ty) => !taken.has(ty))
               return types.length > 0 && (
                 <div key={g.label} className="pick-group" role="group" aria-label={g.label}>
                   <span className="pick-label">{g.label}</span>
                   <Chips className="m-0">
-                    {types.map((t) => {
-                      const u = HABIT_UI[t]
-                      return <Chip key={t} pressed={h.type === t} onClick={() => pick(t)} icon={u.icon} tone={u.color}>{u.label}</Chip>
+                    {types.map((ty) => {
+                      const u = HABIT_UI[ty]
+                      return <Chip key={ty} pressed={h.type === ty} onClick={() => pick(ty)} icon={u.icon} tone={u.color}>{u.label}</Chip>
                     })}
                   </Chips>
                 </div>
@@ -373,16 +375,16 @@ function HabitSheet({ habit, ...sheet }: { habit: Habit; open: boolean; onOpenCh
       )}
       {/* Ready-made trackers keep their own name. */}
       {!HABIT_DEFAULTS[h.type].single && (
-        <TextField label="Name" value={h.name} onChange={(name) => set({ name })} required full
-          placeholder={h.type === 'break' ? 'No sugar' : 'Meditate 10 minutes'} />
+        <TextField label={W.form.name} value={h.name} onChange={(name) => set({ name })} required full
+          placeholder={h.type === 'break' ? W.form.breakPlaceholder : W.form.buildPlaceholder} />
       )}
-      <TextField label="Why" value={h.why ?? ''} onChange={(why) => set({ why })} placeholder="Your reason, in one line (optional)" full />
+      <TextField label={W.form.why} value={h.why ?? ''} onChange={(why) => set({ why })} placeholder={W.form.whyPlaceholder} full />
       <div className="grid2">
         <TextField label={START_LABEL[h.type]} type="date" value={h.start_date ?? ''} onChange={(start_date) => set({ start_date: start_date || null })} />
-        {h.type === 'water' && <TextField label="Glasses a day" type="number" value={String(h.custom_data.target ?? '')} onChange={(v) => setData({ target: num(v) })} />}
+        {h.type === 'water' && <TextField label={W.form.glassesADay} type="number" value={String(h.custom_data.target ?? '')} onChange={(v) => setData({ target: num(v) })} />}
         {h.type === 'smoking' && <>
-          <TextField label="Cigarettes a day, before" type="number" value={String(h.custom_data.per_day ?? '')} onChange={(v) => setData({ per_day: num(v) })} />
-          <TextField label="Price of a pack of 20" type="number" value={String(h.custom_data.price ?? '')} onChange={(v) => setData({ price: num(v) })} />
+          <TextField label={W.form.perDay} type="number" value={String(h.custom_data.per_day ?? '')} onChange={(v) => setData({ per_day: num(v) })} />
+          <TextField label={W.form.price} type="number" value={String(h.custom_data.price ?? '')} onChange={(v) => setData({ price: num(v) })} />
         </>}
       </div>
       {h.type === 'gym' && <WeekdaysField value={h.days} onChange={(days) => set({ days })} />}
@@ -398,7 +400,7 @@ export function Wellbeing() {
   const habits = habitsOf(state)
   const [edit, setEdit] = useState(false)
   usePageBar({
-    add: { label: 'Add a tracker', onClick: () => sheet.open(newHabit(state)) },
+    add: { label: W.add, onClick: () => sheet.open(newHabit(state)) },
     edit: habits.length ? () => setEdit(true) : undefined,
     done: edit ? () => setEdit(false) : undefined,
   })
@@ -408,21 +410,21 @@ export function Wellbeing() {
   }
   return (
     <>
-      <Header title="Wellbeing" lead="Your mood, and habits to build or break." />
+      <Header title={W.title} lead={W.lead} />
       <MoodWidget />
-      <Section title="Habits">
+      <Section title={W.habits}>
         {edit ? (
           <SortList onMove={reorder}>
             {habits.map((h) => (
               <Row key={h.id} title={h.name} sub={HABIT_UI[h.type].label} style={tone(HABIT_UI[h.type].color)}
-                check={<RemoveButton label={`Delete ${h.name}`} title={`Delete ${h.name}?`} description="Its history goes with it. This can't be undone."
+                check={<RemoveButton label={t.common.deleteNamed(h.name)} title={t.common.deleteAsk(h.name)} description={W.deleteText}
                   onConfirm={() => { dispatch({ type: 'deleteHabit', id: h.id }) }} />}
                 onOpen={() => sheet.open(h)} sort />
             ))}
           </SortList>
         ) : habits.length
           ? <div className="widgets">{habits.map((h) => <HabitCard key={h.id} h={h} />)}</div>
-          : <List empty="No habits yet. Tap + to add a tracker: gym, water, quitting smoking, or a habit of your own." />}
+          : <List empty={W.empty} />}
       </Section>
       {sheet.value && <HabitSheet key={sheet.value.id} {...sheet.props} habit={sheet.value} />}
     </>

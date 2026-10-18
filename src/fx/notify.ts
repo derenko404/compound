@@ -1,5 +1,7 @@
 // Daily reminder. Without a push server, the reminder fires from the open app (or the
 // installed PWA while it is alive): at 20:00, if today's tasks aren't done. Settings only switches it on or off.
+import { t } from '@/i18n'
+
 const KEY = 'roadmap-reminder'
 const SENT = 'roadmap-reminder-sent'
 const REMINDER_TIME = '20:00'
@@ -43,7 +45,7 @@ export function startReminderLoop(getLeft: () => number, today: () => string) {
     if (hm < r.time || localStorage.getItem(SENT) === today()) return
     const left = getLeft()
     localStorage.setItem(SENT, today())
-    if (left > 0) void show('Compound', `${left} task${left === 1 ? '' : 's'} left today. Keep the streak alive.`)
+    if (left > 0) void show('Compound', t.today.reminder(left))
   }
   check()
   const id = setInterval(check, 60_000)

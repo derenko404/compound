@@ -9,6 +9,7 @@ import { useStore } from '@/store/StoreProvider'
 import { celebrate } from '@/fx/fx'
 import { Check, Chip, ChipsList, Header, LinkCard, List, Progress, Row, SortList, SearchField } from '@/components/kit'
 import { AreaField, ConfirmSheet, FormSheet, RemoveButton, TextField, fail, moveTo, useSheet } from '@/components/edit'
+import { t } from '@/i18n'
 
 type Filter = 'all' | 'todo' | 'done'
 
@@ -17,18 +18,18 @@ function ListSheet({ list, open, onOpenChange, onSaved }: { list: ListDef; open:
   const [l, setL] = useState(list)
   const isNew = !list.id
   return (
-    <FormSheet open={open} onOpenChange={onOpenChange} title={isNew ? 'New list' : `Edit ${list.name}`} submit={isNew ? 'Create list' : 'Save'}
+    <FormSheet open={open} onOpenChange={onOpenChange} title={isNew ? t.lists.newList : t.common.editNamed(list.name)} submit={isNew ? t.lists.sheet.createList : t.common.save}
       onSubmit={() => {
-        if (!l.name.trim()) return fail('Give the list a name first.')
+        if (!l.name.trim()) return fail(t.lists.sheet.nameFirst)
         const id = l.id || freshId(l.name, state.lists.map((x) => x.id))
         dispatch({ type: 'putList', list: { ...l, id, name: l.name.trim(), title: l.title.trim() || l.name.trim(), sub_label: l.sub_label.trim() } })
         onSaved(id)
       }}>
       <div className="grid2">
-        <TextField label="Short name" value={l.name} onChange={(name) => setL({ ...l, name })} placeholder="📚 Books" required />
-        <TextField label="Detail under each item" value={l.sub_label} onChange={(sub_label) => setL({ ...l, sub_label })} placeholder="Author" hint="Like the author for books, the year for films, the artist for songs" />
+        <TextField label={t.lists.sheet.shortName} value={l.name} onChange={(name) => setL({ ...l, name })} placeholder={t.lists.sheet.shortNamePlaceholder} required />
+        <TextField label={t.lists.sheet.detail} value={l.sub_label} onChange={(sub_label) => setL({ ...l, sub_label })} placeholder={t.lists.sheet.detailPlaceholder} hint={t.lists.sheet.detailHint} />
       </div>
-      <TextField label="Title" value={l.title} onChange={(title) => setL({ ...l, title })} placeholder="100 books everyone should read" full />
+      <TextField label={t.lists.sheet.title} value={l.title} onChange={(title) => setL({ ...l, title })} placeholder={t.lists.sheet.titlePlaceholder} full />
     </FormSheet>
   )
 }
@@ -38,14 +39,14 @@ function ItemSheet({ list, item, open, onOpenChange }: { list: ListDef; item: Li
   const [it, setIt] = useState(item)
   const isNew = !list.items.some((x) => x.id === item.id)
   return (
-    <FormSheet open={open} onOpenChange={onOpenChange} title={isNew ? `Add to ${list.name}` : 'Edit item'} submit={isNew ? 'Add' : 'Save'}
+    <FormSheet open={open} onOpenChange={onOpenChange} title={isNew ? t.lists.item.addTo(list.name) : t.lists.item.edit} submit={isNew ? t.common.add : t.common.save}
       onSubmit={() => {
-        if (!it.title.trim()) return fail('Give it a title first.')
+        if (!it.title.trim()) return fail(t.lists.item.titleFirst)
         const next = { ...it, title: it.title.trim(), sub: it.sub?.trim() || undefined }
         dispatch({ type: 'putList', list: { ...list, items: isNew ? [...list.items, next] : list.items.map((x) => (x.id === it.id ? next : x)) } })
       }}>
-      <TextField label="Title" value={it.title} onChange={(title) => setIt({ ...it, title })} required full />
-      <TextField label={list.sub_label || 'Details'} value={it.sub ?? ''} onChange={(sub) => setIt({ ...it, sub })} full />
+      <TextField label={t.lists.item.title} value={it.title} onChange={(title) => setIt({ ...it, title })} required full />
+      <TextField label={list.sub_label || t.lists.item.details} value={it.sub ?? ''} onChange={(sub) => setIt({ ...it, sub })} full />
     </FormSheet>
   )
 }
@@ -60,18 +61,16 @@ function NoteSheet({ list, item, open, onOpenChange }: { list: ListDef; item: Li
   const p = state.listProgress[list.id]?.[item.id] ?? {}
   const [note, setNote] = useState(p.note ?? '')
   return (
-    <FormSheet open={open} onOpenChange={onOpenChange} title={item.sub ? `${item.title} (${item.sub})` : item.title} submit="Save"
+    <FormSheet open={open} onOpenChange={onOpenChange} title={item.sub ? `${item.title} (${item.sub})` : item.title} submit={t.common.save}
       onSubmit={() => {
         dispatch({ type: 'listItem', list: list.id, item: item.id, progress: { ...p, note: note.trim() || null } })
       }}>
-      <AreaField label="Your review" value={note} onChange={setNote} rows={4} placeholder="Thoughts, rating, when and where" />
+      <AreaField label={t.lists.review.label} value={note} onChange={setNote} rows={4} placeholder={t.lists.review.placeholder} />
     </FormSheet>
   )
 }
 
 /* ---------- All lists ---------- */
-
-const DELETE_LIST = "Its items, ticks and notes go with it. This can't be undone."
 
 export function Lists() {
   const { state, dispatch } = useStore()
@@ -79,19 +78,19 @@ export function Lists() {
   const lists = byPosition(state.lists)
   const listSheet = useSheet<ListDef>()
   const [edit, setEdit] = useState(false)
-  usePageBar({ add: { label: 'New list', onClick: () => listSheet.open(blankList(lists)) }, edit: lists.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
+  usePageBar({ add: { label: t.lists.newList, onClick: () => listSheet.open(blankList(lists)) }, edit: lists.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
   const reorder = (from: number, to: number) => {
     const ys = moveTo(lists, from, to)
     dispatch({ type: 'batch', ops: ys.flatMap((x, j) => (x.position === j ? [] : [{ type: 'putList' as const, list: { ...x, position: j } }])) })
   }
   return (
     <>
-      <Header title="Lists" lead="Books to read, films to watch, places to go." />
+      <Header title={t.lists.title} lead={t.lists.lead} />
       {edit ? (
-        <SortList empty="No lists yet. Start one with +." onMove={reorder}>
+        <SortList empty={t.lists.empty} onMove={reorder}>
           {lists.map((l) => (
             <Row key={l.id} title={l.name} sub={l.title} style={{ '--c': 'var(--primary)' } as CSSProperties}
-              check={<RemoveButton label={`Delete ${l.name}`} title={`Delete ${l.name}?`} description={DELETE_LIST} onConfirm={() => dispatch({ type: 'deleteList', id: l.id })} />}
+              check={<RemoveButton label={t.common.deleteNamed(l.name)} title={t.common.deleteAsk(l.name)} description={t.lists.deleteListText} onConfirm={() => dispatch({ type: 'deleteList', id: l.id })} />}
               onOpen={() => listSheet.open(l)} sort />
           ))}
         </SortList>
@@ -105,7 +104,7 @@ export function Lists() {
             )
           })}
         </div>
-      ) : <List empty="No lists yet. Start one with +." />}
+      ) : <List empty={t.lists.empty} />}
       {listSheet.value && <ListSheet key={listSheet.value.id || 'new'} {...listSheet.props} list={listSheet.value} onSaved={(id) => { if (!listSheet.value?.id) void nav({ to: '/lists/$id', params: { id } }) }} />}
     </>
   )
@@ -129,16 +128,16 @@ export function ListPage() {
   const [deleting, setDeleting] = useState(false)
   const [sharing, setSharing] = useState(false)
   usePageBar({
-    back: { to: '/lists', label: 'Lists' },
-    add: L ? { label: `Add to ${L.name}`, onClick: () => itemSheet.open({ id: uid(), title: '' }) } : undefined,
+    back: { to: '/lists', label: t.lists.title },
+    add: L ? { label: t.lists.item.addTo(L.name), onClick: () => itemSheet.open({ id: uid(), title: '' }) } : undefined,
     edit: L ? () => setEdit(true) : undefined,
     actions: L ? [
-      { label: 'Share', icon: Share2, onSelect: () => setSharing(true) },
-      { label: 'Delete list', icon: Trash2, onSelect: () => setDeleting(true), danger: true },
+      { label: t.common.share, icon: Share2, onSelect: () => setSharing(true) },
+      { label: t.lists.deleteList, icon: Trash2, onSelect: () => setDeleting(true), danger: true },
     ] : [],
     done: edit ? () => setEdit(false) : undefined,
   })
-  if (!L) return <List empty="This list no longer exists." />
+  if (!L) return <List empty={t.lists.page.gone} />
 
   const items = state.listProgress[L.id] ?? {}
   const n = doneIn(state, L)
@@ -165,14 +164,14 @@ export function ListPage() {
         title={<><span className="font-normal tabular-nums text-muted-foreground">{idx + 1}.</span> {it.title}</>}
         sub={it.sub} note={note} tagInline={!edit}
         check={edit
-          ? <RemoveButton label={`Delete ${it.title}`} title={`Delete ${it.title}?`} description="Its tick and note go with it. This can't be undone."
+          ? <RemoveButton label={t.common.deleteNamed(it.title)} title={t.common.deleteAsk(it.title)} description={t.lists.item.deleteText}
               onConfirm={() => dispatch({ type: 'putList', list: { ...L, items: L.items.filter((x) => x.id !== it.id) } })} />
           : <Check on={on} label={it.title} onToggle={(v) => toggle(it.id, v)} />}
         // Tapping the row (not its tick) opens your review. In edit mode it opens the item itself.
         onOpen={edit ? () => itemSheet.open(it) : () => noteSheet.open(it)} chevron={edit} sort={edit}
         // Your review (the item's note): a bubble with + to write one, a bubble with lines once there is one.
         tag={edit ? undefined
-          : <button type="button" className={`icon-btn${note ? ' on' : ''}`} aria-label={note ? `Edit your review of ${it.title}` : `Review ${it.title}`} onClick={() => noteSheet.open(it)}>
+          : <button type="button" className={`icon-btn${note ? ' on' : ''}`} aria-label={note ? t.lists.review.edit(it.title) : t.lists.review.write(it.title)} onClick={() => noteSheet.open(it)}>
               {note ? <MessageSquareText aria-hidden="true" /> : <MessageSquarePlus aria-hidden="true" />}
             </button>} />
     )
@@ -180,22 +179,22 @@ export function ListPage() {
 
   return (
     <>
-      <Header title={L.name} lead={L.title} action={edit ? { label: `Edit ${L.name}'s name and title`, icon: Pencil, onClick: () => listSheet.open(L) } : undefined} />
+      <Header title={L.name} lead={L.title} action={edit ? { label: t.lists.page.editDetails(L.name), icon: Pencil, onClick: () => listSheet.open(L) } : undefined} />
       <div className="mb-4"><Progress n={n} total={L.items.length} /></div>
-      <SearchField value={query} onChange={setQuery} placeholder={`Search ${L.name.toLowerCase()}`} />
+      <SearchField value={query} onChange={setQuery} placeholder={t.lists.page.search(L.name)} />
       {!edit && (
-        <ChipsList label="Show">
+        <ChipsList label={t.lists.page.show}>
           {(['all', 'todo', 'done'] as Filter[]).map((f) => (
-            <Chip key={f} pressed={filter === f} onClick={() => setFilter(f)}>{{ all: 'All', todo: 'Still to do', done: 'Done' }[f]}</Chip>
+            <Chip key={f} pressed={filter === f} onClick={() => setFilter(f)}>{t.lists.page.filters[f]}</Chip>
           ))}
         </ChipsList>
       )}
       {edit
-        ? <SortList empty="This list is empty. Tap + to add items." onMove={(from, to) => dispatch({ type: 'putList', list: { ...L, items: moveTo(L.items, from, to) } })}>{rows}</SortList>
-        : <List empty={L.items.length ? 'Nothing here with this filter.' : 'This list is empty. Tap + to add items.'}>{rows}</List>}
+        ? <SortList empty={t.lists.page.emptyList} onMove={(from, to) => dispatch({ type: 'putList', list: { ...L, items: moveTo(L.items, from, to) } })}>{rows}</SortList>
+        : <List empty={L.items.length ? t.lists.page.emptyFilter : t.lists.page.emptyList}>{rows}</List>}
       {sharing && <ShareSheet open onOpenChange={setSharing} kind="list" name={L.name} data={listSnapshot(L)} />}
-      <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={`Delete ${L.name}?`}
-        description={DELETE_LIST}
+      <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={t.common.deleteAsk(L.name)}
+        description={t.lists.deleteListText}
         onConfirm={() => {
           dispatch({ type: 'deleteList', id: L.id })
           void nav({ to: '/lists' })

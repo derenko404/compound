@@ -4,18 +4,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/store/backends'
 import { useStore } from '@/store/StoreProvider'
+import { t } from '@/i18n'
 
 type Mode = 'signin' | 'signup'
 
 const explain = (msg: string) =>
   /rate limit/i.test(msg)
-    ? 'Too many emails sent from this project. Wait an hour, or sign in with a password.'
+    ? t.settings.signIn.rateLimit
     : /invalid login/i.test(msg)
-      ? 'Wrong email or password.'
+      ? t.settings.signIn.wrong
       : /provider is not enabled/i.test(msg)
-        ? 'Google sign-in is not set up in Supabase yet.'
+        ? t.settings.signIn.noGoogle
         : /not confirmed/i.test(msg)
-          ? 'Confirm your email first, or turn off "Confirm email" in Supabase.'
+          ? t.settings.signIn.notConfirmed
           : msg
 
 // Password sign-in works inside the installed app on a phone; an emailed link would
@@ -41,7 +42,7 @@ export function SignIn() {
       : await supabase.auth.signUp({ ...creds, options: { emailRedirectTo: location.origin } })
     setBusy(false)
     if (error) return setError(explain(error.message))
-    if (mode === 'signup' && !data.session) setInfo(`Check ${creds.email} to confirm your account, then sign in here.`)
+    if (mode === 'signup' && !data.session) setInfo(t.settings.signIn.checkEmail(creds.email))
   }
 
   const google = async () => {
@@ -55,27 +56,27 @@ export function SignIn() {
   return (
     <div className="mx-auto max-w-md py-16">
       <div className="brand mb-6"><span className="brand-mark" aria-hidden="true" />Compound</div>
-      <h1 className="day-date mb-3">{mode === 'signin' ? 'Sign in to sync' : 'Create your account'}</h1>
-      <p className="lead">Your progress, notes and ideas are saved to your account and follow you to every device.</p>
+      <h1 className="day-date mb-3">{mode === 'signin' ? t.settings.signIn.title : t.settings.signIn.titleSignUp}</h1>
+      <p className="lead">{t.settings.signIn.lead}</p>
       <div className="mt-6 grid gap-4">
         <form className="panel grid gap-3" onSubmit={submit}>
           <div className="field">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t.settings.signIn.email}</Label>
             <Input id="email" type="email" autoComplete="email" required className="bg-background" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="field">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t.settings.signIn.password}</Label>
             <Input id="password" type="password" required minLength={6} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               className="bg-background" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           {error && <p className="text-small text-destructive" role="alert">{error}</p>}
           {info && <p className="text-small text-muted-foreground" role="status">{info}</p>}
-          <Button type="submit" disabled={busy}>{busy ? 'One moment…' : mode === 'signin' ? 'Sign in' : 'Create account'}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t.settings.signIn.busy : mode === 'signin' ? t.settings.signIn.submit : t.settings.signIn.submitSignUp}</Button>
           <Button type="button" variant="link" className="px-0" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setInfo('') }}>
-            {mode === 'signin' ? 'No account yet? Create one' : 'Have an account? Sign in'}
+            {mode === 'signin' ? t.settings.signIn.toSignUp : t.settings.signIn.toSignIn}
           </Button>
         </form>
-        <div className="flex items-center gap-3 text-small text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div>
+        <div className="flex items-center gap-3 text-small text-muted-foreground"><span className="h-px flex-1 bg-border" />{t.settings.signIn.or}<span className="h-px flex-1 bg-border" /></div>
         <Button variant="outline" className="w-full bg-card" onClick={google}>
           <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
             <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.7z" />
@@ -83,10 +84,10 @@ export function SignIn() {
             <path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8l4-3.1z" />
             <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.8 3.6-4.9 6.7-4.9z" />
           </svg>
-          Continue with Google
+          {t.settings.signIn.google}
         </Button>
       </div>
-      <Button variant="link" className="mt-4 px-0" onClick={useLocal}>Use without an account, on this device only</Button>
+      <Button variant="link" className="mt-4 px-0" onClick={useLocal}>{t.settings.signIn.local}</Button>
     </div>
   )
 }

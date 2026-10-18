@@ -1,9 +1,10 @@
 // Roadmap views for Today: the focus topic, and this week as a strip.
-import { WEEKDAYS_SHORT, topicOf } from '@/lib/content'
+import { topicOf } from '@/lib/content'
 import { addDays, keyOf } from '@/lib/dates'
 import { Link } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
-import { currentProject, dayProgress, focusOf, nextUp, topicProgress } from '@/lib/derive'
+import { currentProject, dayProgress, focusOf, nextUp, topicProgress, weekdayShort } from '@/lib/derive'
+import { t } from '@/i18n'
 import { useStore } from '@/store/StoreProvider'
 import { cvar } from './kit'
 
@@ -13,8 +14,8 @@ export function FocusCard() {
   const focus = topicOf(state, focusOf(state))
   if (!focus) return (
     <Link to="/topics" className="focus-card">
-      <div className="focus-label">Focus</div>
-      <div className="muted text-small">No focus topic yet. Pick one on Topics: it gets the study sessions and the weekend project.</div>
+      <div className="focus-label">{t.today.focus.label}</div>
+      <div className="muted text-small">{t.today.focus.none}</div>
     </Link>
   )
   const { done, total } = topicProgress(state, focus)
@@ -25,21 +26,21 @@ export function FocusCard() {
     <Link to="/topics/$ch" params={{ ch: focus.id }} className="focus-card" style={cvar(focus.id)}>
       <div className="focus-head">
         <div>
-          <div className="focus-label">Focus</div>
+          <div className="focus-label">{t.today.focus.label}</div>
           <div className="focus-name"><span className="dot" />{focus.name}</div>
         </div>
-        <span className="focus-count">{done} of {total} steps</span>
+        <span className="focus-count">{t.today.focus.steps(done, total)}</span>
         <ChevronRight className="chev" aria-hidden="true" />
       </div>
       {next ? (
         <div className="focus-task">
-          <div className="focus-label">Skill {next.index + 1} of {focus.skills.length}: {next.skill.name}</div>
+          <div className="focus-label">{t.today.focus.skillOf(next.index + 1, focus.skills.length, next.skill.name)}</div>
           <ol className="focus-next">{upcoming.map((t) => <li key={t.id}>{t.text}</li>)}</ol>
         </div>
-      ) : <div className="focus-task">Every skill on this topic is done.</div>}
+      ) : <div className="focus-task">{t.today.focus.allDone}</div>}
       {project && (
         <div className="focus-task">
-          <div className="focus-label">{(state.projects[project.id] ?? 'todo') === 'doing' ? 'Project in progress' : 'Next project'}</div>
+          <div className="focus-label">{(state.projects[project.id] ?? 'todo') === 'doing' ? t.today.focus.projectDoing : t.today.focus.projectNext}</div>
           <div><b>{project.code}</b> {project.name}</div>
         </div>
       )}
@@ -67,8 +68,8 @@ export function WeekStrip() {
         const state_ = dk > k ? 'future' : pct === 1 ? 'full' : pct > 0 ? 'part' : 'empty'
         return (
           <div key={dk} className={`wday${dk === k ? ' today' : ''}`} data-state={state_}>
-            <span>{WEEKDAYS_SHORT[d.getDay()]}</span>
-            <i style={{ '--pct': `${pct * 100}%` } as React.CSSProperties} aria-label={dk > k ? 'Upcoming' : `${done} of ${total} done`} />
+            <span>{weekdayShort(d.getDay())}</span>
+            <i style={{ '--pct': `${pct * 100}%` } as React.CSSProperties} aria-label={dk > k ? t.today.week.upcoming : t.today.week.doneOf(done, total)} />
             <small aria-hidden="true">{total ? `${done}/${total}` : '–'}</small>
           </div>
         )

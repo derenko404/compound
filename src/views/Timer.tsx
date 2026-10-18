@@ -9,10 +9,12 @@ import type { Ambient } from '@/fx/sound'
 import {
   CUSTOM_MAX, LENGTH_LABEL, customStep, TIMER_DEFAULTS, clock, lengthOf, remaining, timer, useTimer, type Length, type TimerSettings,
 } from '@/fx/timer'
+import { t } from '@/i18n'
 
 const LENGTHS: Length[] = ['short', 'long', 'custom']
 const SOUNDS: { value: Ambient; label: string }[] = [
-  { value: 'off', label: 'Off' }, { value: 'tick', label: 'Ticking' }, { value: 'rain', label: 'Rain' }, { value: 'brown', label: 'Deep' },
+  { value: 'off', label: t.timer.sounds.off }, { value: 'tick', label: t.timer.sounds.tick }, { value: 'rain', label: t.timer.sounds.rain },
+  { value: 'brown', label: t.timer.sounds.brown },
 ]
 
 // A focus timer: pick a length (short, long, or custom minutes), and a ring counts it down. Start and pause,
@@ -20,7 +22,7 @@ const SOUNDS: { value: Ambient; label: string }[] = [
 export function Timer() {
   const { state, settings, now } = useTimer()
   const [editing, setEditing] = useState(false)
-  usePageBar({ actions: [{ label: 'Timer settings', icon: Settings2, onSelect: () => setEditing(true) }] })
+  usePageBar({ actions: [{ label: t.timer.settings, icon: Settings2, onSelect: () => setEditing(true) }] })
   const total = lengthOf(state.length)
   const left = remaining(state, now)
   const running = !!state.endsAt
@@ -35,27 +37,27 @@ export function Timer() {
 
   return (
     <>
-      <Header title="Timer" lead="Pick a length, start, and focus until it rings." />
+      <Header title={t.timer.title} lead={t.timer.lead} />
       <div className="timer">
-        <Segmented label="Length" value={state.length} onChange={timer.length}
-          options={LENGTHS.map((l) => ({ value: l, label: l === 'custom' ? LENGTH_LABEL[l] : `${LENGTH_LABEL[l]} · ${settings[l]} min` }))} />
+        <Segmented label={t.timer.length} value={state.length} onChange={timer.length}
+          options={LENGTHS.map((l) => ({ value: l, label: l === 'custom' ? LENGTH_LABEL[l] : `${LENGTH_LABEL[l]} · ${t.common.minutes(settings[l])}` }))} />
         {/* Custom minutes: one at a time up to 5, then in fives. Locked once the clock has started, until reset or done. */}
         {state.length === 'custom' && (
-          <Stepper label="Custom length" value={`${custom} min`} less="Fewer minutes" more="More minutes"
+          <Stepper label={t.timer.customLength} value={t.common.minutes(custom)} less={t.timer.fewer} more={t.timer.more}
             onLess={idle && custom > 1 ? () => setCustom(customStep(custom, false)) : undefined}
             onMore={idle && custom < CUSTOM_MAX ? () => setCustom(customStep(custom, true)) : undefined} />
         )}
-        <Dial size="lg" n={total - left} total={total} value={clock(left)} sub={running ? 'Focus' : idle ? 'Ready' : 'Paused'} />
+        <Dial size="lg" n={total - left} total={total} value={clock(left)} sub={running ? t.timer.running : idle ? t.timer.ready : t.timer.paused} />
         <div className="timer-actions">
-          <Button variant="outline" onClick={timer.reset} disabled={idle}><RotateCcw aria-hidden="true" />Reset</Button>
+          <Button variant="outline" onClick={timer.reset} disabled={idle}><RotateCcw aria-hidden="true" />{t.timer.reset}</Button>
           {running
-            ? <Button onClick={timer.pause}><Pause aria-hidden="true" />Pause</Button>
-            : <Button onClick={start}><Play aria-hidden="true" />{idle ? 'Start' : 'Resume'}</Button>}
+            ? <Button onClick={timer.pause}><Pause aria-hidden="true" />{t.timer.pause}</Button>
+            : <Button onClick={start}><Play aria-hidden="true" />{idle ? t.timer.start : t.timer.resume}</Button>}
         </div>
         {/* A sound in the background while the clock runs, as focus apps have. */}
         <div className="timer-sound">
-          <span className="timer-sound-label">Sound while it runs</span>
-          <Segmented label="Sound while it runs" value={settings.sound} onChange={(sound) => timer.settings({ ...settings, sound })} options={SOUNDS} />
+          <span className="timer-sound-label">{t.timer.sound}</span>
+          <Segmented label={t.timer.sound} value={settings.sound} onChange={(sound) => timer.settings({ ...settings, sound })} options={SOUNDS} />
         </div>
       </div>
       {editing && <TimerSheet open onOpenChange={setEditing} settings={settings} />}
@@ -67,17 +69,17 @@ export function Timer() {
 function TimerSheet({ settings, open, onOpenChange }: { settings: TimerSettings; open: boolean; onOpenChange: (o: boolean) => void }) {
   const [text, setText] = useState({ short: String(settings.short), long: String(settings.long) })
   return (
-    <FormSheet open={open} onOpenChange={onOpenChange} title="Timer settings"
+    <FormSheet open={open} onOpenChange={onOpenChange} title={t.timer.settings}
       onSubmit={() => {
         const [short, long] = [Math.round(Number(text.short)), Math.round(Number(text.long))]
-        if (![short, long].every((m) => m >= 1 && m <= CUSTOM_MAX)) return fail(`Minutes go from 1 to ${CUSTOM_MAX}.`)
+        if (![short, long].every((m) => m >= 1 && m <= CUSTOM_MAX)) return fail(t.timer.range(CUSTOM_MAX))
         timer.settings({ ...settings, short, long })
       }}>
-      <TextField label="Short, minutes" type="number" value={text.short} onChange={(short) => setText({ ...text, short })} />
-      <TextField label="Long, minutes" type="number" value={text.long} onChange={(long) => setText({ ...text, long })} />
+      <TextField label={t.timer.shortMinutes} type="number" value={text.short} onChange={(short) => setText({ ...text, short })} />
+      <TextField label={t.timer.longMinutes} type="number" value={text.long} onChange={(long) => setText({ ...text, long })} />
       <button type="button" className="link-btn span-all justify-self-start"
         onClick={() => setText({ short: String(TIMER_DEFAULTS.short), long: String(TIMER_DEFAULTS.long) })}>
-        Back to {TIMER_DEFAULTS.short} and {TIMER_DEFAULTS.long} minutes
+        {t.timer.backTo(TIMER_DEFAULTS.short, TIMER_DEFAULTS.long)}
       </button>
     </FormSheet>
   )

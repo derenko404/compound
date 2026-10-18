@@ -8,11 +8,10 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/fx/fx'
 import { SHARE_DAYS, createShare, supabase, type ShareKind } from '@/store/backends'
 import { useStore } from '@/store/StoreProvider'
+import { t } from '@/i18n'
 import type { Topic, ListDef } from '@/lib/types'
 import { FormSheet } from './edit'
 import { CopyButton } from './kit'
-
-const NOUN: Record<ShareKind, string> = { topic: 'topic', list: 'list' }
 
 // Makes the link on the first tap (a snapshot: editing later doesn't change it), then offers Copy.
 export function ShareSheet({ kind, name, data, open, onOpenChange }: {
@@ -29,26 +28,26 @@ export function ShareSheet({ kind, name, data, open, onOpenChange }: {
       setLink(`${location.origin}/share/${id}`)
       void qc.invalidateQueries({ queryKey: ['shares'] })
     } catch {
-      toast.error("Couldn't make the link. Try again.")
+      toast.error(t.topics.share.failed)
     } finally {
       setBusy(false)
     }
   }
   return (
-    <FormSheet open={open} onOpenChange={onOpenChange} title={`Share ${name}`} submit="Done" onSubmit={() => {}}
-      description={`Anyone with the link can see this ${NOUN[kind]} and add a copy to their own, for ${SHARE_DAYS} days. Your data will not be changed.`}>
+    <FormSheet open={open} onOpenChange={onOpenChange} title={t.topics.share.title(name)} submit={t.common.done} onSubmit={() => {}}
+      description={t.topics.share.describe(kind, SHARE_DAYS)}>
       {mode !== 'cloud' || !supabase ? (
-        <p className="text-muted-foreground span-all">Sign in to share. Links are kept in your account.</p>
+        <p className="text-muted-foreground span-all">{t.topics.share.signIn}</p>
       ) : link ? (
         <div className="field span-all">
-          <Label htmlFor="share-link">Link</Label>
+          <Label htmlFor="share-link">{t.topics.share.link}</Label>
           <div className="share-actions">
             <Input id="share-link" readOnly value={link} onFocus={(e) => e.target.select()} />
             <CopyButton text={link} />
           </div>
         </div>
       ) : (
-        <Button type="button" className="span-all" disabled={busy} onClick={() => void make()}><Share2 aria-hidden="true" />{busy ? 'Creating…' : 'Create link'}</Button>
+        <Button type="button" className="span-all" disabled={busy} onClick={() => void make()}><Share2 aria-hidden="true" />{busy ? t.topics.share.creating : t.topics.share.create}</Button>
       )}
     </FormSheet>
   )

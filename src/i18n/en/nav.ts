@@ -1,0 +1,65 @@
+// The app shell (tabs, top bar, sync state) and the shared components in kit.tsx, edit.tsx and bar.tsx.
+export const nav = {
+  tabs: {
+    today: 'Today',
+    topics: 'Topics',
+    notebook: 'Notebook',
+    lists: 'Lists',
+    wellbeing: 'Wellbeing',
+    timer: 'Timer',
+    settings: 'Settings',
+  },
+  views: 'Views',
+  more: 'More',
+  otherViews: 'Other views',
+  // The sync icon's tooltip. StoreProvider's `sync` text uses these too.
+  sync: {
+    loading: 'Loading…',
+    loadError: "Couldn't load your data",
+    saving: 'Saving…',
+    saveError: "Couldn't save",
+    synced: 'Synced',
+    local: 'Saved on this device only',
+  },
+  timerLeft: (time: string) => `Timer: ${time} left`,
+  loadingProgress: 'Loading your progress…',
+  notFound: 'Page not found.',
+  appUpdated: 'App updated.',
+  updating: 'Updating the app…',
+  // Top bar
+  bar: {
+    edit: 'Edit',
+    done: 'Done',
+  },
+  // kit.tsx
+  kit: {
+    showMore: 'Show more',
+    showLess: 'Show less',
+    doneToday: 'Done today',
+    of: (n: number, total: number, unit: string) => `${n} of ${total} ${unit}`,
+    removeUnit: (unit: string) => `Remove a ${unit}`,
+    addUnit: (unit: string) => `Add a ${unit}`,
+    ofTotal: (total: number, unit: string) => `of ${total} ${unit}`,
+    unitN: (n: number, unit: string) => `${n} ${unit}`,
+    progressDone: 'done',
+    search: 'Search',
+    clearSearch: 'Clear search',
+  },
+  // edit.tsx
+  edit: {
+    addTo: (label: string) => `Add to ${label}`,
+    remove: (item: string) => `Remove ${item}`,
+    topic: 'Topic',
+    topics: 'Topics',
+    colour: 'Colour',
+    // A topic's colour, by the palette keys in content.ts PALETTE.
+    colours: {
+      blue: 'Blue', orange: 'Orange', purple: 'Purple', green: 'Green', pink: 'Pink', amber: 'Amber',
+      slate: 'Slate', teal: 'Teal', gray: 'Grey', red: 'Red', indigo: 'Indigo', lime: 'Lime',
+    },
+    days: 'Days',
+  },
+  // Sunday first, as Date.getDay() counts.
+  weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  weekdaysShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+}

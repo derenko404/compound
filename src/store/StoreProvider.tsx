@@ -6,6 +6,9 @@ import { emptyState, type Op, type State } from '@/lib/types'
 import { cloudBackend, localBackend, supabase, type Backend, type NotesFilter } from './backends'
 import { reduce } from './reduce'
 import { normalizeState } from '@/lib/content'
+import { t } from '@/i18n'
+
+export type SyncState = 'loading' | 'loadError' | 'saving' | 'saveError' | 'synced' | 'local'
 
 export type Mode = 'loading' | 'signin' | 'local' | 'cloud'
 
@@ -94,7 +97,7 @@ export function useStore() {
     onError: (e) => {
       console.error(e)
       // 23505: unique violation, which for notes means the link is saved already.
-      toast.error((e as { code?: string }).code === '23505' ? 'This link is already in your notebook.' : "Couldn't save. Check your connection and try again.")
+      toast.error((e as { code?: string }).code === '23505' ? t.common.linkExists : t.common.saveFailed)
       void qc.invalidateQueries({ queryKey: key })
     },
     // Notes are read in pages by their own queries, so they refresh once a note change is saved.
@@ -116,15 +119,12 @@ export function useStore() {
     [qc, key, mutate],
   )
 
-  const sync = query.isPending
-    ? 'Loading…'
-    : query.isError
-      ? "Couldn't load your data"
-      : saving
-        ? 'Saving…'
-        : mutation.isError
-          ? "Couldn't save"
-          : auth.mode === 'cloud' ? 'Synced' : 'Saved on this device only'
+  // Where the data stands, for the top bar's cloud icon (its words are in t.nav.sync).
+  const sync: SyncState = query.isPending ? 'loading'
+    : query.isError ? 'loadError'
+      : saving ? 'saving'
+        : mutation.isError ? 'saveError'
+          : auth.mode === 'cloud' ? 'synced' : 'local'
 
   return { state: query.data ?? emptyState(), ready: query.isSuccess, dispatch, sync, ...auth }
 }

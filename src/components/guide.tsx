@@ -2,7 +2,7 @@
 import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { BookOpen, ChevronDown, ExternalLink, FileText, GraduationCap, Headphones, Hammer, Newspaper, PlayCircle, Wrench, Link2 } from 'lucide-react'
-import { RESOURCE_KINDS, topicOf, sizeLabel } from '@/lib/content'
+import { RESOURCE_KINDS, topicOf } from '@/lib/content'
 import { hostOf } from '@/lib/finds'
 import type { Topic, TopicId, Project, ProjectStatus, Resource, ResourceKind, Skill } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
@@ -10,6 +10,7 @@ import { burst, celebrate } from '@/fx/fx'
 import { playTick, playUntick } from '@/fx/sound'
 import { Check, Fold, InnerLink, Row, cvar } from '@/components/kit'
 import { RemoveButton } from '@/components/edit'
+import { t } from '@/i18n'
 
 interface LinkIndex {
   re: RegExp | null
@@ -102,14 +103,14 @@ function ResourceRow({ ch, r, onEdit, onRemove, readOnly }: { ch?: TopicId; r: R
   const last = words.pop()
   return (
     <Row ch={ch} done={!readOnly && !onEdit && tick.on(r.id)} onOpen={onEdit && (() => onEdit(r))}
-      check={onRemove ? <RemoveButton label={`Delete ${r.title}`} title={`Delete ${r.title}?`} onConfirm={() => onRemove(r)} /> : readOnly || onEdit ? undefined : <Check on={tick.on(r.id)} label={r.title} onToggle={(v) => tick.set(r.id, v)} />}
+      check={onRemove ? <RemoveButton label={t.common.deleteNamed(r.title)} title={t.common.deleteAsk(r.title)} onConfirm={() => onRemove(r)} /> : readOnly || onEdit ? undefined : <Check on={tick.on(r.id)} label={r.title} onToggle={(v) => tick.set(r.id, v)} />}
       // The last word and the ↗ never split, so the icon can't wrap onto a line of its own.
-      title={r.url && !onEdit ? <a href={r.url} target="_blank" rel="noopener" className="res-title">{words.length ? `${words.join(' ')} ` : ''}<span className="whitespace-nowrap">{last}<ExternalLink className="res-ext" aria-label="opens in a new tab" /></span></a> : r.title}
+      title={r.url && !onEdit ? <a href={r.url} target="_blank" rel="noopener" className="res-title">{words.length ? `${words.join(' ')} ` : ''}<span className="whitespace-nowrap">{last}<ExternalLink className="res-ext" aria-label={t.topics.resources.newTab} /></span></a> : r.title}
       // The note on its own line, then where it lives and whether it's free.
       sub={(r.note || r.url || r.free) ? (
         <>
           {r.note && <span className="block"><Linkify text={r.note} /></span>}
-          {(r.url || r.free) && <span className="res-meta">{r.url && <span className="res-host">{hostOf(r.url)}</span>}{r.free && <span className="res-free">Free</span>}</span>}
+          {(r.url || r.free) && <span className="res-meta">{r.url && <span className="res-host">{hostOf(r.url)}</span>}{r.free && <span className="res-free">{t.topics.resources.free}</span>}</span>}
         </>
       ) : undefined}
     />
@@ -127,7 +128,7 @@ export function ResourceGroups({ ch, resources, onEdit, onRemove, readOnly }: { 
         const done = g.items.filter((r) => tick.on(r.id)).length
         const Icon = KIND_ICON[g.id]
         return (
-          <Fold key={g.id} ch={ch} open={gi === 0 || !!onEdit} icon={<Icon className="res-icon" aria-hidden="true" />} title={g.label} meta={readOnly ? g.items.length : `${done}/${g.items.length}`}>
+          <Fold key={g.id} ch={ch} open={gi === 0 || !!onEdit} icon={<Icon className="res-icon" aria-hidden="true" />} title={t.topics.resourceKinds[g.id]} meta={readOnly ? g.items.length : `${done}/${g.items.length}`}>
             {g.items.map((r) => <ResourceRow key={r.id} ch={ch} r={r} onEdit={onEdit} onRemove={onRemove} readOnly={readOnly} />)}
           </Fold>
         )
@@ -138,7 +139,7 @@ export function ResourceGroups({ ch, resources, onEdit, onRemove, readOnly }: { 
 
 // Skills as folds: intro and steps in order, each tickable. The skill you're on starts open, marked "now".
 // readOnly: no ticks (someone else's shared topic).
-export function SkillFolds({ ch, skills, current, itemsLabel = 'Steps, in order', readOnly }: {
+export function SkillFolds({ ch, skills, current, itemsLabel = t.topics.skills.stepsInOrder, readOnly }: {
   ch?: TopicId; skills: Skill[]; current?: string; itemsLabel?: string; readOnly?: boolean
 }) {
   const tick = useTick()
@@ -147,14 +148,14 @@ export function SkillFolds({ ch, skills, current, itemsLabel = 'Steps, in order'
       {skills.map((k) => {
         const done = k.steps.filter((t) => tick.on(t.id)).length
         return (
-          <Fold key={k.id} ch={ch} open={k.id === current || undefined} title={k.id === current ? `${k.name}, now` : k.name} meta={readOnly ? `${k.steps.length} steps` : `${done}/${k.steps.length}`}>
+          <Fold key={k.id} ch={ch} open={k.id === current || undefined} title={k.id === current ? t.topics.skills.now(k.name) : k.name} meta={readOnly ? t.common.steps(k.steps.length) : `${done}/${k.steps.length}`}>
             {k.intro && <p className="fold-intro"><Linkify text={k.intro} /></p>}
             {k.steps.length > 0 && <div className="list-label">{itemsLabel}</div>}
             {k.steps.map((it) => (
               <Row key={it.id} ch={ch} done={!readOnly && tick.on(it.id)} title={<span className="font-normal"><Linkify text={it.text} /></span>}
                 check={readOnly ? undefined : <Check on={tick.on(it.id)} label={it.text} onToggle={(v) => tick.set(it.id, v)} />} />
             ))}
-            {!k.steps.length && <div className="empty">No steps yet.</div>}
+            {!k.steps.length && <div className="empty">{t.topics.empty.steps}</div>}
           </Fold>
         )
       })}
@@ -162,7 +163,7 @@ export function SkillFolds({ ch, skills, current, itemsLabel = 'Steps, in order'
   )
 }
 
-const LABEL: Record<ProjectStatus, string> = { todo: 'Not started', doing: 'In progress', done: 'Done' }
+const LABEL: Record<ProjectStatus, string> = t.topics.project.status
 // The badge in a project's header: grey, amber while in progress, green when done.
 const STATUS_TONE: Record<ProjectStatus, string> = { todo: '--muted-foreground', doing: '--warn', done: '--good' }
 const NEXT: Record<ProjectStatus, ProjectStatus> = { todo: 'doing', doing: 'done', done: 'todo' }
@@ -204,7 +205,7 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
         {readOnly ? null : (
           // The status pill is the switch: each tap moves to the next state.
           <button type="button" className="chip tint status-pill" style={{ '--c': `var(${STATUS_TONE[sv]})` } as CSSProperties}
-            aria-label={`${p.name}: ${LABEL[sv]}. Change status`} onClick={() => setStatus(NEXT[sv])}>
+            aria-label={t.topics.project.changeStatus(p.name, LABEL[sv])} onClick={() => setStatus(NEXT[sv])}>
             {LABEL[sv]}
           </button>
         )}
@@ -214,9 +215,9 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
           {p.goal && <p><Linkify text={p.goal} /></p>}
           {p.steps && p.steps.length > 0 && <ol>{p.steps.map((s, i) => <li key={i}><Linkify text={s} /></li>)}</ol>}
           <dl>
-            {p.done && <><dt>Done when</dt><dd><Linkify text={p.done} /></dd></>}
-            {p.trains?.length ? <><dt>Trains</dt><dd>{p.trains.join(', ')}</dd></> : null}
-            {p.size && <><dt>Size</dt><dd>{sizeLabel(p.size)}</dd></>}
+            {p.done && <><dt>{t.topics.project.doneWhen}</dt><dd><Linkify text={p.done} /></dd></>}
+            {p.trains?.length ? <><dt>{t.topics.project.trains}</dt><dd>{p.trains.join(', ')}</dd></> : null}
+            {p.size && <><dt>{t.topics.project.size}</dt><dd>{`${t.topics.sizes[p.size].label}, ${t.topics.sizes[p.size].means}`}</dd></>}
           </dl>
         </div>
       )}

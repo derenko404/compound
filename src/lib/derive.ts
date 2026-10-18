@@ -1,13 +1,33 @@
 // Pure functions that turn stored state into what the views show.
-import type { Topic, TopicId, Habit, Routine, State } from './types'
+import type { Topic, TopicId, Habit, Routine, State, When } from './types'
 import { habitRows } from './habits'
 import { topicOf, topics, matchesWhen, program } from './content'
-import { addDays, dayDiff, keyOf, parseKey } from './dates'
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
+import { addDays, dayDiff, fmtShort, keyOf, parseKey } from './dates'
+import { currentLocale, t } from '@/i18n'
 
 // "Aug 2027"
-export const monthName = (d: Date) => `${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+export const monthName = (d: Date) => d.toLocaleDateString(currentLocale(), { month: 'short', year: 'numeric' })
+
+// "Mon" for a weekday number (0 = Sunday), capitalised ("Пн").
+const weekdayFmt = new Intl.DateTimeFormat(currentLocale(), { weekday: 'short' })
+export const weekdayShort = (day: number) => {
+  const s = weekdayFmt.format(new Date(2024, 0, 7 + day)) // 7 Jan 2024 was a Sunday
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+// How a task repeats, in words: "Every Mon, Wed".
+export function describeWhen(w: When) {
+  switch (w.kind) {
+    case 'daily':
+      return t.today.when.daily
+    case 'weekly':
+      return w.days.length === 7 ? t.today.when.daily : t.today.when.weekly([...w.days].sort().map(weekdayShort).join(', '))
+    case 'monthly':
+      return w.day > 0 ? t.today.when.monthlyOn(w.day) : t.today.when.monthlyLast
+    case 'once':
+      return t.today.when.once(fmtShort(parseKey(w.date)))
+  }
+}
 
 // A topic's target finish: its duration counted from when it was created.
 export function targetFinish(c: Topic, months = c.months) {
@@ -75,7 +95,7 @@ function catchUp(s: State, c: Topic, today: Date) {
   const open = c.skills.flatMap((skill) => skill.steps.filter((t) => !s.plan[t.id]).map((step) => ({ skill, step })))
   const extra = open[1]
   if (!extra) return null
-  const why = finish ? `Behind pace: you'd finish ${monthName(finish)}, target ${monthName(target)}` : `Behind pace: nothing ticked in 4 weeks, target ${monthName(target)}`
+  const why = finish ? t.today.rows.behind(monthName(finish), monthName(target)) : t.today.rows.behindIdle(monthName(target))
   return { step: extra.step, why }
 }
 
@@ -94,7 +114,7 @@ function lightTopic(s: State, d: Date, focus: TopicId | null): TopicId | null {
 // A topic's next step as a Today row: the step as the title, its skill below.
 const nextRow = (s: State, c: Topic) => {
   const n = nextUp(s, c)
-  return n ? { title: n.step.text, sub: n.skill.name } : { title: 'Everything on this topic is done.', sub: '' }
+  return n ? { title: n.step.text, sub: n.skill.name } : { title: t.today.rows.allDone, sub: '' }
 }
 
 export const checkCount = (s: State, id: string) => Object.values(s.days).filter((d) => d.done.includes(id)).length
@@ -132,7 +152,7 @@ export function todayItems(s: State, today: Date): DayItem[] {
   const res = fc?.resources.find((r) => !s.plan[r.id])
   if (fc && res) items.push({ id: 'slot-resource', ch: fc.id, slot: 'resource', title: res.title, sub: res.note ?? '' })
   const rev = reviewStep(s, today)
-  if (rev) items.push({ id: 'slot-review', ch: rev.c.id, slot: 'review', title: rev.step.text, sub: `${rev.skill.name}, ticked ${rev.ago} days ago` })
+  if (rev) items.push({ id: 'slot-review', ch: rev.c.id, slot: 'review', title: rev.step.text, sub: t.today.rows.tickedAgo(rev.skill.name, rev.ago) })
   const cu = fc ? catchUp(s, fc, today) : null
   if (fc && cu) items.push({ id: 'slot-catchup', ch: fc.id, slot: 'catchup', title: cu.step.text, sub: cu.why })
 

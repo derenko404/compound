@@ -100,7 +100,8 @@ export function celebrate() {
   playFanfare()
   if (reduced()) return
   const root = getComputedStyle(document.documentElement)
-  const cols = ['--c-tech', '--c-product', '--c-mgmt', '--c-biz', '--c-eng', '--c-money'].map((v) => root.getPropertyValue(v).trim())
+  // The topic palette (light or dark, whichever is on), so the confetti is in the app's own colours.
+  const cols = ['blue', 'orange', 'purple', 'green', 'pink', 'amber', 'teal', 'red'].map((p) => root.getPropertyValue(`--p-${p}`).trim()).filter(Boolean)
   for (let i = 0; i < 160; i++) {
     parts.push({
       x: Math.random() * innerWidth, y: -20 - Math.random() * innerHeight * 0.5, vx: (Math.random() - 0.5) * 2, vy: 2 + Math.random() * 3,

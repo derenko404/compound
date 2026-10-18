@@ -10,6 +10,7 @@ import type { Topic, Note, Project, Resource, ResourceKind, Skill } from '@/lib/
 import { useNoteCount, useNotes, useStore } from '@/store/StoreProvider'
 import { lockOn } from '@/fx/fx'
 import { playFocus } from '@/fx/sound'
+import { currentLocale, t } from '@/i18n'
 import {
   Chip, ChipsList, Header, List, Meter, Row, SearchField, Section, SortList, Tabs, cvar, empty,
 } from '@/components/kit'
@@ -36,37 +37,37 @@ function TopicCard({ c }: { c: Topic }) {
   const end = targetFinish(c)
   const late = !!finish && !!end && finish > end
   const paceLine = perWeek && left && finish
-    ? `${perWeek % 1 ? perWeek.toFixed(1) : perWeek} steps a week, done around ${finish.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}${late ? `, after your ${monthName(end!)} target` : ''}`
+    ? `${t.topics.card.pace(String(perWeek % 1 ? perWeek.toFixed(1) : perWeek), finish.toLocaleDateString(currentLocale(), { month: 'short', year: 'numeric' }))}${late ? t.topics.card.late(monthName(end!)) : ''}`
     : null
   return (
     <Link to="/topics/$ch" params={{ ch: c.id }} className={`topic-card${focus ? ' is-focus' : ''}`} style={cvar(c.id)}>
       <div className="topic-card-head">
         <span className="focus-name"><span className="dot" />{c.name}</span>
         {/* One topic is the focus (heavy): it gets the study sessions and the weekend project. Set from the topic's ⋯ menu. */}
-        {focus && <span className="focus-badge"><Crosshair aria-hidden="true" />Focus</span>}
+        {focus && <span className="focus-badge"><Crosshair aria-hidden="true" />{t.topics.focus}</span>}
       </div>
       {total > 0 ? (
         <>
-          <div className="topic-card-progress"><Meter value={done / total} label={`${done} of ${total} steps`} /><span>{done} of {total}</span></div>
-          {next?.step && <div className="topic-card-now"><span className="focus-label">Next step in {next.skill.name}</span>{next.step.text}</div>}
+          <div className="topic-card-progress"><Meter value={done / total} label={t.topics.card.stepsOf(done, total)} /><span>{t.topics.card.doneOf(done, total)}</span></div>
+          {next?.step && <div className="topic-card-now"><span className="focus-label">{t.topics.card.nextIn(next.skill.name)}</span>{next.step.text}</div>}
           {paceLine && <div className={`topic-row-pace${late ? ' late' : ''}`}>{paceLine}</div>}
         </>
       ) : (
-        <div className="muted text-small">{c.skills.length} skills, {c.resources.length} resources</div>
+        <div className="muted text-small">{t.topics.card.counts(c.skills.length, c.resources.length)}</div>
       )}
     </Link>
   )
 }
 
-const DELETE_TOPIC = "Its skills, resources and projects go with it. Notes filed under it stay in your notebook. This can't be undone."
-const skillCount = (c: Topic) => `${c.skills.length} ${c.skills.length === 1 ? 'skill' : 'skills'}`
+const DELETE_TOPIC = t.topics.index.deleteTopic
+const skillCount = (c: Topic) => t.common.skills(c.skills.length)
 
 export function TopicIndex() {
   const { state, dispatch } = useStore()
   const sheet = useSheet<Topic>()
   const nav = useNavigate()
   const [edit, setEdit] = useState(false)
-  usePageBar({ add: { label: 'New topic', onClick: () => sheet.open(newTopic('learn', state.topics)) }, edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
+  usePageBar({ add: { label: t.topics.index.newTopic, onClick: () => sheet.open(newTopic('learn', state.topics)) }, edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
   // The focus topic when the page opened leads. Switching focus during the visit moves nothing,
   // like ticks with useDoneLastOnOpen; the next visit shows the new order. Edit mode shows the saved order.
   const [lead] = useState(() => focusOf(state))
@@ -81,20 +82,20 @@ export function TopicIndex() {
 
   return (
     <>
-      <Header title="Topics" lead="Your roadmap, one topic per skill area, all running in parallel." />
-      <Section title="Your topics">
+      <Header title={t.topics.index.title} lead={t.topics.index.lead} />
+      <Section title={t.topics.index.yours}>
         {edit ? (
-          <SortList empty="No topics yet. Tap + to add one." onMove={reorder}>
+          <SortList empty={t.topics.index.empty} onMove={reorder}>
             {learn.map((c) => (
               <Row key={c.id} ch={c.id} title={c.name} sub={skillCount(c)}
-                check={<RemoveButton label={`Delete ${c.name}`} title={`Delete ${c.name}?`} description={DELETE_TOPIC} onConfirm={() => dispatch({ type: 'deleteTopic', id: c.id })} />}
+                check={<RemoveButton label={t.common.deleteNamed(c.name)} title={t.common.deleteAsk(c.name)} description={DELETE_TOPIC} onConfirm={() => dispatch({ type: 'deleteTopic', id: c.id })} />}
                 onOpen={() => sheet.open(c)} sort />
             ))}
           </SortList>
         ) : <div className="card-grid">{roadmap.map((c) => <TopicCard key={c.id} c={c} />)}</div>}
       </Section>
       {other.length > 0 && (
-        <Section title="Other">
+        <Section title={t.topics.index.other}>
           {edit
             ? <List>{other.map((c) => <Row key={c.id} ch={c.id} title={c.name} sub={skillCount(c)} onOpen={() => sheet.open(c)} />)}</List>
             : <div className="card-grid">{other.map((c) => <TopicCard key={c.id} c={c} />)}</div>}
@@ -112,7 +113,7 @@ export function Topics() {
   const { ch } = route.useParams()
   const { state } = useStore()
   const c = topicOf(state, ch)
-  if (!c) return empty('This topic no longer exists.')
+  if (!c) return empty(t.topics.page.gone)
   return <TopicPage key={c.id} c={c} />
 }
 
@@ -127,16 +128,16 @@ function AboutSheet({ c, open, onOpenChange }: { c: Topic; open: boolean; onOpen
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sheet-wide" style={cvar(c.id)}>
         <DialogTitle>{c.name}</DialogTitle>
-        <DialogDescription className="sr-only">About {c.name}</DialogDescription>
+        <DialogDescription className="sr-only">{t.topics.page.about(c.name)}</DialogDescription>
         <div className="grid gap-5 pb-2">
           {c.description && <div className="about-text"><Linkify text={c.description} /></div>}
           {c.outcomes.length > 0 && (
             <div className="grid gap-2">
-              <h3 className="text-title font-bold">{target ? `Where you'll be by ${monthName(target)}` : 'Goals'}</h3>
+              <h3 className="text-title font-bold">{target ? t.topics.goalsBy(monthName(target)) : t.topics.goals}</h3>
               <Bullets items={c.outcomes} />
             </div>
           )}
-          {!c.description && !c.outcomes.length && <p className="muted">Nothing here yet. Tap Edit, then the pencil by the name.</p>}
+          {!c.description && !c.outcomes.length && <p className="muted">{t.topics.page.aboutEmpty}</p>}
         </div>
       </DialogContent>
     </Dialog>
@@ -150,10 +151,10 @@ function TopicNotes({ ch, onOpen, edit }: { ch: string; onOpen: (n: Note) => voi
   const more = useLoadMore(notes)
   return (
     <>
-      <List empty={notes.isPending ? 'Loading…' : 'Nothing here yet. Add notes, ideas and links with +, or send them to your Telegram bot.'}>
+      <List empty={notes.isPending ? t.common.loading : t.topics.page.notesEmpty}>
         {items.map((n) => <NoteCard key={n.id} n={n} showTopic={false} onOpen={() => onOpen(n)} removable={edit} />)}
       </List>
-      {notes.hasNextPage && <div ref={more} className="empty">{notes.isFetchingNextPage ? 'Loading more…' : ''}</div>}
+      {notes.hasNextPage && <div ref={more} className="empty">{notes.isFetchingNextPage ? t.common.loadingMore : ''}</div>}
     </>
   )
 }
@@ -187,19 +188,19 @@ function TopicPage({ c }: { c: Topic }) {
   // In edit mode every list shows its + and the rows show their controls.
   // The top bar's + adds to the open tab.
   const add: Record<Tab, { label: string; onClick: () => void }> = {
-    learn: { label: 'New skill', onClick: () => sheet.open({ kind: 'skill', v: blankSkill() }) },
-    resources: { label: 'New resource', onClick: () => sheet.open({ kind: 'resource', v: blankResource() }) },
-    projects: { label: 'New project', onClick: () => sheet.open({ kind: 'project', v: blankProject() }) },
-    notes: { label: 'New note', onClick: () => setNoting({}) },
+    learn: { label: t.topics.add.skill, onClick: () => sheet.open({ kind: 'skill', v: blankSkill() }) },
+    resources: { label: t.topics.add.resource, onClick: () => sheet.open({ kind: 'resource', v: blankResource() }) },
+    projects: { label: t.topics.add.project, onClick: () => sheet.open({ kind: 'project', v: blankProject() }) },
+    notes: { label: t.topics.add.note, onClick: () => setNoting({}) },
   }
   const moveIn = (key: 'projects' | 'skills') => (from: number, to: number) => save({ ...c, [key]: moveTo<unknown>(c[key], from, to) })
 
   const noteCount = useNoteCount({ topic: c.id })
   const tabs: { id: Tab; label: string; count?: string | number; show: boolean }[] = [
-    { id: 'learn', label: 'Skills', count: total ? `${done}/${total}` : c.skills.length || undefined, show: true },
-    { id: 'resources', label: 'Resources', count: c.resources.length || undefined, show: true },
-    { id: 'projects', label: 'Projects', count: c.projects.length || undefined, show: true },
-    { id: 'notes', label: 'Notebook', count: noteCount || undefined, show: true },
+    { id: 'learn', label: t.topics.tabs.skills, count: total ? `${done}/${total}` : c.skills.length || undefined, show: true },
+    { id: 'resources', label: t.topics.tabs.resources, count: c.resources.length || undefined, show: true },
+    { id: 'projects', label: t.topics.tabs.projects, count: c.projects.length || undefined, show: true },
+    { id: 'notes', label: t.topics.tabs.notebook, count: noteCount || undefined, show: true },
   ]
 
   // The focus (heavy) topic gets the study sessions and the weekend project. Choosing it locks on with a sound and animation.
@@ -214,13 +215,13 @@ function TopicPage({ c }: { c: Topic }) {
   }
 
   usePageBar({
-    back: { to: '/topics', label: 'Topics' },
+    back: { to: '/topics', label: t.topics.page.back },
     add: add[tab],
     edit: () => setEdit(true),
     actions: [
-      ...(c.kind === 'learn' ? [{ label: 'Share', icon: Share2, onSelect: () => setSharing(true) }] : []),
+      ...(c.kind === 'learn' ? [{ label: t.common.share, icon: Share2, onSelect: () => setSharing(true) }] : []),
       // Personal is the built-in default topic (new notes and routines go there), so it can't be deleted.
-      ...(c.kind === 'general' ? [] : [{ label: 'Delete topic', icon: Trash2, onSelect: () => setDeleting(true), danger: true }]),
+      ...(c.kind === 'general' ? [] : [{ label: t.topics.page.deleteTopic, icon: Trash2, onSelect: () => setDeleting(true), danger: true }]),
     ],
     done: edit ? () => setEdit(false) : undefined,
   })
@@ -231,27 +232,27 @@ function TopicPage({ c }: { c: Topic }) {
       {/* The name opens About; in edit mode it opens the details form. */}
       <Header title={<><span className="dot title-dot" />{c.name}</>}
         action={edit
-          ? { label: `Edit ${c.name}'s details`, icon: Pencil, onClick: () => sheet.open({ kind: 'topic' }) }
-          : { label: `About ${c.name}`, icon: Info, onClick: () => setAbout(true) }}>
+          ? { label: t.topics.page.editDetails(c.name), icon: Pencil, onClick: () => sheet.open({ kind: 'topic' }) }
+          : { label: t.topics.page.about(c.name), icon: Info, onClick: () => setAbout(true) }}>
         {/* Right of the title: the Focus badge, or a button to make this the focus topic. */}
         {c.kind === 'learn' && (isFocus
-          ? <span className="focus-badge"><Crosshair aria-hidden="true" />Focus</span>
-          : <button type="button" className="focus-set" onClick={makeFocus}><Crosshair aria-hidden="true" />Set focus</button>)}
+          ? <span className="focus-badge"><Crosshair aria-hidden="true" />{t.topics.focus}</span>
+          : <button type="button" className="focus-set" onClick={makeFocus}><Crosshair aria-hidden="true" />{t.topics.setFocus}</button>)}
       </Header>
 
       {total > 0 && (
         <div className="topic-progress" style={cvar(c.id)}>
-          <Meter value={done / total} label={`${done} of ${total} steps done`} />
+          <Meter value={done / total} label={t.topics.page.stepsDone(done, total)} />
           <span className="muted text-small">
-            {done} of {total} steps{next ? `, skill ${next.index + 1} of ${c.skills.length}` : ', all done'}
+            {t.topics.page.stepsOf(done, total)}{next ? t.topics.page.skillOf(next.index + 1, c.skills.length) : t.topics.page.allDone}
           </span>
         </div>
       )}
       </div>
       {active.length > 0 && (
         <button type="button" className="active-project" style={cvar(c.id)} onClick={() => setTab('projects')}>
-          <span className="muted">In progress:</span> <span className="project-code">{active[0].code}</span> <b>{active[0].name}</b>
-          {active.length > 1 && <span className="muted"> and {active.length - 1} more</span>}
+          <span className="muted">{t.topics.page.inProgress}</span> <span className="project-code">{active[0].code}</span> <b>{active[0].name}</b>
+          {active.length > 1 && <span className="muted">{t.topics.page.andMore(active.length - 1)}</span>}
         </button>
       )}
 
@@ -259,47 +260,47 @@ function TopicPage({ c }: { c: Topic }) {
       <Tabs value={tab} onChange={setTab} items={tabs.filter((t) => t.show)} />
 
       {tab === 'projects' && (
-        <Section title="Projects">
+        <Section title={t.topics.tabs.projects}>
           {edit ? (
-            <SortList empty="No projects yet." onMove={moveIn('projects')}>
+            <SortList empty={t.topics.empty.projects} onMove={moveIn('projects')}>
               {c.projects.map((p) => (
                 <Row key={p.id} ch={c.id} title={p.name} sub={[p.code, p.size].filter(Boolean).join(', ')}
-                  check={<RemoveButton label={`Delete ${p.name}`} title={`Delete ${p.code} ${p.name}?`} onConfirm={() => save({ ...c, projects: c.projects.filter((x) => x.id !== p.id) })} />}
+                  check={<RemoveButton label={t.common.deleteNamed(p.name)} title={t.topics.page.deleteProject(p.code, p.name)} onConfirm={() => save({ ...c, projects: c.projects.filter((x) => x.id !== p.id) })} />}
                   onOpen={() => sheet.open({ kind: 'project', v: p })} sort />
               ))}
             </SortList>
           ) : (
-            <List empty="No projects yet.">{c.projects.map((p) => <ProjectCard key={p.id} ch={c.id} p={p} />)}</List>
+            <List empty={t.topics.empty.projects}>{c.projects.map((p) => <ProjectCard key={p.id} ch={c.id} p={p} />)}</List>
           )}
         </Section>
       )}
 
       {tab === 'learn' && (
-        <Section title="Skills">
+        <Section title={t.topics.tabs.skills}>
           {edit ? (
-            <SortList empty="No skills yet. Tap + to add one." onMove={moveIn('skills')}>
+            <SortList empty={t.topics.empty.skills} onMove={moveIn('skills')}>
               {c.skills.map((k) => (
-                <Row key={k.id} ch={c.id} title={k.name} sub={`${k.steps.length} ${k.steps.length === 1 ? 'step' : 'steps'}`}
-                  check={<RemoveButton label={`Delete ${k.name}`} title={`Delete ${k.name}?`} description="Its steps and their ticks go with it. This can't be undone."
+                <Row key={k.id} ch={c.id} title={k.name} sub={t.common.steps(k.steps.length)}
+                  check={<RemoveButton label={t.common.deleteNamed(k.name)} title={t.common.deleteAsk(k.name)} description={t.topics.page.deleteSkill}
                     onConfirm={() => save({ ...c, skills: c.skills.filter((x) => x.id !== k.id) })} />}
                   onOpen={() => sheet.open({ kind: 'skill', v: k })} sort />
               ))}
             </SortList>
           ) : c.skills.length
-            ? <SkillFolds ch={c.id} skills={c.skills} current={next?.skill.id} itemsLabel="Steps, in order" />
-            : <List empty="No skills yet. Tap + to add one." />}
+            ? <SkillFolds ch={c.id} skills={c.skills} current={next?.skill.id} itemsLabel={t.topics.skills.stepsInOrder} />
+            : <List empty={t.topics.empty.skills} />}
         </Section>
       )}
 
       {tab === 'resources' && (
-        <Section title="Resources">
+        <Section title={t.topics.tabs.resources}>
           {c.resources.length > 3 && (
             <>
-              <SearchField value={query} onChange={setQuery} placeholder="Search by title or note" />
+              <SearchField value={query} onChange={setQuery} placeholder={t.topics.resources.search} />
               {kinds.length > 1 && (
-                <ChipsList label="Resource type">
-                  <Chip pressed={!kind} onClick={() => setKind(null)} count={c.resources.length}>All</Chip>
-                  {kinds.map((k) => <Chip key={k.id} pressed={kind === k.id} onClick={() => setKind(k.id)} count={kindCount(k.id)}>{k.label}</Chip>)}
+                <ChipsList label={t.topics.resources.typeFilter}>
+                  <Chip pressed={!kind} onClick={() => setKind(null)} count={c.resources.length}>{t.topics.resources.all}</Chip>
+                  {kinds.map((k) => <Chip key={k.id} pressed={kind === k.id} onClick={() => setKind(k.id)} count={kindCount(k.id)}>{t.topics.resourceKinds[k.id]}</Chip>)}
                 </ChipsList>
               )}
             </>
@@ -307,19 +308,19 @@ function TopicPage({ c }: { c: Topic }) {
           {resources.length
             ? <ResourceGroups ch={c.id} resources={resources} onEdit={edit ? (v) => sheet.open({ kind: 'resource', v }) : undefined}
                 onRemove={edit ? (v) => save({ ...c, resources: c.resources.filter((x) => x.id !== v.id) }) : undefined} />
-            : <List empty={c.resources.length ? 'Nothing matches.' : 'No resources yet.'} />}
+            : <List empty={c.resources.length ? t.common.nothingMatches : t.topics.empty.resources} />}
         </Section>
       )}
 
       {tab === 'notes' && (
-        <Section title="Notebook">
+        <Section title={t.topics.tabs.notebook}>
           <TopicNotes ch={c.id} onOpen={(n) => setNoting({ note: n })} edit={edit} />
         </Section>
       )}
 
       <AboutSheet c={c} open={about} onOpenChange={setAbout} />
       {sharing && <ShareSheet open onOpenChange={setSharing} kind="topic" name={c.name} data={topicSnapshot(c)} />}
-      <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={`Delete ${c.name}?`}
+      <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={t.common.deleteAsk(c.name)}
         description={DELETE_TOPIC}
         onConfirm={() => {
           dispatch({ type: 'deleteTopic', id: c.id })

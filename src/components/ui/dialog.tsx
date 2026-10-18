@@ -2,6 +2,7 @@ import * as React from "react"
 import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"
+import { t } from "@/i18n"
 
 function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -44,7 +45,7 @@ function DialogTitle({ className, start, end, ...props }: React.ComponentProps<t
       {start && <div className="sheet-start">{start}</div>}
       <DialogPrimitive.Title data-slot="dialog-title" className={cn("font-display text-heading font-bold", className)} {...props} />
       {end && <div className="sheet-end">{end}</div>}
-      <DialogPrimitive.Close className="icon-btn sheet-close" aria-label="Close">
+      <DialogPrimitive.Close className="icon-btn sheet-close" aria-label={t.common.close}>
         <XIcon />
       </DialogPrimitive.Close>
     </div>

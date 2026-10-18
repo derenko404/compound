@@ -14,7 +14,7 @@ import { mountFx } from '@/fx/fx'
 import { startReminderLoop } from '@/fx/notify'
 import { keyOf } from '@/lib/dates'
 import { todayItems } from '@/lib/derive'
-import { useStore } from '@/store/StoreProvider'
+import { useStore, type SyncState } from '@/store/StoreProvider'
 import { TopicIndex, Topics } from '@/views/Topics'
 import { Wellbeing } from '@/views/Wellbeing'
 import { ListPage, Lists } from '@/views/Lists'
@@ -25,20 +25,21 @@ import { SignIn } from '@/views/SignIn'
 import { Today } from '@/views/Today'
 import { Timer } from '@/views/Timer'
 import { clock, remaining, useTimer } from '@/fx/timer'
+import { t } from '@/i18n'
 
 type Tab = { to: '/today' | '/topics' | '/notebook' | '/lists' | '/wellbeing' | '/timer' | '/settings'; label: string; icon: LucideIcon }
 
 // Phones: MAIN in the bottom bar, MORE in its sheet.
 const MAIN: Tab[] = [
-  { to: '/today', label: 'Today', icon: CalendarCheck },
-  { to: '/topics', label: 'Topics', icon: RouteIcon },
-  { to: '/notebook', label: 'Notebook', icon: NotebookPen },
-  { to: '/wellbeing', label: 'Wellbeing', icon: HeartPulse },
+  { to: '/today', label: t.nav.tabs.today, icon: CalendarCheck },
+  { to: '/topics', label: t.nav.tabs.topics, icon: RouteIcon },
+  { to: '/notebook', label: t.nav.tabs.notebook, icon: NotebookPen },
+  { to: '/wellbeing', label: t.nav.tabs.wellbeing, icon: HeartPulse },
 ]
 const MORE: Tab[] = [
-  { to: '/lists', label: 'Lists', icon: ListChecks },
-  { to: '/timer', label: 'Timer', icon: TimerIcon },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon },
+  { to: '/lists', label: t.nav.tabs.lists, icon: ListChecks },
+  { to: '/timer', label: t.nav.tabs.timer, icon: TimerIcon },
+  { to: '/settings', label: t.nav.tabs.settings, icon: SettingsIcon },
 ]
 // Wide screens show every view as a tab, in this order.
 const TABS = [MAIN[0], MAIN[1], MAIN[2], MORE[0], MAIN[3], MORE[1], MORE[2]]
@@ -46,16 +47,16 @@ const TABS = [MAIN[0], MAIN[1], MAIN[2], MORE[0], MAIN[3], MORE[1], MORE[2]]
 function BottomNav() {
   const [more, setMore] = useState(false)
   const { pathname } = useLocation()
-  const inMore = MORE.some((t) => pathname.startsWith(t.to))
+  const inMore = MORE.some((m) => pathname.startsWith(m.to))
   useEffect(() => setMore(false), [pathname])
   return (
-    <nav className="bottom-nav" aria-label="Views">
+    <nav className="bottom-nav" aria-label={t.nav.views}>
       {MAIN.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="bnav"><Icon aria-hidden="true" />{label}</Link>)}
-      <button className={`bnav${inMore ? ' active' : ''}`} aria-expanded={more} onClick={() => setMore(true)}><MoreHorizontal aria-hidden="true" />More</button>
+      <button className={`bnav${inMore ? ' active' : ''}`} aria-expanded={more} onClick={() => setMore(true)}><MoreHorizontal aria-hidden="true" />{t.nav.more}</button>
       <Dialog open={more} onOpenChange={setMore}>
         <DialogContent>
-          <DialogTitle>More</DialogTitle>
-          <DialogDescription className="sr-only">Other views</DialogDescription>
+          <DialogTitle>{t.nav.more}</DialogTitle>
+          <DialogDescription className="sr-only">{t.nav.otherViews}</DialogDescription>
           <div className="more-grid">
             {MORE.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="more-item"><Icon aria-hidden="true" />{label}</Link>)}
           </div>
@@ -65,18 +66,19 @@ function BottomNav() {
   )
 }
 
-function SyncIcon({ sync, mode }: { sync: string; mode: string }) {
-  const state = sync.startsWith('Loading') ? 'loading' : sync.startsWith('Saving') ? 'saving' : sync.startsWith("Couldn't") ? 'error' : mode === 'cloud' ? 'synced' : 'local'
+function SyncIcon({ sync }: { sync: SyncState }) {
+  const state = sync === 'loadError' || sync === 'saveError' ? 'error' : sync
+  const tipText = t.nav.sync[sync]
   const Icon = { loading: CloudDownload, saving: CloudUpload, error: CloudAlert, synced: CloudCheck, local: CloudOff }[state]
   const [tip, setTip] = useState(false)
   useEffect(() => {
     if (!tip) return
-    const t = setTimeout(() => setTip(false), 2200)
-    return () => clearTimeout(t)
+    const id = setTimeout(() => setTip(false), 2200)
+    return () => clearTimeout(id)
   }, [tip])
   // Tap shows the tooltip on phones; hover and focus show it elsewhere.
   return (
-    <button type="button" className={`sync${tip ? ' tip-open' : ''}`} data-state={state} data-tip={sync} aria-label={sync} onClick={() => setTip(true)}>
+    <button type="button" className={`sync${tip ? ' tip-open' : ''}`} data-state={state} data-tip={tipText} aria-label={tipText} onClick={() => setTip(true)}>
       <Icon aria-hidden="true" />
     </button>
   )
@@ -102,20 +104,20 @@ function TimerPill() {
   const { pathname } = useLocation()
   if (!state.endsAt || pathname === '/timer') return null
   return (
-    <Link to="/timer" className="bar-timer" aria-label={`Timer: ${clock(remaining(state, now))} left`}>
+    <Link to="/timer" className="bar-timer" aria-label={t.nav.timerLeft(clock(remaining(state, now)))}>
       <TimerIcon aria-hidden="true" />{clock(remaining(state, now))}
     </Link>
   )
 }
 
 // Top-level pages show the brand and sync state; inner pages show only their back link. The right side is the page's ⋯ menu.
-function TopBar({ sync, mode }: { sync: string; mode: string }) {
+function TopBar({ sync }: { sync: SyncState }) {
   const bar = useBar()
   return (
     <header className="top">
       <div className="flex min-w-0 items-center gap-2">
         {bar?.back ? <BarBack {...bar.back} /> : <Link to="/today" className="brand text-foreground no-underline"><span className="brand-mark" aria-hidden="true" />Compound</Link>}
-        {!bar?.back && <SyncIcon sync={sync} mode={mode} />}
+        {!bar?.back && <SyncIcon sync={sync} />}
       </div>
       {/* Keeps the bar the same height on pages without a ⋯. */}
       <div className="flex min-h-(--control-md) min-w-0 items-center gap-1">
@@ -149,11 +151,11 @@ function Shell() {
     if (!sessionStorage.getItem('roadmap-just-updated')) return
     // Shown once the shell has settled. The flag is cleared
     // inside the timer so StrictMode's mount-unmount-mount doesn't drop the toast.
-    const t = setTimeout(() => {
+    const id = setTimeout(() => {
       sessionStorage.removeItem('roadmap-just-updated')
-      toast.success('App updated.')
+      toast.success(t.nav.appUpdated)
     }, 500)
-    return () => clearTimeout(t)
+    return () => clearTimeout(id)
   }, [])
   useEffect(
     () =>
@@ -171,12 +173,12 @@ function Shell() {
       <div className="wrap">
         {mode === 'signin' ? (sharing ? <main><Outlet /></main> : <SignIn />) : (
           <>
-            <TopBar sync={sync} mode={mode} />
-            <nav className="tabs" aria-label="Views">
+            <TopBar sync={sync} />
+            <nav className="tabs" aria-label={t.nav.views}>
               {TABS.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="tab"><Icon aria-hidden="true" />{label}</Link>)}
             </nav>
             <TopicColors topics={state.topics} />
-            <main>{ready && !seeding ? <Outlet /> : <div className="empty">Loading your progress…</div>}</main>
+            <main>{ready && !seeding ? <Outlet /> : <div className="empty">{t.nav.loadingProgress}</div>}</main>
             <BottomNav />
           </>
         )}
@@ -205,7 +207,7 @@ const routeTree = root.addChildren([
   page('/share/$id', SharePage),
 ])
 
-export const router = createRouter({ routeTree, defaultNotFoundComponent: () => <div className="empty">Page not found.</div> })
+export const router = createRouter({ routeTree, defaultNotFoundComponent: () => <div className="empty">{t.nav.notFound}</div> })
 
 declare module '@tanstack/react-router' {
   interface Register {

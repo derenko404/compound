@@ -11,6 +11,7 @@ import type { Topic, ListDef } from '@/lib/types'
 import { Header, List, MoreText, Row, Section } from '@/components/kit'
 import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/components/guide'
 import { SignIn } from './SignIn'
+import { t } from '@/i18n'
 
 const route = getRouteApi('/share/$id')
 
@@ -22,11 +23,11 @@ function TopicPreview({ c }: { c: Topic }) {
   return (
     <div style={{ '--c': `var(--p-${c.color})` } as CSSProperties}>
       {c.description && <div className="mb-6"><div className="lead"><MoreText lines={6}><Linkify text={c.description} /></MoreText></div></div>}
-      {c.outcomes.length > 0 && <Section title="Goals"><Bullets items={c.outcomes} /></Section>}
-      {c.skills.length > 0 && <Section title="Skills"><SkillFolds skills={c.skills} readOnly /></Section>}
-      {c.resources.length > 0 && <Section title="Resources"><ResourceGroups resources={c.resources} readOnly /></Section>}
+      {c.outcomes.length > 0 && <Section title={t.topics.goals}><Bullets items={c.outcomes} /></Section>}
+      {c.skills.length > 0 && <Section title={t.topics.tabs.skills}><SkillFolds skills={c.skills} readOnly /></Section>}
+      {c.resources.length > 0 && <Section title={t.topics.tabs.resources}><ResourceGroups resources={c.resources} readOnly /></Section>}
       {c.projects.length > 0 && (
-        <Section title="Projects">
+        <Section title={t.topics.tabs.projects}>
           <List>{c.projects.map((p) => <ProjectCard key={p.id} p={p} readOnly />)}</List>
         </Section>
       )}
@@ -36,7 +37,7 @@ function TopicPreview({ c }: { c: Topic }) {
 
 function ListPreview({ l }: { l: ListDef }) {
   return (
-    <Section title={`${l.items.length} items`}>
+    <Section title={t.topics.shared.items(l.items.length)}>
       <List>{l.items.map((it, i) => <Row key={it.id} title={<><span className="font-normal tabular-nums text-muted-foreground">{i + 1}.</span> {it.title}</>} sub={it.sub} />)}</List>
     </Section>
   )
@@ -50,9 +51,9 @@ export function SharePage() {
   const share = useQuery({ queryKey: ['share', id], queryFn: () => getShare(supabase!, id), enabled: !!supabase })
 
   if (signingIn && mode === 'signin') return <SignIn />
-  if (!supabase) return <List empty="Shared links need the online app." />
-  if (share.isPending) return <List empty="Loading…" />
-  if (!share.data) return <List empty="This link doesn't work any more. Links last 7 days, or its owner may have deleted it." />
+  if (!supabase) return <List empty={t.topics.shared.needsOnline} />
+  if (share.isPending) return <List empty={t.common.loading} />
+  if (!share.data) return <List empty={t.topics.shared.expired} />
 
   const s = share.data
   const isTopic = s.kind === 'topic'
@@ -77,12 +78,12 @@ export function SharePage() {
   const original = s.mine ? (isTopic ? state.topics.some((c) => c.id === s.data.id) : state.lists.some((l) => l.id === s.data.id)) : false
   return (
     <>
-      <Header title={s.name} lead={s.mine ? `Shared by you. This is what people see when they open the link.` : isTopic ? 'A shared topic' : (s.data as ListDef).title}>
+      <Header title={s.name} lead={s.mine ? t.topics.shared.yours : isTopic ? t.topics.shared.aTopic : (s.data as ListDef).title}>
         {s.mine
           ? original && <Button variant="outline" onClick={() => void (isTopic ? nav({ to: '/topics/$ch', params: { ch: s.data.id } }) : nav({ to: '/lists/$id', params: { id: s.data.id } }))}>
-              {isTopic ? 'Open my topic' : 'Open my list'}
+              {isTopic ? t.topics.shared.openTopic : t.topics.shared.openList}
             </Button>
-          : <Button onClick={add}><Plus aria-hidden="true" />{mode === 'signin' ? 'Sign in to add' : isTopic ? 'Add to my topics' : 'Add to my lists'}</Button>}
+          : <Button onClick={add}><Plus aria-hidden="true" />{mode === 'signin' ? t.topics.shared.signInToAdd : isTopic ? t.topics.shared.addTopic : t.topics.shared.addList}</Button>}
       </Header>
       {isTopic ? <TopicPreview c={s.data as Topic} /> : <ListPreview l={s.data as ListDef} />}
     </>

@@ -3,6 +3,8 @@
   "plugins": ["react", "typescript", "oxc"],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "react/jsx-no-literals": ["error", { "noStrings": false, "ignoreProps": true, "allowedStrings": ["Compound", "·", "…", "—", "–", "/", "×", ",", ":", "%", "+", "−", "(", ")", "↗", "→", "?", ".", "#"] }]
+  },
+  "overrides": [{ "files": ["src/components/ui/**"], "rules": { "react/jsx-no-literals": "off" } }]
 }

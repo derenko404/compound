@@ -1,0 +1,44 @@
+// Lists: the index, one list's page and its sheets.
+export const lists = {
+  title: 'Lists',
+  lead: 'Books to read, films to watch, places to go.',
+  empty: 'No lists yet. Start one with +.',
+  newList: 'New list',
+  deleteList: 'Delete list',
+  deleteListText: "Its items, ticks and notes go with it. This can't be undone.",
+  // The list's own sheet: name, title and the detail label.
+  sheet: {
+    createList: 'Create list',
+    nameFirst: 'Give the list a name first.',
+    shortName: 'Short name',
+    shortNamePlaceholder: '📚 Books',
+    detail: 'Detail under each item',
+    detailPlaceholder: 'Author',
+    detailHint: 'Like the author for books, the year for films, the artist for songs',
+    title: 'Title',
+    titlePlaceholder: '100 books everyone should read',
+  },
+  item: {
+    addTo: (name: string) => `Add to ${name}`,
+    edit: 'Edit item',
+    titleFirst: 'Give it a title first.',
+    title: 'Title',
+    details: 'Details',
+    deleteText: "Its tick and note go with it. This can't be undone.",
+  },
+  review: {
+    label: 'Your review',
+    placeholder: 'Thoughts, rating, when and where',
+    write: (title: string) => `Review ${title}`,
+    edit: (title: string) => `Edit your review of ${title}`,
+  },
+  page: {
+    gone: 'This list no longer exists.',
+    editDetails: (name: string) => `Edit ${name}'s name and title`,
+    search: (name: string) => `Search ${name.toLowerCase()}`,
+    show: 'Show',
+    filters: { all: 'All', todo: 'Still to do', done: 'Done' },
+    emptyList: 'This list is empty. Tap + to add items.',
+    emptyFilter: 'Nothing here with this filter.',
+  },
+}

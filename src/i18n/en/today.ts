@@ -1,0 +1,81 @@
+// today: the Today page, its task form, the focus card and week strip, and the rows built from topics.
+import { plural } from '../plural'
+
+export const today = {
+  doneOf: (total: number) => ` of ${total} done`,
+  doneToday: (n: number, total: number) => `${n} of ${total} done today`,
+  goals: "Today's goals",
+  routines: 'Routines',
+  noRoutines: 'No routines yet. Add one with +.',
+  nothingPlanned: 'Nothing planned today. Add a task with +.',
+  fromHabits: 'From your habits',
+  wellbeing: 'Wellbeing',
+  fromTopics: 'From your topics',
+  updatesDaily: 'Updates daily',
+  thisWeek: 'This week',
+  streakLine: (run: number, full: number, total: number) => `${run}-day streak, ${full} of ${total} days complete`,
+  countsForStreak: ', counts for the streak',
+  addTask: 'Add a task',
+  addGlass: 'Add a glass',
+  // Badges on the rows from topics (their tooltips).
+  slot: {
+    focus: 'Focus topic',
+    light: 'Light topic',
+    project: 'Project',
+    resource: 'Resource',
+    review: 'Review',
+    catchup: 'Catch up',
+  },
+  // The task form.
+  form: {
+    newTitle: 'New task',
+    editTitle: 'Edit task',
+    submitNew: 'Add task',
+    nameFirst: 'Give the task a name first.',
+    pickDay: 'Pick at least one day.',
+    task: 'Task',
+    taskPlaceholder: 'Watch one Hussein Nasser video',
+    details: 'Details',
+    optional: 'Optional',
+    when: 'When',
+    todayOnly: 'Today only',
+    once: 'Once, on a date',
+    daily: 'Every day',
+    weekly: 'On days of the week',
+    monthly: 'Every month',
+    date: 'Date',
+    dayOfMonth: 'Day of month',
+    lastDay: 'Last day',
+    countsLabel: 'Counts for the streak',
+    countsSub: 'A day counts when every streak task due that day is ticked',
+  },
+  // How a task repeats, under its name.
+  when: {
+    daily: 'Every day',
+    weekly: (days: string) => `Every ${days}`,
+    monthlyOn: (day: number) => `Monthly, on day ${day}`,
+    monthlyLast: 'Monthly, on the last day',
+    once: (date: string) => `On ${date}`,
+  },
+  // Rows built from the topics.
+  rows: {
+    allDone: 'Everything on this topic is done.',
+    tickedAgo: (skill: string, n: number) => `${skill}, ticked ${plural(n, { one: '# day', other: '# days' })} ago`,
+    behind: (finish: string, target: string) => `Behind pace: you'd finish ${finish}, target ${target}`,
+    behindIdle: (target: string) => `Behind pace: nothing ticked in 4 weeks, target ${target}`,
+  },
+  focus: {
+    label: 'Focus',
+    none: 'No focus topic yet. Pick one on Topics: it gets the study sessions and the weekend project.',
+    steps: (done: number, total: number) => `${done} of ${total} steps`,
+    skillOf: (i: number, n: number, name: string) => `Skill ${i} of ${n}: ${name}`,
+    allDone: 'Every skill on this topic is done.',
+    projectDoing: 'Project in progress',
+    projectNext: 'Next project',
+  },
+  week: {
+    upcoming: 'Upcoming',
+    doneOf: (done: number, total: number) => `${done} of ${total} done`,
+  },
+  reminder: (n: number) => `${plural(n, { one: '# task', other: '# tasks' })} left today. Keep the streak alive.`,
+}

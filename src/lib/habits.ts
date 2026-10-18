@@ -1,29 +1,18 @@
 // Wellbeing habits: the maths every skin shares, and each type's Today row. No UI here.
 import type { Habit, HabitData, HabitType, State } from './types'
 import { addDays, dayDiff, keyOf, parseKey } from './dates'
+import { t } from '@/i18n'
+
+const W = t.wellbeing
 
 export const NEW_HABIT_DAYS = 21
 
-// Quit smoking: health milestones by minutes since the quit day, and tips shown on Today.
+// Quit smoking: health milestones by minutes since the quit day (their words are in the dictionary, same order), and tips shown on Today.
 const DAY = 60 * 24
-export const MILESTONES = [
-  { mins: 20, label: '20 minutes', text: 'Heart rate and blood pressure drop' },
-  { mins: 720, label: '12 hours', text: 'Carbon monoxide in your blood drops to normal' },
-  { mins: DAY * 14, label: '2 weeks', text: 'Circulation improves and lung function increases (2–12 weeks)' },
-  { mins: DAY * 30, label: '1 month', text: 'Coughing and shortness of breath start to decrease (1–9 months)' },
-  { mins: DAY * 365, label: '1 year', text: "Coronary heart disease risk is about half a smoker's" },
-  { mins: DAY * 365 * 5, label: '5 years', text: "Stroke risk falls toward a nonsmoker's (5–15 years)" },
-  { mins: DAY * 365 * 10, label: '10 years', text: "Lung cancer risk falls to about half a smoker's" },
-  { mins: DAY * 365 * 15, label: '15 years', text: "Coronary heart disease risk is a nonsmoker's" },
-]
+const MINS = [20, 720, DAY * 14, DAY * 30, DAY * 365, DAY * 365 * 5, DAY * 365 * 10, DAY * 365 * 15]
+export const MILESTONES = W.milestones.map((m, i) => ({ ...m, mins: MINS[i] }))
 
-export const CRAVING_TIPS = [
-  'Craving? Delay 10 minutes. It usually fades first.',
-  'Breathe in for 4, out for 6, ten times.',
-  'Drink a full glass of water, slowly.',
-  'Walk, do push-ups or message a friend.',
-  'Say "I don\'t smoke", not "I\'m trying to quit".',
-]
+export const CRAVING_TIPS = W.cravingTips
 
 // Values in habit_logs.
 export const DONE = 1
@@ -32,10 +21,10 @@ export const SLIP = -1
 // What a fresh habit of each type starts with. Gym, water and smoking are one per account.
 export const HABIT_DEFAULTS: Record<HabitType, { name: string; days: number[]; data: HabitData; single?: boolean }> = {
   gym: {
-    name: 'Gym', days: [1, 3, 5], single: true, data: {},
+    name: W.types.gym.label, days: [1, 3, 5], single: true, data: {},
   },
-  water: { name: 'Water', days: [], data: { target: 8 }, single: true },
-  smoking: { name: 'Quit smoking', days: [], data: { per_day: 10, price: 100 }, single: true },
+  water: { name: W.types.water.label, days: [], data: { target: 8 }, single: true },
+  smoking: { name: W.types.smoking.label, days: [], data: { per_day: 10, price: 100 }, single: true },
   build: { name: '', days: [], data: { target: NEW_HABIT_DAYS } },
   break: { name: '', days: [], data: {} },
 }
@@ -114,10 +103,8 @@ export function gymStats(s: State, h: Habit, today: Date) {
   }
 }
 
-const WEEKDAY = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
 // The goal is per week: a gym day missed this week can be made up on any later day.
-// Returns the missed day ("Friday") while the week is behind, else null.
+// Returns the missed day ("Friday", in the form the catch-up phrases need) while the week is behind, else null.
 export function gymMakeUp(s: State, h: Habit, today: Date) {
   if (!started(h, today) || !h.days.length) return null
   const log = logOf(s, h)
@@ -127,7 +114,7 @@ export function gymMakeUp(s: State, h: Habit, today: Date) {
   const done = past.filter((d) => log[keyOf(d)] === DONE).length
   if (done >= scheduled.length || gymStats(s, h, today).week >= h.days.length) return null
   const missed = scheduled.find((d) => log[keyOf(d)] !== DONE)
-  return missed ? WEEKDAY[missed.getDay()] : null
+  return missed ? W.weekdays[missed.getDay()] : null
 }
 
 /* ---------- Water: glasses today against a target ---------- */
@@ -163,26 +150,26 @@ export function habitRows(s: State, today: Date): HabitRow[] {
     switch (h.type) {
       case 'gym': {
         const { week, perWeek } = gymStats(s, h, today)
-        rows.push({ habit: h, title: makeUp ? `${h.name}: catch up on ${makeUp}` : h.name, sub: makeUp ? `You missed ${makeUp}. Going today still counts for this week (${week} of ${perWeek}).` : `${week} of ${perWeek} this week`, done: v === DONE })
+        rows.push({ habit: h, title: makeUp ? W.gym.rowCatchUp(h.name, makeUp) : h.name, sub: makeUp ? W.gym.rowMissed(makeUp, week, perWeek) : W.gym.rowWeek(week, perWeek), done: v === DONE })
         break
       }
       case 'water': {
         const { today: n, target } = waterStats(s, h, today)
-        rows.push({ habit: h, title: `${h.name}: ${n} of ${target}`, sub: n >= target ? 'Target reached' : `${target - n} to go`, done: n >= target })
+        rows.push({ habit: h, title: W.water.rowTitle(h.name, n, target), sub: n >= target ? W.water.reached : W.water.toGo(target - n), done: n >= target })
         break
       }
       case 'smoking': {
         const n = dayDiff(parseKey(h.start_date!), today)
-        rows.push({ habit: h, title: 'Smoke-free today', sub: v === SLIP ? 'Slip logged. Keep going tomorrow.' : CRAVING_TIPS[n % CRAVING_TIPS.length], done: v === DONE })
+        rows.push({ habit: h, title: W.smoking.today, sub: v === SLIP ? W.slip.logged : CRAVING_TIPS[n % CRAVING_TIPS.length], done: v === DONE })
         break
       }
       case 'build': {
         const c = chain(s, h, today)
-        rows.push({ habit: h, title: h.name, sub: c.complete ? `Built. ${c.run}-day streak` : `Day ${Math.min(c.day, c.target)} of ${c.target}`, done: v === DONE })
+        rows.push({ habit: h, title: h.name, sub: c.complete ? W.build.rowBuilt(c.run) : W.build.rowDay(Math.min(c.day, c.target), c.target), done: v === DONE })
         break
       }
       case 'break':
-        rows.push({ habit: h, title: `${h.name}: clean today`, sub: v === SLIP ? 'Slip logged. Keep going tomorrow.' : h.why ?? '', done: v === DONE })
+        rows.push({ habit: h, title: W.clean.rowTitle(h.name), sub: v === SLIP ? W.slip.logged : h.why ?? '', done: v === DONE })
         break
     }
   }

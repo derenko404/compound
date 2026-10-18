@@ -17,28 +17,21 @@ import {
 import { useStore } from '@/store/StoreProvider'
 import type { State } from '@/lib/types'
 import { keyOf } from '@/lib/dates'
-import { CopyButton, Header, Panel, Section, Segmented, SettingRow } from '@/components/kit'
+import { CopyButton, Header, Panel, Section, SettingRow, SettingSelect } from '@/components/kit'
 import { ConfirmSheet, FormSheet, TextField, fail } from '@/components/edit'
+import { t, currentLocale, getLangPref, setLangPref, type LangPref } from '@/i18n'
 
 const BOT = import.meta.env.VITE_TELEGRAM_BOT as string | undefined
 
-const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+const fmtDay = (iso: string) => new Date(iso).toLocaleDateString(currentLocale(), { day: 'numeric', month: 'short', year: 'numeric' })
 
 // What to paste into an AI: where to connect, the token, and where the guide is.
-const aiPrompt = (token: string) => {
-  const o = location.origin
-  return [
-    'Connect to my Compound account, a self-development app.',
-    `MCP server: ${o}/mcp with the header "Authorization: Bearer ${token}" (or the URL ${o}/mcp/${token} if you can't set headers).`,
-    `Or the REST API: ${o}/api/v1 with the same header. Docs: ${o}/api/v1/openapi.json.`,
-    `Read ${o}/llms.txt first, then build me a topic for <subject>.`,
-  ].join('\n')
-}
+const aiPrompt = (token: string) => t.settings.ai.aiPrompt(location.origin, token)
 
 // "works 5 more days", "works until tonight"
 const expiresIn = (created: string) => {
   const days = Math.ceil((new Date(created).getTime() + SHARE_DAYS * 86_400_000 - Date.now()) / 86_400_000)
-  return days <= 1 ? 'works until tomorrow' : `works ${days} more days`
+  return days <= 1 ? t.settings.shares.worksUntilTomorrow : t.settings.shares.worksMore(days)
 }
 
 // Links you've shared (topics and lists): copy one again, or delete it so the link stops working.
@@ -46,19 +39,19 @@ function SharedLinksRows() {
   const qc = useQueryClient()
   const shares = useQuery({ queryKey: ['shares'], queryFn: () => myShares(supabase!) })
   const [removing, setRemoving] = useState<Share | null>(null)
-  if (!shares.data?.length) return <SettingRow title="No shared links yet" sub="Share a topic or a list from its ⋯ menu." />
+  if (!shares.data?.length) return <SettingRow title={t.settings.shares.none} sub={t.settings.shares.noneSub} />
   return (
     <>
       {shares.data.map((s) => (
-        <SettingRow key={s.id} title={s.name} sub={`${s.kind === 'topic' ? 'Topic' : 'List'} · ${expiresIn(s.created_at)}`}>
+        <SettingRow key={s.id} title={s.name} sub={`${s.kind === 'topic' ? t.settings.shares.topic : t.settings.shares.list} · ${expiresIn(s.created_at)}`}>
           <div className="flex gap-2">
             <CopyButton text={`${location.origin}/share/${s.id}`} />
-            <Button variant="outline" size="icon" aria-label={`Delete the link to ${s.name}`} onClick={() => setRemoving(s)}><Trash2 aria-hidden="true" /></Button>
+            <Button variant="outline" size="icon" aria-label={t.settings.shares.deleteLink(s.name)} onClick={() => setRemoving(s)}><Trash2 aria-hidden="true" /></Button>
           </div>
         </SettingRow>
       ))}
       <ConfirmSheet open={!!removing} onOpenChange={(o) => !o && setRemoving(null)}
-        title={`Delete the link to ${removing?.name ?? 'this'}?`} description="Anyone who opens it sees that it's gone. Copies people already added stay theirs."
+        title={t.settings.shares.deleteAsk(removing?.name ?? null)} description={t.settings.shares.deleteSub}
         onConfirm={async () => {
           if (!removing) return
           await deleteShare(supabase!, removing.id)
@@ -78,43 +71,43 @@ function AiAccessRows() {
   const [revoking, setRevoking] = useState<ApiToken | null>(null)
   return (
     <>
-      <SettingRow title="AI access" sub="Let an AI (Claude, ChatGPT…) build topics and lists for you. Each token has full access to your data.">
-        <Button onClick={() => { setName(''); setNaming(true) }}><KeyRound aria-hidden="true" />New token</Button>
+      <SettingRow title={t.settings.ai.title} sub={t.settings.ai.sub}>
+        <Button onClick={() => { setName(''); setNaming(true) }}><KeyRound aria-hidden="true" />{t.settings.ai.newToken}</Button>
       </SettingRow>
-      {(tokens.data ?? []).map((t) => (
-        <SettingRow key={t.id} title={t.name} sub={`${t.prefix}… · made ${fmtDay(t.created_at)} · ${t.last_used_at ? `last used ${fmtDay(t.last_used_at)}` : 'never used'}`}>
-          <Button variant="outline" onClick={() => setRevoking(t)}><Trash2 aria-hidden="true" />Revoke</Button>
+      {(tokens.data ?? []).map((tk) => (
+        <SettingRow key={tk.id} title={tk.name} sub={t.settings.ai.tokenMeta(tk.prefix, fmtDay(tk.created_at), tk.last_used_at ? fmtDay(tk.last_used_at) : null)}>
+          <Button variant="outline" onClick={() => setRevoking(tk)}><Trash2 aria-hidden="true" />{t.settings.ai.revoke}</Button>
         </SettingRow>
       ))}
-      <FormSheet open={naming} onOpenChange={setNaming} title="New token" submit="Make token"
+      <FormSheet open={naming} onOpenChange={setNaming} title={t.settings.ai.newToken} submit={t.settings.ai.makeToken}
         onSubmit={() => {
-          if (!name.trim()) return fail('Name it first, e.g. "Claude".')
-          void createApiToken(supabase!, name.trim()).then((t) => {
-            setMade(t)
+          if (!name.trim()) return fail(t.settings.ai.nameFirst)
+          void createApiToken(supabase!, name.trim()).then((tk) => {
+            setMade(tk)
             void qc.invalidateQueries({ queryKey: ['api-tokens'] })
-          }).catch(() => toast.error("Couldn't make the token. Try again."))
+          }).catch(() => toast.error(t.settings.ai.makeFailed))
         }}>
-        <TextField label="Name" value={name} onChange={setName} placeholder="Claude" hint="Which AI or app uses it, so you know what to revoke." required full />
+        <TextField label={t.settings.ai.name} value={name} onChange={setName} placeholder={t.settings.ai.namePlaceholder} hint={t.settings.ai.nameHint} required full />
       </FormSheet>
-      <FormSheet open={!!made} onOpenChange={(o) => !o && setMade(null)} title="Your token" submit="Done" onSubmit={() => {}}
-        description="Copy it now: it won't be shown again. Anyone with it can read and change your data.">
+      <FormSheet open={!!made} onOpenChange={(o) => !o && setMade(null)} title={t.settings.ai.yourToken} submit={t.common.done} onSubmit={() => {}}
+        description={t.settings.ai.yourTokenSub}>
         {made && <>
           <div className="field span-all">
-            <Label htmlFor="new-token">Token</Label>
+            <Label htmlFor="new-token">{t.settings.ai.token}</Label>
             <div className="flex gap-2">
               <Input id="new-token" readOnly value={made} className="font-mono" onFocus={(e) => e.target.select()} />
               <CopyButton text={made} />
             </div>
           </div>
           <div className="field span-all">
-            <Label htmlFor="ai-prompt">Prompt for your AI</Label>
+            <Label htmlFor="ai-prompt">{t.settings.ai.prompt}</Label>
             <Textarea id="ai-prompt" readOnly rows={6} value={aiPrompt(made)} onFocus={(e) => e.target.select()} />
-            <CopyButton text={aiPrompt(made)} label="Copy prompt" className="justify-self-start" />
+            <CopyButton text={aiPrompt(made)} label={t.settings.ai.copyPrompt} className="justify-self-start" />
           </div>
         </>}
       </FormSheet>
-      <ConfirmSheet open={!!revoking} onOpenChange={(o) => !o && setRevoking(null)} confirm="Revoke"
-        title={`Revoke ${revoking?.name ?? 'this token'}?`} description="Anything using it stops working at once."
+      <ConfirmSheet open={!!revoking} onOpenChange={(o) => !o && setRevoking(null)} confirm={t.settings.ai.revoke}
+        title={t.settings.ai.revokeAsk(revoking?.name ?? null)} description={t.settings.ai.revokeSub}
         onConfirm={async () => {
           if (!revoking) return
           await revokeApiToken(supabase!, revoking.id)
@@ -140,18 +133,18 @@ function TelegramRows() {
     staleTime: 10 * 60 * 1000,
   })
   if (link.data) return (
-    <SettingRow title={link.data.username ? `Connected as @${link.data.username}` : 'Connected'} sub="Send links and notes to the bot. They land in your Notebook.">
+    <SettingRow title={link.data.username ? t.settings.telegram.connectedAs(link.data.username) : t.settings.telegram.connected} sub={t.settings.telegram.connectedSub}>
       <Button variant="outline" onClick={async () => {
         await disconnectTelegram(supabase!)
         await qc.invalidateQueries({ queryKey: ['telegram'] })
-      }}><Unlink aria-hidden="true" />Disconnect</Button>
+      }}><Unlink aria-hidden="true" />{t.settings.telegram.disconnect}</Button>
     </SettingRow>
   )
   return (
-    <SettingRow title="Connect Telegram" sub={`Send links and notes to @${BOT} from any chat, and they land in your Notebook.`}>
+    <SettingRow title={t.settings.telegram.connectTitle} sub={t.settings.telegram.connectSub(BOT ?? '')}>
       {code.data
-        ? <Button asChild><a href={`https://t.me/${BOT}?start=${code.data}`} target="_blank" rel="noopener"><Send aria-hidden="true" />Connect</a></Button>
-        : <Button disabled><Send aria-hidden="true" />Connect</Button>}
+        ? <Button asChild><a href={`https://t.me/${BOT}?start=${code.data}`} target="_blank" rel="noopener"><Send aria-hidden="true" />{t.settings.telegram.connect}</a></Button>
+        : <Button disabled><Send aria-hidden="true" />{t.settings.telegram.connect}</Button>}
     </SettingRow>
   )
 }
@@ -161,15 +154,15 @@ const BUILD = typeof __BUILD__ !== 'undefined' ? __BUILD__ : { time: new Date().
 
 const fmtBuild = () => {
   const d = new Date(BUILD.time)
-  return `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
+  return `${d.toLocaleDateString(currentLocale(), { day: 'numeric', month: 'short', year: 'numeric' })}, ${d.toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' })}`
 }
 
 // What a check found, shown under the version. A new version shows the "Updating" overlay and reloads by itself.
 async function checkForUpdates() {
   const reg = await navigator.serviceWorker?.getRegistration()
-  if (!reg) return 'Updates come with the installed app.'
+  if (!reg) return t.settings.about.installedOnly
   await reg.update()
-  return reg.installing || reg.waiting ? 'Updating…' : "You're on the latest version."
+  return reg.installing || reg.waiting ? t.settings.about.updating : t.settings.about.latest
 }
 
 export function Settings() {
@@ -178,6 +171,7 @@ export function Settings() {
   const [sound, setSound] = useState(soundOn)
   const [rem, setRem] = useState(getReminder)
   const [theme, setThemeState] = useState<Theme>(getTheme)
+  const [langPref, setLang] = useState<LangPref>(getLangPref)
   const [importing, setImporting] = useState(false)
   const [checking, setChecking] = useState(false)
   const [checked, setChecked] = useState<string | null>(null)
@@ -186,7 +180,7 @@ export function Settings() {
 
   const updateRem = async (r: typeof rem) => {
     if (r.enabled && (await requestPermission()) !== 'granted') {
-      toast.error('Notifications are blocked. Allow them in your browser settings.')
+      toast.error(t.settings.notify.blocked)
       return
     }
     setRem(r)
@@ -206,7 +200,7 @@ export function Settings() {
     try {
       setIncoming(parseExport(await f.text()))
     } catch {
-      toast.error("That file isn't a Compound export.")
+      toast.error(t.settings.backup.notExport)
     }
     if (fileRef.current) fileRef.current.value = ''
   }
@@ -215,15 +209,15 @@ export function Settings() {
 
   return (
     <>
-      <Header title="Settings" />
-      <Section title="Account">
+      <Header title={t.settings.title} />
+      <Section title={t.settings.account.section}>
         <Panel>
           {mode === 'cloud' ? (
             <>
-              <SettingRow title={session?.user.email ?? 'Signed in'} sub="Your data syncs to your account on every device.">
-                <Button variant="outline" onClick={signOut}><LogOut aria-hidden="true" />Sign Out</Button>
+              <SettingRow title={session?.user.email ?? t.settings.account.signedIn} sub={t.settings.account.syncs}>
+                <Button variant="outline" onClick={signOut}><LogOut aria-hidden="true" />{t.settings.account.signOut}</Button>
               </SettingRow>
-              <SettingRow title="Import from this device" sub="Copy anything you saved before signing in into your account.">
+              <SettingRow title={t.settings.account.importLocal} sub={t.settings.account.importLocalSub}>
                 <Button variant="outline" disabled={importing} onClick={async () => {
                   const local = await loadLocalSnapshot()
                   setImporting(true)
@@ -233,85 +227,89 @@ export function Settings() {
                     await qc.invalidateQueries({ queryKey: ['state'] })
                   } catch (e) {
                     console.error(e)
-                    toast.error("Couldn't import. Try again.")
+                    toast.error(t.settings.account.importFailed)
                   } finally {
                     setImporting(false)
                   }
-                }}><CloudUpload aria-hidden="true" />{importing ? 'Importing…' : 'Import'}</Button>
+                }}><CloudUpload aria-hidden="true" />{importing ? t.settings.account.importing : t.settings.account.import}</Button>
               </SettingRow>
             </>
           ) : (
-            <SettingRow title="This device only" sub={supabase ? 'Sign in to sync across devices.' : 'Supabase is not configured for this build.'}>
-              {supabase && <Button onClick={signOut}><LogIn aria-hidden="true" />Sign In</Button>}
+            <SettingRow title={t.settings.account.deviceOnly} sub={supabase ? t.settings.account.signInToSync : t.settings.account.noSupabase}>
+              {supabase && <Button onClick={signOut}><LogIn aria-hidden="true" />{t.settings.account.signIn}</Button>}
             </SettingRow>
           )}
         </Panel>
       </Section>
 
-      <Section title="AI access">
+      <Section title={t.settings.ai.section}>
         <Panel>
           {mode === 'cloud' && supabase
             ? <AiAccessRows />
-            : <SettingRow title="AI access" sub="Sign in first, then make a token so an AI can build topics and lists for you." />}
+            : <SettingRow title={t.settings.ai.title} sub={t.settings.ai.signInFirst} />}
         </Panel>
       </Section>
 
       {mode === 'cloud' && supabase && (
-        <Section title="Shared links">
+        <Section title={t.settings.shares.section}>
           <Panel><SharedLinksRows /></Panel>
         </Section>
       )}
 
       {BOT && (
-        <Section title="Telegram">
+        <Section title={t.settings.telegram.section}>
           <Panel>
             {mode === 'cloud' && supabase
               ? <TelegramRows />
-              : <SettingRow title="Connect Telegram" sub={`Sign in first, then send links and notes to @${BOT} and they land in your Notebook.`} />}
+              : <SettingRow title={t.settings.telegram.connectTitle} sub={t.settings.telegram.signInFirst(BOT)} />}
           </Panel>
         </Section>
       )}
 
-      <Section title="Notifications and sounds">
+      <Section title={t.settings.notify.section}>
         <Panel>
-          <SettingRow title="Sounds" sub="A pop on every tick, a chime when the day is done.">
+          <SettingRow title={t.settings.notify.sounds} sub={t.settings.notify.soundsSub}>
             <Switch checked={sound} onCheckedChange={(v) => { setSound(v); setSoundOn(v); if (v) playTick(0.5) }} />
           </SettingRow>
           {supported() ? (
-            <SettingRow title="Notifications" sub="Reminders about daily tasks.">
+            <SettingRow title={t.settings.notify.notifications} sub={t.settings.notify.notificationsSub}>
               <Switch checked={rem.enabled} onCheckedChange={(v) => updateRem({ ...rem, enabled: v })} />
             </SettingRow>
           ) : (
-            <SettingRow title="Notifications" sub="This browser doesn't support notifications. On iPhone, add the app to your Home Screen first." />
+            <SettingRow title={t.settings.notify.notifications} sub={t.settings.notify.unsupported} />
           )}
         </Panel>
       </Section>
 
-      <Section title="Appearance">
+      <Section title={t.settings.appearance.section}>
         <Panel>
-          <SettingRow title="Theme">
-            <Segmented label="Theme" value={theme} onChange={(t) => { setThemeState(t); setTheme(t) }}
-              options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} />
+          <SettingRow title={t.settings.appearance.theme}>
+            <SettingSelect label={t.settings.appearance.theme} value={theme} onChange={(v) => { setThemeState(v); setTheme(v) }}
+              options={[{ value: 'system', label: t.settings.appearance.system }, { value: 'light', label: t.settings.appearance.light }, { value: 'dark', label: t.settings.appearance.dark }]} />
+          </SettingRow>
+          <SettingRow title={t.settings.appearance.language} sub={t.settings.appearance.languageSub}>
+            <SettingSelect<LangPref> label={t.settings.appearance.language} value={langPref} onChange={(v) => { setLang(v); setLangPref(v) }}
+              options={[{ value: 'auto', label: t.settings.appearance.auto }, { value: 'en', label: t.settings.appearance.english }, { value: 'uk', label: t.settings.appearance.ukrainian }]} />
           </SettingRow>
         </Panel>
       </Section>
 
-      <Section title="Backup">
+      <Section title={t.settings.backup.section}>
         <Panel>
-          <SettingRow title="Your data" sub="Save it all to a file, or bring it back.">
+          <SettingRow title={t.settings.backup.title} sub={t.settings.backup.sub}>
             <div className="flex gap-2">
-              <Button variant="outline" disabled={!backend} onClick={() => void download().catch(() => toast.error("Couldn't export. Try again."))}><Download aria-hidden="true" />Export</Button>
-              <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload aria-hidden="true" />Import</Button>
+              <Button variant="outline" disabled={!backend} onClick={() => void download().catch(() => toast.error(t.settings.backup.exportFailed))}><Download aria-hidden="true" />{t.settings.backup.export}</Button>
+              <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload aria-hidden="true" />{t.settings.backup.import}</Button>
             </div>
             <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => void readFile(e.target.files?.[0])} />
           </SettingRow>
         </Panel>
       </Section>
 
-      <Section title="About">
+      <Section title={t.settings.about.section}>
         <Panel>
-          <SettingRow title="Version" sub={`${fmtBuild()} · ${BUILD.commit}${checked ? `. ${checked}` : ''}`}>
-            <Button variant="outline" size="icon" aria-label="Check for updates" title="Check for updates" disabled={checking}
+          <SettingRow title={t.settings.about.version} sub={`${fmtBuild()} · ${BUILD.commit}${checked ? `. ${checked}` : ''}`}>
+            <Button variant="outline" size="icon" aria-label={t.settings.about.checkUpdates} title={t.settings.about.checkUpdates} disabled={checking}
               onClick={() => { setChecking(true); void checkForUpdates().then(setChecked).finally(() => setChecking(false)) }}>
               <RefreshCw className={checking ? 'motion-safe:animate-spin' : undefined} aria-hidden="true" />
             </Button>
@@ -319,8 +317,8 @@ export function Settings() {
         </Panel>
       </Section>
 
-      <ConfirmSheet open={!!incoming} onOpenChange={(o) => !o && setIncoming(null)} confirm="Import"
-        title="Import this file?" description={incoming ? `${count(incoming)} items will be added. Anything already here with the same name is updated.` : ''}
+      <ConfirmSheet open={!!incoming} onOpenChange={(o) => !o && setIncoming(null)} confirm={t.settings.backup.import}
+        title={t.settings.backup.importAsk} description={incoming ? t.settings.backup.importSub(count(incoming)) : ''}
         onConfirm={async () => {
           if (!incoming || !backend) return
           try {
@@ -329,7 +327,7 @@ export function Settings() {
             await qc.invalidateQueries({ queryKey: ['notes'] })
           } catch (e) {
             console.error(e)
-            toast.error("Couldn't import. Try again.")
+            toast.error(t.settings.account.importFailed)
           }
         }} />
     </>

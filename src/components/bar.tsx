@@ -4,6 +4,7 @@ import { ChevronLeft, MoreHorizontal, type LucideIcon } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { PlusButton } from '@/components/edit'
+import { t } from '@/i18n'
 
 export interface BarAction { label: string; icon?: LucideIcon; onSelect: () => void; danger?: boolean }
 
@@ -54,12 +55,12 @@ const usePhone = () => useSyncExternalStore(
 // Right side of the top bar, as on iOS: ⋯ with the page's other actions, the page's +, then Edit as plain text at the
 // far right, which turns into a bold Done in the same place while editing.
 export function BarMenu({ bar }: { bar: PageBar | null }) {
-  if (bar?.done) return <button type="button" className="bar-text is-done" onClick={bar.done}>Done</button>
+  if (bar?.done) return <button type="button" className="bar-text is-done" onClick={bar.done}>{t.nav.bar.done}</button>
   return (
     <>
       <BarMore actions={bar?.actions ?? []} />
       {bar?.add && <PlusButton label={bar.add.label} onClick={bar.add.onClick} />}
-      {bar?.edit && <button type="button" className="bar-text" onClick={bar.edit}>Edit</button>}
+      {bar?.edit && <button type="button" className="bar-text" onClick={bar.edit}>{t.nav.bar.edit}</button>}
     </>
   )
 }
@@ -73,11 +74,11 @@ function BarMore({ actions: all }: { actions: BarAction[] }) {
   if (!actions.length) return null
   if (phone) return (
     <>
-      <button type="button" className="bar-more" aria-label="More actions" data-state={open ? 'open' : 'closed'} onClick={() => setOpen(true)}><MoreHorizontal /></button>
+      <button type="button" className="bar-more" aria-label={t.common.moreActions} data-state={open ? 'open' : 'closed'} onClick={() => setOpen(true)}><MoreHorizontal /></button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="action-sheet">
-          <DialogTitle className="sr-only">More actions</DialogTitle>
-          <DialogDescription className="sr-only">Actions for this page</DialogDescription>
+          <DialogTitle className="sr-only">{t.common.moreActions}</DialogTitle>
+          <DialogDescription className="sr-only">{t.common.actionsForPage}</DialogDescription>
           <div className="action-list">
             {actions.map(({ label, icon: Icon, onSelect, danger }) => (
               <button key={label} type="button" className={`action-item${danger ? ' is-danger' : ''}`} onClick={() => { setOpen(false); onSelect() }}>
@@ -91,7 +92,7 @@ function BarMore({ actions: all }: { actions: BarAction[] }) {
   )
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger className="bar-more" aria-label="More actions"><MoreHorizontal /></DropdownMenuTrigger>
+      <DropdownMenuTrigger className="bar-more" aria-label={t.common.moreActions}><MoreHorizontal /></DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bar-menu">
         {actions.map(({ label, icon: Icon, onSelect, danger }) => (
           <DropdownMenuItem key={label} variant={danger ? 'destructive' : 'default'} onSelect={onSelect}>{Icon && <Icon />}{label}</DropdownMenuItem>

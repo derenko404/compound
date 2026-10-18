@@ -117,6 +117,14 @@
       <span class="splash-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span
       ><span class="splash-text">Updating the app…</span>
     </div>
+    <script>
+      // The splash shows before the app loads, so it picks its language like src/i18n/lang.ts does.
+      try {
+        var p = localStorage.getItem('roadmap-lang')
+        if (p === 'uk' || (p !== 'en' && /^(uk|ru|be)\b/i.test(navigator.language)))
+          document.querySelector('#root .splash-text').textContent = 'Завантаження…'
+      } catch (e) {}
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

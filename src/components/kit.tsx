@@ -8,6 +8,8 @@ import { burst, toast } from '@/fx/fx'
 import { playTick, playUntick } from '@/fx/sound'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { t } from '@/i18n'
 
 // Rows read their colour from --c; each topic's --c-<id> is set by <TopicColors>.
 export const cvar = (ch: TopicId | null | undefined): CSSProperties =>
@@ -105,7 +107,7 @@ export function Row({ ch, done, check, title, sub, note, tag, tagInline, onOpen,
         {tag}
         {onOpen && chevron && <ChevronRight className="row-chev" aria-hidden="true" />}
         {sort && reorder && (
-          <button type="button" className="sort-handle" aria-label="Reorder: drag, or use the up and down arrow keys"
+          <button type="button" className="sort-handle" aria-label={t.common.reorder}
             onClick={(e) => e.stopPropagation()} onPointerDown={(e) => dragRow(e, reorder)}
             onKeyDown={(e) => {
               if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
@@ -206,7 +208,7 @@ export function Dial({ n, total, sub, pulse, value, size }: { n: number; total: 
       </svg>
       <div className="dial-label">
         <div>
-          <div className="dial-num">{value ?? (sub === 'done today' ? `${n}/${total}` : n)}</div>
+          <div className="dial-num">{value ?? n}</div>
           <div className="dial-sub">{sub}</div>
         </div>
       </div>
@@ -244,7 +246,7 @@ export function MoreText({ children, lines = 2 }: { children: ReactNode; lines?:
     <div className="more-text">
       <div ref={ref} className={open ? undefined : 'clamp'} style={{ WebkitLineClamp: lines }}>{children}</div>
       {(overflows || open) && (
-        <LinkButton aria-expanded={open} onClick={() => setOpen(!open)}>{open ? 'Show less' : 'Show more'}</LinkButton>
+        <LinkButton aria-expanded={open} onClick={() => setOpen(!open)}>{open ? t.nav.kit.showLess : t.nav.kit.showMore}</LinkButton>
       )}
     </div>
   )
@@ -332,7 +334,7 @@ export function Fold({ title, meta, icon, ch, open, children }: {
 // One entry in a list of notes, ideas or finds: a meta line, then the content.
 // onEdit: a click anywhere on the entry opens it (links and buttons inside keep their own action). A › on the
 // right shows it and is the keyboard way in; the entry lights up on hover. remove: edit mode's ⊖ (RemoveButton), on the left.
-export const Entry = ({ ch, meta, onEdit, editLabel = 'Edit', remove, children }: {
+export const Entry = ({ ch, meta, onEdit, editLabel = t.common.edit, remove, children }: {
   ch?: TopicId | null; meta?: ReactNode; onEdit?: () => void; editLabel?: string; remove?: ReactNode; children: ReactNode
 }) => (
   <div className={`note${onEdit ? ' editable' : ''}${remove ? ' has-remove' : ''}`} style={ch ? cvar(ch) : { '--c': 'var(--primary)' } as CSSProperties}
@@ -448,7 +450,7 @@ export const IconBadge = ({ icon: Icon, label, color }: { icon: ComponentType<{ 
 // A full-width "done" toggle at the bottom of a card (a habit's tick for today). Coloured by --c; filled when done.
 // Same feedback as Check: the tick sound and a burst. repeat: every press counts up (a glass of water) instead of
 // toggling; it fills once `on` (the target is reached). icon replaces the check mark.
-export function DoneButton({ on, label, done = 'Done today', onToggle, repeat, icon: Icon = CheckIcon }: {
+export function DoneButton({ on, label, done = t.nav.kit.doneToday, onToggle, repeat, icon: Icon = CheckIcon }: {
   on: boolean; label: string; done?: string; onToggle: (on: boolean) => void; repeat?: boolean
   icon?: ComponentType<{ 'aria-hidden'?: boolean }>
 }) {
@@ -484,10 +486,16 @@ export function Stepper({ label, value, less, more, onLess, onMore }: {
 
 // A count toward a daily goal (glasses of water): one icon per unit, filled up to n. Tap one to set the count to it,
 // tap the last filled one to take it back. Past the goal a dashed one more is offered. Goals above 10 get a stepper.
-// unit: singular and plural, for labels ("glass", "glasses").
-export function CountRow({ n, target, onSet, icon: Icon, unit }: {
-  n: number; target: number; onSet: (n: number) => void; icon: ComponentType<{ 'aria-hidden'?: boolean }>; unit: [string, string]
+// unit: singular and plural for English-style labels ("glass", "glasses"), or a CountUnit with the labels in full
+// (languages whose plurals and cases a pair of words can't cover).
+export interface CountUnit { of: (n: number, total: number) => string; count: (n: number) => string; add: string; remove: string }
+export function CountRow({ n, target, onSet, icon: Icon, unit: u }: {
+  n: number; target: number; onSet: (n: number) => void; icon: ComponentType<{ 'aria-hidden'?: boolean }>; unit: [string, string] | CountUnit
 }) {
+  const k = t.nav.kit
+  const unit: CountUnit = Array.isArray(u)
+    ? { of: (a, b) => k.of(a, b, u[1]), count: (i) => k.unitN(i, i === 1 ? u[0] : u[1]), add: k.addUnit(u[0]), remove: k.removeUnit(u[0]) }
+    : u
   const set = (v: number, el: HTMLElement) => {
     if (v > n) {
       playTick(Math.min(1, v / target))
@@ -496,15 +504,15 @@ export function CountRow({ n, target, onSet, icon: Icon, unit }: {
     onSet(v)
   }
   if (target > 10) return (
-    <Stepper label={`${n} of ${target} ${unit[1]}`} value={`${n}/${target}`} less={`Remove a ${unit[0]}`} more={`Add a ${unit[0]}`}
+    <Stepper label={unit.of(n, target)} value={`${n}/${target}`} less={unit.remove} more={unit.add}
       onLess={n ? (el) => set(n - 1, el) : undefined} onMore={(el) => set(n + 1, el)} />
   )
   const shown = Math.max(target, n) + (n >= target ? 1 : 0)
   return (
-    <div className="count-row" role="group" aria-label={`${n} of ${target} ${unit[1]}`}>
+    <div className="count-row" role="group" aria-label={unit.of(n, target)}>
       {Array.from({ length: shown }, (_, i) => (
         <button key={i} type="button" className={`count-unit${i < n ? ' on' : ''}${i >= target ? ' extra' : ''}`}
-          aria-label={`${i + 1} ${i ? unit[1] : unit[0]}`} aria-pressed={i < n} onClick={(e) => set(i + 1 === n ? i : i + 1, e.currentTarget)}>
+          aria-label={unit.count(i + 1)} aria-pressed={i < n} onClick={(e) => set(i + 1 === n ? i : i + 1, e.currentTarget)}>
           <Icon aria-hidden />
         </button>
       ))}
@@ -513,7 +521,7 @@ export function CountRow({ n, target, onSet, icon: Icon, unit }: {
 }
 
 // Copies text. The button itself says "Copied" for a moment instead of a toast. Failing to copy is an error toast.
-export function CopyButton({ text, label = 'Copy', className }: { text: string; label?: string; className?: string }) {
+export function CopyButton({ text, label = t.common.copy, className }: { text: string; label?: string; className?: string }) {
   const [done, setDone] = useState(false)
   const copy = async () => {
     try {
@@ -521,20 +529,32 @@ export function CopyButton({ text, label = 'Copy', className }: { text: string; 
       setDone(true)
       setTimeout(() => setDone(false), 2000)
     } catch {
-      toast.error("Couldn't copy. Select it and copy by hand.")
+      toast.error(t.common.copyFailed)
     }
   }
   return (
     <Button type="button" variant="outline" className={className} onClick={() => void copy()} aria-live="polite">
-      {done ? <CheckIcon aria-hidden="true" /> : <Copy aria-hidden="true" />}{done ? 'Copied' : label}
+      {done ? <CheckIcon aria-hidden="true" /> : <Copy aria-hidden="true" />}{done ? t.common.copied : label}
     </Button>
+  )
+}
+
+// A dropdown on the right of a SettingRow (theme, language): one choice of a few whose labels are too long for Segmented.
+export function SettingSelect<T extends string>({ label, value, onChange, options }: {
+  label: string; value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode }[]
+}) {
+  return (
+    <Select value={value} onValueChange={(v) => onChange(v as T)}>
+      <SelectTrigger aria-label={label}><SelectValue /></SelectTrigger>
+      <SelectContent>{options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+    </Select>
   )
 }
 
 // One setting in a Panel: title and explanation on the left, its control on the right. Rows are divided by lines.
 export const SettingRow = ({ title, sub, children }: { title: ReactNode; sub?: ReactNode; children?: ReactNode }) => (
   <div className="setting-row">
-    <div className="min-w-0"><div className="font-bold">{title}</div>{sub && <div className="text-small text-muted-foreground">{sub}</div>}</div>
+    <div className="setting-text"><div className="font-bold">{title}</div>{sub && <div className="text-small text-muted-foreground">{sub}</div>}</div>
     {children}
   </div>
 )
@@ -560,10 +580,10 @@ export const Meter = ({ value, label, size }: { value: number; label: string; si
 )
 
 // A Meter with its count beside it: "12 of 100 done".
-export const Progress = ({ n, total, label = 'done' }: { n: number; total: number; label?: string }) => (
+export const Progress = ({ n, total, label = t.nav.kit.progressDone }: { n: number; total: number; label?: string }) => (
   <div className="progress-line">
-    <Meter value={total ? n / total : 0} label={`${n} of ${total} ${label}`} />
-    <span><b>{n}</b> of {total} {label}</span>
+    <Meter value={total ? n / total : 0} label={t.nav.kit.of(n, total, label)} />
+    <span><b>{n}</b> {t.nav.kit.ofTotal(total, label)}</span>
   </div>
 )
 
@@ -584,14 +604,14 @@ export function useDoneLastOnOpen<T>(items: T[], isDone: (t: T) => boolean, key:
 /* ---------- Inputs ---------- */
 
 // A compact search box: icon inside, no visible label (screen readers still get one), clear button once typed.
-export function SearchField({ value, onChange, placeholder = 'Search', label = 'Search', className }: {
+export function SearchField({ value, onChange, placeholder = t.nav.kit.search, label = t.nav.kit.search, className }: {
   value: string; onChange: (v: string) => void; placeholder?: string; label?: string; className?: string
 }) {
   return (
     <div className={`search${className ? ` ${className}` : ''}`}>
       <Search className="search-icon" aria-hidden="true" />
       <Input type="search" aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
-      {value && <button type="button" className="icon-btn search-clear" aria-label="Clear search" onClick={() => onChange('')}><X /></button>}
+      {value && <button type="button" className="icon-btn search-clear" aria-label={t.nav.kit.clearSearch} onClick={() => onChange('')}><X /></button>}
     </div>
   )
 }

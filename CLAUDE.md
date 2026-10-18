@@ -50,6 +50,14 @@ A topic is a `Topic` everywhere (UI, code, API, table `topics`); the old "track"
 - `Linkify` (`src/components/guide.tsx`) links project codes to `/topics/<ch>#<code>`, "Topic N" to the Nth learn topic, and resource titles to their URLs. Keep codes verbatim in text so links work.
 - Timer (`src/views/Timer.tsx`, logic in `src/fx/timer.ts`): a Short / Long / Custom countdown (defaults 5 and 30 min, custom 1–180) with an optional generated background sound (`playAmbient` in `src/fx/sound.ts`). It keeps running across pages and reloads (state and settings in localStorage, this device only, only changed settings stored), shows a pill in the top bar elsewhere, and ends with a fanfare, confetti and a notification. Nothing reaches the account.
 
+## Languages (i18n)
+
+- English and Ukrainian. Every user-facing string comes from `t` (`import { t, plural, currentLocale } from '@/i18n'`): `t.today.title`, `t.common.days(3)`. Dictionaries live in `src/i18n/en/<area>.ts` (the shape) and `src/i18n/uk/<area>.ts` (typed `typeof en['<area>']`, so a missing key fails `tsc`). Shared words (Save, Cancel, Delete…) are in `common`. Interpolation is a function in the dictionary. Plurals use `plural(n, { one, few, many, other })` (Ukrainian needs one/few/many). Dates and numbers use `currentLocale()`.
+- Settings → Language: Auto (the device's language, else English), English, Українська. Per device (`roadmap-lang`). Changing it reloads the app, so module-level strings are safe.
+- Never translated: what users type, the starting content once created, the brand "Compound", the Telegram bot, the API/MCP and `llms.txt`. `src/lib/content.ts`, `finds.ts` and `types.ts` (shared with the worker) never import `@/i18n`: translate their ids at the call site (`t.topics.resourceKinds[id]`).
+- `npm run lint` fails on raw text: `react/jsx-no-literals` catches text between tags, and `scripts/check-i18n.mjs` catches literals in user-facing props (`aria-label`, `title`, `placeholder`, `label`…) and in `toast()`/`fail()`. A line that must keep a literal ends with `// i18n-ok`.
+- Ukrainian terms: Тема, Навичка, Крок, Ресурс, Проєкт, Нотатник, Список, Самопочуття, Звичка, Завдання, Таймер. Polite plural imperative ("Додайте"), sentence case, ʼ for the apostrophe.
+
 ## Design system
 
 The UI is a design system: every page is built from the same tokens and components. Follow it for every change, however small.

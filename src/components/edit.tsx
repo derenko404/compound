@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { PALETTE, WEEKDAYS_SHORT, topics, uid } from '@/lib/content'
+import { PALETTE, topics, uid } from '@/lib/content'
+import { t } from '@/i18n'
 import type { TopicId, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { toast } from '@/fx/fx'
@@ -21,7 +22,7 @@ import { Chip, Chips, Dot } from './kit'
 
 // "Delete X?" with what it removes: a small alert over whatever is open (a form included), Cancel and a red Delete
 // side by side. No header line or close button: Cancel closes it.
-export function ConfirmSheet({ open, onOpenChange, title, description, confirm = 'Delete', onConfirm }: {
+export function ConfirmSheet({ open, onOpenChange, title, description, confirm = t.common.delete, onConfirm }: {
   open: boolean; onOpenChange: (o: boolean) => void; title: string; description: string; confirm?: string; onConfirm: () => void
 }) {
   return (
@@ -30,7 +31,7 @@ export function ConfirmSheet({ open, onOpenChange, title, description, confirm =
         <DialogPrimitiveTitle className="confirm-title">{title}</DialogPrimitiveTitle>
         <DialogDescription>{description}</DialogDescription>
         <div className="actions confirm-actions">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t.common.cancel}</Button>
           <Button type="button" variant="destructive" onClick={() => { onConfirm(); onOpenChange(false) }}>{confirm}</Button>
         </div>
       </DialogContent>
@@ -50,12 +51,12 @@ export function RemoveButton({ label, title, description, onConfirm }: SheetRemo
   return (
     <span className="contents" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
       <button type="button" className="row-remove" aria-label={label} onClick={() => setAsking(true)}><Minus aria-hidden="true" /></button>
-      <ConfirmSheet open={asking} onOpenChange={setAsking} title={title} description={description ?? "This can't be undone."} onConfirm={onConfirm} />
+      <ConfirmSheet open={asking} onOpenChange={setAsking} title={title} description={description ?? t.common.cantUndo} onConfirm={onConfirm} />
     </span>
   )
 }
 
-export function FormSheet({ open, onOpenChange, title, description, children, onSubmit, submit = 'Save', remove, wide }: {
+export function FormSheet({ open, onOpenChange, title, description, children, onSubmit, submit = t.common.save, remove, wide }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
@@ -68,7 +69,7 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
 }) {
   const formId = useId()
   const [asking, setAsking] = useState(false)
-  const cancel = <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+  const cancel = <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t.common.cancel}</Button>
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={wide ? 'sheet-wide' : undefined}>
@@ -92,7 +93,7 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
           </div>
         </form>
         {remove && (
-          <ConfirmSheet open={asking} onOpenChange={setAsking} title={remove.title} description={remove.description ?? "This can't be undone."}
+          <ConfirmSheet open={asking} onOpenChange={setAsking} title={remove.title} description={remove.description ?? t.common.cantUndo}
             onConfirm={() => { remove.onConfirm(); onOpenChange(false) }} />
         )}
       </DialogContent>
@@ -197,7 +198,7 @@ export function LinesField({ label, value, onChange, hint, placeholder, quick }:
           onChange={(e) => (e.target.value.includes('\n') ? add(e.target.value) : setDraft(e.target.value))}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); add(draft) } }}
           onBlur={() => draft.trim() && add(draft)} />
-        <button type="button" className="lines-add" aria-label={`Add to ${label}`} disabled={!draft.trim()}
+        <button type="button" className="lines-add" aria-label={t.nav.edit.addTo(label)} disabled={!draft.trim()}
           onMouseDown={(e) => e.preventDefault()} onClick={() => add(draft)}><CornerDownLeft /></button>
       </div>
       {hint && <span className="text-caption text-muted-foreground">{hint}</span>}
@@ -205,8 +206,8 @@ export function LinesField({ label, value, onChange, hint, placeholder, quick }:
         <ul className="entries">
           {items.map((it, i) => (
             <li key={i} className="entry">
-              <button type="button" className="entry-text" title="Edit" onClick={() => { onChange(items.filter((_, j) => j !== i)); setDraft(it) }}>{it}</button>
-              <button type="button" className="icon-btn" aria-label={`Remove ${it}`} onClick={() => onChange(items.filter((_, j) => j !== i))}><X /></button>
+              <button type="button" className="entry-text" title={t.common.edit} onClick={() => { onChange(items.filter((_, j) => j !== i)); setDraft(it) }}>{it}</button>
+              <button type="button" className="icon-btn" aria-label={t.nav.edit.remove(it)} onClick={() => onChange(items.filter((_, j) => j !== i))}><X /></button>
             </li>
           ))}
         </ul>
@@ -244,7 +245,7 @@ export function TopicSelect({ id, value, onChange, state, allowNone }: {
 }) {
   const groups = [
     { label: '', items: topics(state, 'general') },
-    { label: 'Topics', items: topics(state, 'learn') },
+    { label: t.nav.edit.topics, items: topics(state, 'learn') },
   ].filter((g) => g.items.length)
   return (
     <Select value={value ?? 'none'} onValueChange={(v) => onChange(v === 'none' ? null : v)}>
@@ -263,7 +264,7 @@ export function TopicSelect({ id, value, onChange, state, allowNone }: {
   )
 }
 
-export const TopicField = ({ label = 'Topic', value, onChange, allowNone }: { label?: string; value: TopicId | null; onChange: (c: TopicId | null) => void; allowNone?: string }) => {
+export const TopicField = ({ label = t.nav.edit.topic, value, onChange, allowNone }: { label?: string; value: TopicId | null; onChange: (c: TopicId | null) => void; allowNone?: string }) => {
   const { state } = useStore()
   return <Field label={label}>{(id) => <TopicSelect id={id} state={state} value={value} onChange={onChange} allowNone={allowNone} />}</Field>
 }
@@ -271,10 +272,10 @@ export const TopicField = ({ label = 'Topic', value, onChange, allowNone }: { la
 export function ColorField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div className="field span-all">
-      <Label>Colour</Label>
-      <div className="swatches" role="radiogroup" aria-label="Colour">
+      <Label>{t.nav.edit.colour}</Label>
+      <div className="swatches" role="radiogroup" aria-label={t.nav.edit.colour}>
         {PALETTE.map((p) => (
-          <button key={p} type="button" role="radio" aria-checked={value === p} aria-label={p} className="swatch" style={{ '--c': `var(--p-${p})` } as React.CSSProperties} onClick={() => onChange(p)} />
+          <button key={p} type="button" role="radio" aria-checked={value === p} aria-label={t.nav.edit.colours[p]} className="swatch" style={{ '--c': `var(--p-${p})` } as React.CSSProperties} onClick={() => onChange(p)} />
         ))}
       </div>
     </div>
@@ -286,12 +287,12 @@ export function WeekdaysField({ value, onChange }: { value: number[]; onChange: 
   const order = [1, 2, 3, 4, 5, 6, 0]
   return (
     <div className="field span-all">
-      <Label>Days</Label>
-      <div className="segmented" role="group" aria-label="Days" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
+      <Label>{t.nav.edit.days}</Label>
+      <div className="segmented" role="group" aria-label={t.nav.edit.days} style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
         {order.map((d) => (
           <button key={d} type="button" className="segment" aria-pressed={value.includes(d)}
             onClick={() => onChange(value.includes(d) ? value.filter((x) => x !== d) : [...value, d].sort())}>
-            {WEEKDAYS_SHORT[d]}
+            {t.nav.weekdaysShort[d]}
           </button>
         ))}
       </div>

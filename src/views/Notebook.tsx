@@ -1,20 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ExternalLink, Lightbulb } from 'lucide-react'
-import { topicName, topicOf, topics as allTopics } from '@/lib/content'
+import { topicOf, topics as allTopics } from '@/lib/content'
 import { addDays, fmtLong, fmtStamp, keyOf, parseKey } from '@/lib/dates'
-import { cleanTag, findUrls, hostOf, kindFromUrl, kindName, youtubeId } from '@/lib/finds'
+import { cleanTag, findUrls, hostOf, kindFromUrl, youtubeId } from '@/lib/finds'
 import type { TopicId, Note } from '@/lib/types'
 import { useNotes, useStore } from '@/store/StoreProvider'
 import { Linkify } from '@/components/guide'
 import { AreaField, TopicField, FormSheet, LinesField, RemoveButton, fail } from '@/components/edit'
 import { usePageBar } from '@/components/bar'
 import { Chip, ChipsList, Dot, Entry, Header, List, SearchField, useDebouncedValue } from '@/components/kit'
+import { t } from '@/i18n'
 
 
 function dayTitle(key: string) {
   const today = new Date()
-  if (key === keyOf(today)) return 'Today'
-  if (key === keyOf(addDays(today, -1))) return 'Yesterday'
+  if (key === keyOf(today)) return t.notebook.today
+  if (key === keyOf(addDays(today, -1))) return t.notebook.yesterday
   return fmtLong(parseKey(key))
 }
 
@@ -40,9 +41,9 @@ export function NoteSheet({ open, onOpenChange, note, topic }: { open: boolean; 
   const set = (patch: Partial<Note>) => setN({ ...n, ...patch })
   const url = findUrls(n.body)[0] ?? null
   return (
-    <FormSheet open={open} onOpenChange={onOpenChange} title="Notebook" submit="Save"
+    <FormSheet open={open} onOpenChange={onOpenChange} title={t.notebook.title} submit={t.common.save}
       onSubmit={() => {
-        if (!n.body.trim()) return fail('Write something first.')
+        if (!n.body.trim()) return fail(t.notebook.sheet.writeFirst)
         const isLink = !!url
         // A link decides the type; otherwise #idea makes it an idea, and anything else is a note.
         const type = isLink ? 'link' : n.tags.includes('idea') ? 'idea' : 'note'
@@ -51,17 +52,17 @@ export function NoteSheet({ open, onOpenChange, note, topic }: { open: boolean; 
           url: isLink ? url : null, kind: isLink ? (url === note?.url && n.kind) || kindFromUrl(url!) || 'site' : null,
         } })
       }}>
-      <AreaField label="Note" value={n.body} rows={5} onChange={(body) => set({ body })}
-        placeholder="An insight, an idea, or paste a link with why it's interesting" />
+      <AreaField label={t.notebook.sheet.note} value={n.body} rows={5} onChange={(body) => set({ body })}
+        placeholder={t.notebook.sheet.notePlaceholder} />
       {n.context && (
         <div className="field span-all">
-          <span className="text-small font-bold">AI context</span>
+          <span className="text-small font-bold">{t.notebook.sheet.aiContext}</span>
           <div className="nb-context">{n.context}</div>
-          <span className="text-caption text-muted-foreground">Written by the AI when the bot saved this. You can't edit it.</span>
+          <span className="text-caption text-muted-foreground">{t.notebook.sheet.aiContextHint}</span>
         </div>
       )}
       {!(topic && !note) && <TopicField value={n.topic} onChange={(c) => set({ topic: c })} />}
-      <LinesField label="Tags" value={n.tags} placeholder="A tag" quick={QUICK_TAGS}
+      <LinesField label={t.notebook.sheet.tags} value={n.tags} placeholder={t.notebook.sheet.tagPlaceholder} quick={QUICK_TAGS}
         onChange={(ts) => set({ tags: [...new Set(ts.map(cleanTag).filter(Boolean))] })} />
     </FormSheet>
   )
@@ -73,15 +74,15 @@ export function NoteCard({ n, onOpen, onTag, showTopic = true, removable }: { n:
   const { state, dispatch } = useStore()
   const yt = n.url ? youtubeId(n.url) : null
   return (
-    <Entry ch={n.topic} onEdit={onOpen} editLabel={`Edit ${n.body.slice(0, 40) || (n.url ? hostOf(n.url) : 'entry')}`}
-      remove={removable && <RemoveButton label="Delete entry" title="Delete this entry?" description="It's removed from your notebook for good." onConfirm={() => dispatch({ type: 'deleteNote', id: n.id })} />}>
+    <Entry ch={n.topic} onEdit={onOpen} editLabel={t.common.editNamed(n.body.slice(0, 40) || (n.url ? hostOf(n.url) : t.notebook.card.entry))}
+      remove={removable && <RemoveButton label={t.notebook.card.deleteEntry} title={t.notebook.card.deleteAsk} description={t.notebook.card.deleteText} onConfirm={() => dispatch({ type: 'deleteNote', id: n.id })} />}>
       <div className="nb-card">
         {n.type === 'link' && n.url && (
           <div className="nb-link">
             {yt && <img className="nb-thumb" src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" loading="lazy" />}
             <div className="min-w-0">
-              <a href={n.url} target="_blank" rel="noreferrer" className="res-title nb-title">{hostOf(n.url)}<ExternalLink className="res-ext" aria-label="opens in a new tab" /></a>
-              {n.kind && <div className="nb-sub">{kindName(n.kind)}</div>}
+              <a href={n.url} target="_blank" rel="noreferrer" className="res-title nb-title">{hostOf(n.url)}<ExternalLink className="res-ext" aria-label={t.notebook.card.opensNewTab} /></a>
+              {n.kind && <div className="nb-sub">{t.notebook.kinds[n.kind]}</div>}
             </div>
           </div>
         )}
@@ -90,12 +91,12 @@ export function NoteCard({ n, onOpen, onTag, showTopic = true, removable }: { n:
           ? <div className="note-text nb-idea"><Lightbulb aria-hidden="true" /><span><Linkify text={n.body} /></span></div>
           : <div className={`note-text${n.type === 'link' ? ' nb-quote' : ''}`}><Linkify text={n.body} /></div>)}
         <div className="note-meta nb-meta">
-          {showTopic && n.topic && <span className="inline-flex items-center gap-1"><Dot />{topicName(state, n.topic)}</span>}
-          {n.tags.map((t) => onTag
-            ? <button key={t} type="button" className="nb-tag" onClick={() => onTag(t)}>#{t}</button>
-            : <span key={t} className="nb-tag">#{t}</span>)}
+          {showTopic && n.topic && <span className="inline-flex items-center gap-1"><Dot />{topicOf(state, n.topic)?.name ?? t.common.noTopic}</span>}
+          {n.tags.map((tag) => onTag
+            ? <button key={tag} type="button" className="nb-tag" onClick={() => onTag(tag)}>#{tag}</button>
+            : <span key={tag} className="nb-tag">#{tag}</span>)}
           <span>{fmtStamp(n.created_at)}</span>
-          {n.source === 'telegram' && <span>via Telegram</span>}
+          {n.source === 'telegram' && <span>{t.notebook.card.viaTelegram}</span>}
         </div>
       </div>
     </Entry>
@@ -126,7 +127,7 @@ export function Notebook() {
   const notes = useNotes({ topic, q })
   const items = useMemo(() => notes.data?.pages.flat() ?? [], [notes.data])
   const more = useLoadMore(notes)
-  usePageBar({ add: { label: 'Add a note, idea or link', onClick: () => setSheet({}) }, edit: items.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
+  usePageBar({ add: { label: t.notebook.add, onClick: () => setSheet({}) }, edit: items.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
 
   const days = useMemo(() => {
     const by = new Map<string, Note[]>()
@@ -138,21 +139,21 @@ export function Notebook() {
   }, [items])
   const filtered = !!topic || !!q
   // A tapped tag on a card goes into the search box, which finds #tags exactly.
-  const onTag = (t: string) => setQuery(`#${t}`)
+  const onTag = (tag: string) => setQuery(`#${tag}`)
 
   return (
     <>
-      <Header title="Notebook" lead="Notes, ideas and links in one place. Add them here, or send them to your Telegram bot." />
-      <SearchField label="Search your notebook" value={query} onChange={setQuery} placeholder="Search by text, link or #tag" />
-      <ChipsList label="Filter">
-        <Chip pressed={!topic} onClick={() => setTopic(null)}>All</Chip>
+      <Header title={t.notebook.title} lead={t.notebook.lead} />
+      <SearchField label={t.notebook.searchLabel} value={query} onChange={setQuery} placeholder={t.notebook.searchPlaceholder} />
+      <ChipsList label={t.notebook.filter}>
+        <Chip pressed={!topic} onClick={() => setTopic(null)}>{t.notebook.all}</Chip>
         {/* Personal and the roadmap topics; wellbeing habits aren't topics, so they get no chip. */}
         {[...allTopics(state, 'general'), ...allTopics(state, 'learn')].map((c) => (
           <Chip key={c.id} ch={c.id} pressed={topic === c.id} onClick={() => setTopic(topic === c.id ? null : c.id)}>{c.name}</Chip>
         ))}
       </ChipsList>
       {notes.isPending
-        ? <List empty="Loading…" />
+        ? <List empty={t.common.loading} />
         : days.length
           ? days.map(([k, list]) => (
               <section key={k} className="mb-5">
@@ -160,8 +161,8 @@ export function Notebook() {
                 <List>{list.map((n) => <NoteCard key={n.id} n={n} onOpen={() => setSheet({ note: n })} onTag={onTag} removable={edit} />)}</List>
               </section>
             ))
-          : <List empty={filtered ? 'Nothing matches.' : 'Nothing here yet. Tap + to add a note, an idea or a link.'} />}
-      {notes.hasNextPage && <div ref={more} className="empty">{notes.isFetchingNextPage ? 'Loading more…' : ''}</div>}
+          : <List empty={filtered ? t.common.nothingMatches : t.notebook.empty} />}
+      {notes.hasNextPage && <div ref={more} className="empty">{notes.isFetchingNextPage ? t.common.loadingMore : ''}</div>}
       {sheet && <NoteSheet open onOpenChange={(o) => !o && setSheet(null)} note={sheet.note} />}
     </>
   )

@@ -208,6 +208,7 @@
   --control-lg: 56px; /* the floating add button */
   --menu-w: 200px; /* dropdown menus */
   --dial-lg: 248px; /* the timer's ring */
+  --setting-text: 192px; /* SettingRow: the narrowest its text gets before the controls wrap below */
   --confirm-w: 400px; /* confirm dialogs */
   --thumb-w: 96px; /* video thumbnails in the notebook */
   --nav-h: 60px;      /* bottom navigation on phones, without the safe area */
@@ -326,9 +327,11 @@
 .segment[aria-pressed="true"], .segment[aria-checked="true"] { background: var(--primary); color: var(--primary-foreground); }
 .segment:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 /* A setting in a Panel (SettingRow). */
-.setting-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-block: var(--space-3); border-top: 1px solid var(--border); }
+/* SettingRow: text on the left, controls on the right. When the controls don't fit beside the text (longer labels in Ukrainian), they wrap below it. */
+.setting-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-4); padding-block: var(--space-3); border-top: 1px solid var(--border); }
 .setting-row:first-child { border-top: 0; padding-top: 0; }
 .setting-row:last-child { padding-bottom: 0; }
+.setting-text { flex: 1 1 var(--setting-text); min-width: 0; }
 .chip-icon { width: var(--icon-sm); height: var(--icon-sm); flex: none; }
 /* A toned chip (Chip icon + tone): the icon takes the tone colour; on a selected chip it follows the chip's text so it stays readable. */
 .chbtn.toned .chip-icon { color: var(--c); }
