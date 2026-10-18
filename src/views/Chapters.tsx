@@ -189,7 +189,6 @@ function ChapterPage({ c }: { c: Chapter }) {
     playFocus()
     setPop(true)
     if (head.current) lockOn(head.current)
-    toast(`${c.name} is now the focus.`)
   }
 
   usePageBar({
