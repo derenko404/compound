@@ -35,7 +35,7 @@ const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8'
 const UA = 'Mozilla/5.0 (compatible; RoadmapFinds/1.0)'
 const HELP = [
   'Send me a link, with a note if you like, and I\'ll save it to Finds.',
-  '/note <text> saves a note to Notes. Start with a chapter to pick it, e.g. /note english …',
+  'Any other text is saved as a note in Notes. Start it with a chapter to pick one, e.g. "english practise th sounds"; otherwise the AI picks.',
   '/ai <link> [question] reads the page, sums it up and saves it to Finds. /ai <question> just asks the AI.',
 ].join('\n\n')
 
@@ -68,7 +68,11 @@ async function handle(msg: TgMessage, env: Env) {
 
   const linked = [...(msg.entities ?? []), ...(msg.caption_entities ?? [])].flatMap((e) => (e.type === 'text_link' && e.url ? [e.url] : []))
   const urls = [...new Set([...findUrls(rest), ...linked])]
-  if (!urls.length) return say(isAi && rest.trim() ? await ask(env, rest.trim()) : HELP)
+  if (!urls.length) {
+    if (isAi) return say(rest.trim() ? await ask(env, rest.trim()) : HELP)
+    // Plain text with no link is a note, same as /note.
+    return say(text.trim() ? await saveNote(env, text.trim()) : HELP)
+  }
 
   let note = rest
   for (const u of findUrls(rest)) note = note.replace(u, '')
