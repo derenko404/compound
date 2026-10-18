@@ -6,7 +6,7 @@ import { cleanTag, findUrls, hostOf, kindFromUrl, kindName, youtubeId } from '@/
 import type { TopicId, Note } from '@/lib/types'
 import { useNotes, useStore } from '@/store/StoreProvider'
 import { Linkify } from '@/components/guide'
-import { AreaField, TopicField, FormSheet, LinesField, PlusButton, RemoveButton, fail } from '@/components/edit'
+import { AreaField, TopicField, FormSheet, LinesField, RemoveButton, fail } from '@/components/edit'
 import { usePageBar } from '@/components/bar'
 import { Chip, ChipsList, Dot, Entry, Header, List, SearchField, useDebouncedValue } from '@/components/kit'
 
@@ -126,7 +126,7 @@ export function Notebook() {
   const notes = useNotes({ topic, q })
   const items = useMemo(() => notes.data?.pages.flat() ?? [], [notes.data])
   const more = useLoadMore(notes)
-  usePageBar({ edit: items.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
+  usePageBar({ add: { label: 'Add a note, idea or link', onClick: () => setSheet({}) }, edit: items.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
 
   const days = useMemo(() => {
     const by = new Map<string, Note[]>()
@@ -142,9 +142,7 @@ export function Notebook() {
 
   return (
     <>
-      <Header title="Notebook" lead="Notes, ideas and links in one place. Add them here, or send them to your Telegram bot.">
-        <PlusButton label="Add a note, idea or link" onClick={() => setSheet({})} />
-      </Header>
+      <Header title="Notebook" lead="Notes, ideas and links in one place. Add them here, or send them to your Telegram bot." />
       <SearchField label="Search your notebook" value={query} onChange={setQuery} placeholder="Search by text, link or #tag" />
       <ChipsList label="Filter">
         <Chip pressed={!topic} onClick={() => setTopic(null)}>All</Chip>

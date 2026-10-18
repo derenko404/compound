@@ -345,7 +345,7 @@
 .entries { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
 /* LinesField: the ↵ button sits inside the box; it lights up once there's something to add. */
 .lines-input { position: relative; }
-.lines-input textarea { min-height: var(--control-field); padding-right: var(--control-field); resize: none; overflow: hidden; field-sizing: fixed; }
+.lines-input textarea { min-height: var(--control-field); padding-block: calc((var(--control-field) - 1lh - 2px) / 2); padding-right: var(--control-field); resize: none; overflow: hidden; field-sizing: fixed; }
 /* Long unbroken text (a URL, "hellohello…") wraps instead of widening the box and the whole sheet. */
 [data-slot="textarea"] { overflow-wrap: anywhere; min-width: 0; max-width: 100%; }
 /* Square, with the same gap to the box's top, bottom and right edge (inside the 1px border). */
@@ -388,9 +388,13 @@ details > summary::-webkit-details-marker { display: none; }
 .icon-btn svg { width: var(--icon-md); height: var(--icon-md); }
 .icon-btn.danger { color: var(--card); background: var(--destructive); }
 .icon-btn:disabled { opacity: 0.3; cursor: default; background: none; }
-.plus-btn { display: inline-grid; place-items: center; width: var(--control-md); height: var(--control-md); border-radius: 50%; background: var(--primary); color: var(--primary-foreground); border: 0; cursor: pointer; flex: none; box-shadow: var(--shadow-card); }
-.plus-btn svg { width: var(--icon-lg); height: var(--icon-lg); }
-.plus-btn:hover { filter: brightness(1.08); }
+/* PlusButton: a plain + in the primary colour, as iOS does, with a soft tint on hover. */
+.plus-btn { display: inline-grid; place-items: center; width: var(--control-md); height: var(--control-md); margin-right: calc(-1 * var(--space-2)); border-radius: 50%; background: none; color: var(--primary); border: 0; cursor: pointer; flex: none; transition: background var(--dur-fast); }
+.plus-btn svg { width: var(--icon-lg); height: var(--icon-lg); stroke-width: 2.5; }
+.plus-btn:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+.plus-btn:focus-visible { outline: 2px solid var(--ring); }
+/* In the top bar the + sits left of Edit, so only the last control pulls into the edge. */
+.plus-btn:not(:last-child) { margin-right: 0; }
 
 /* Tooltip on any element with data-tip: hover, focus, or .tip-open (set on tap). */
 [data-tip] { position: relative; }

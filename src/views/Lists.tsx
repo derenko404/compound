@@ -8,7 +8,7 @@ import type { ListDef, ListDefItem, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { celebrate } from '@/fx/fx'
 import { Check, Chip, ChipsList, Header, LinkCard, List, Progress, Row, SortList, SearchField } from '@/components/kit'
-import { AreaField, ConfirmSheet, FormSheet, PlusButton, RemoveButton, TextField, fail, moveTo, useSheet } from '@/components/edit'
+import { AreaField, ConfirmSheet, FormSheet, RemoveButton, TextField, fail, moveTo, useSheet } from '@/components/edit'
 
 type Filter = 'all' | 'todo' | 'done'
 
@@ -79,16 +79,14 @@ export function Lists() {
   const lists = byPosition(state.lists)
   const listSheet = useSheet<ListDef>()
   const [edit, setEdit] = useState(false)
-  usePageBar({ edit: lists.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
+  usePageBar({ add: { label: 'New list', onClick: () => listSheet.open(blankList(lists)) }, edit: lists.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
   const reorder = (from: number, to: number) => {
     const ys = moveTo(lists, from, to)
     dispatch({ type: 'batch', ops: ys.flatMap((x, j) => (x.position === j ? [] : [{ type: 'putList' as const, list: { ...x, position: j } }])) })
   }
   return (
     <>
-      <Header title="Lists" lead="Books to read, films to watch, places to go.">
-        <PlusButton label="New list" onClick={() => listSheet.open(blankList(lists))} />
-      </Header>
+      <Header title="Lists" lead="Books to read, films to watch, places to go." />
       {edit ? (
         <SortList empty="No lists yet. Start one with +." onMove={reorder}>
           {lists.map((l) => (
@@ -132,6 +130,7 @@ export function ListPage() {
   const [sharing, setSharing] = useState(false)
   usePageBar({
     back: { to: '/lists', label: 'Lists' },
+    add: L ? { label: `Add to ${L.name}`, onClick: () => itemSheet.open({ id: uid(), title: '' }) } : undefined,
     edit: L ? () => setEdit(true) : undefined,
     actions: L ? [
       { label: 'Share', icon: Share2, onSelect: () => setSharing(true) },
@@ -181,9 +180,7 @@ export function ListPage() {
 
   return (
     <>
-      <Header title={L.name} lead={L.title} action={edit ? { label: `Edit ${L.name}'s name and title`, icon: Pencil, onClick: () => listSheet.open(L) } : undefined}>
-        <PlusButton label={`Add to ${L.name}`} onClick={() => itemSheet.open({ id: uid(), title: '' })} />
-      </Header>
+      <Header title={L.name} lead={L.title} action={edit ? { label: `Edit ${L.name}'s name and title`, icon: Pencil, onClick: () => listSheet.open(L) } : undefined} />
       <div className="mb-4"><Progress n={n} total={L.items.length} /></div>
       <SearchField value={query} onChange={setQuery} placeholder={`Search ${L.name.toLowerCase()}`} />
       {!edit && (

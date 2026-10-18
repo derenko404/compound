@@ -10,7 +10,7 @@ import {
 import type { Habit, HabitType, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { Chip, CountRow, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, SortList, Section, Stats } from '@/components/kit'
-import { FormSheet, PlusButton, RemoveButton, TextField, WeekdaysField, fail, moveTo, useSheet } from '@/components/edit'
+import { FormSheet, RemoveButton, TextField, WeekdaysField, fail, moveTo, useSheet } from '@/components/edit'
 import { usePageBar } from '@/components/bar'
 import { HABIT_ORDER, HABIT_UI } from '@/components/habits'
 
@@ -398,6 +398,7 @@ export function Wellbeing() {
   const habits = habitsOf(state)
   const [edit, setEdit] = useState(false)
   usePageBar({
+    add: { label: 'Add a tracker', onClick: () => sheet.open(newHabit(state)) },
     edit: habits.length ? () => setEdit(true) : undefined,
     done: edit ? () => setEdit(false) : undefined,
   })
@@ -407,9 +408,7 @@ export function Wellbeing() {
   }
   return (
     <>
-      <Header title="Wellbeing" lead="Your mood, and habits to build or break.">
-        <PlusButton label="Add a tracker" onClick={() => sheet.open(newHabit(state))} />
-      </Header>
+      <Header title="Wellbeing" lead="Your mood, and habits to build or break." />
       <MoodWidget />
       <Section title="Habits">
         {edit ? (

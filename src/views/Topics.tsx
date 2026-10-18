@@ -13,7 +13,7 @@ import { playFocus } from '@/fx/sound'
 import {
   Chip, ChipsList, Header, List, Meter, Row, SearchField, Section, SortList, Tabs, cvar, empty,
 } from '@/components/kit'
-import { ConfirmSheet, PlusButton, RemoveButton, moveTo, useSheet } from '@/components/edit'
+import { ConfirmSheet, RemoveButton, moveTo, useSheet } from '@/components/edit'
 import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/components/guide'
 import { NoteCard, NoteSheet, useLoadMore } from './Notebook'
 import {
@@ -66,7 +66,7 @@ export function TopicIndex() {
   const sheet = useSheet<Topic>()
   const nav = useNavigate()
   const [edit, setEdit] = useState(false)
-  usePageBar({ edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
+  usePageBar({ add: { label: 'New topic', onClick: () => sheet.open(newTopic('learn', state.topics)) }, edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
   // The focus topic when the page opened leads. Switching focus during the visit moves nothing,
   // like ticks with useDoneLastOnOpen; the next visit shows the new order. Edit mode shows the saved order.
   const [lead] = useState(() => focusOf(state))
@@ -81,9 +81,7 @@ export function TopicIndex() {
 
   return (
     <>
-      <Header title="Topics" lead="Your roadmap, one topic per skill area, all running in parallel.">
-        <PlusButton label="New topic" onClick={() => sheet.open(newTopic('learn', state.topics))} />
-      </Header>
+      <Header title="Topics" lead="Your roadmap, one topic per skill area, all running in parallel." />
       <Section title="Your topics">
         {edit ? (
           <SortList empty="No topics yet. Tap + to add one." onMove={reorder}>
@@ -187,7 +185,13 @@ function TopicPage({ c }: { c: Topic }) {
   const kindCount = (k: ResourceKind) => c.resources.filter((r) => r.kind === k).length
   const kinds = RESOURCE_KINDS.filter((k) => kindCount(k.id)).sort((a, b) => kindCount(b.id) - kindCount(a.id))
   // In edit mode every list shows its + and the rows show their controls.
-  const listActions = (label: string, e: Editing, idle?: React.ReactNode) => (edit ? <PlusButton label={label} onClick={() => sheet.open(e)} /> : idle)
+  // The top bar's + adds to the open tab.
+  const add: Record<Tab, { label: string; onClick: () => void }> = {
+    learn: { label: 'New skill', onClick: () => sheet.open({ kind: 'skill', v: blankSkill() }) },
+    resources: { label: 'New resource', onClick: () => sheet.open({ kind: 'resource', v: blankResource() }) },
+    projects: { label: 'New project', onClick: () => sheet.open({ kind: 'project', v: blankProject() }) },
+    notes: { label: 'New note', onClick: () => setNoting({}) },
+  }
   const moveIn = (key: 'projects' | 'skills') => (from: number, to: number) => save({ ...c, [key]: moveTo<unknown>(c[key], from, to) })
 
   const noteCount = useNoteCount({ topic: c.id })
@@ -211,6 +215,7 @@ function TopicPage({ c }: { c: Topic }) {
 
   usePageBar({
     back: { to: '/topics', label: 'Topics' },
+    add: add[tab],
     edit: () => setEdit(true),
     actions: [
       ...(c.kind === 'learn' ? [{ label: 'Share', icon: Share2, onSelect: () => setSharing(true) }] : []),
@@ -254,7 +259,7 @@ function TopicPage({ c }: { c: Topic }) {
       <Tabs value={tab} onChange={setTab} items={tabs.filter((t) => t.show)} />
 
       {tab === 'projects' && (
-        <Section title="Projects" aside={listActions('New project', { kind: 'project', v: blankProject() })}>
+        <Section title="Projects">
           {edit ? (
             <SortList empty="No projects yet." onMove={moveIn('projects')}>
               {c.projects.map((p) => (
@@ -270,7 +275,7 @@ function TopicPage({ c }: { c: Topic }) {
       )}
 
       {tab === 'learn' && (
-        <Section title="Skills" aside={listActions('New skill', { kind: 'skill', v: blankSkill() })}>
+        <Section title="Skills">
           {edit ? (
             <SortList empty="No skills yet. Tap + to add one." onMove={moveIn('skills')}>
               {c.skills.map((k) => (
@@ -282,12 +287,12 @@ function TopicPage({ c }: { c: Topic }) {
             </SortList>
           ) : c.skills.length
             ? <SkillFolds ch={c.id} skills={c.skills} current={next?.skill.id} itemsLabel="Steps, in order" />
-            : <List empty="No skills yet. Tap Edit, then + to add one." />}
+            : <List empty="No skills yet. Tap + to add one." />}
         </Section>
       )}
 
       {tab === 'resources' && (
-        <Section title="Resources" aside={listActions('New resource', { kind: 'resource', v: blankResource() })}>
+        <Section title="Resources">
           {c.resources.length > 3 && (
             <>
               <SearchField value={query} onChange={setQuery} placeholder="Search by title or note" />
@@ -307,7 +312,7 @@ function TopicPage({ c }: { c: Topic }) {
       )}
 
       {tab === 'notes' && (
-        <Section title="Notebook" aside={<PlusButton label="New note" onClick={() => setNoting({})} />}>
+        <Section title="Notebook">
           <TopicNotes ch={c.id} onOpen={(n) => setNoting({ note: n })} edit={edit} />
         </Section>
       )}
