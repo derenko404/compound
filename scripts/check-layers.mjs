@@ -1,18 +1,18 @@
 /**
- * Enforces Feature-Sliced Design's import rules in src/ (run by `npm run lint`):
- * - layers only import from layers below them: core < shared < entities < features < widgets < pages < app;
- * - a slice never imports another slice of the same layer (pages/today can't import pages/topics);
- * - from another slice, import its public API (`@/entities/topic`), not a file inside it;
- * - adapters (storage, AI, HTTP clients) are wired in shared/api and app only;
- * - entities of the same layer may share through FSD's cross-import, `@/entities/topic/@x/note` (topic's API for note).
+ * Enforces the app's Feature-Sliced Design (the lighter variant) in src/, run by `npm run lint`:
+ * - layers only import from layers below them: core < shared < features < pages < app;
+ * - a page never imports another page;
+ * - from another slice, import its public API (`@/features/topics`), not a file inside it. Features may use
+ *   each other this way;
+ * - adapters (storage, AI, HTTP clients) are wired in shared/api and app only.
  * A line that must break a rule ends with `// layers-ok` and says why.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 
 const ROOT = resolve(new URL('..', import.meta.url).pathname)
-const LAYERS = ['core', 'adapters', 'shared', 'entities', 'features', 'widgets', 'pages', 'app']
-const SLICED = new Set(['entities', 'features', 'widgets', 'pages'])
+const LAYERS = ['core', 'adapters', 'shared', 'features', 'pages', 'app']
+const SLICED = new Set(['features', 'pages'])
 
 // Where a file sits: its layer and (for sliced layers) its slice.
 const place = (file) => {
@@ -43,15 +43,15 @@ for (const file of files) {
       const to = place(target)
       if (!LAYERS.includes(to.layer)) continue
       const where = `${relative(ROOT, file)}:${i + 1}`
-      // FSD cross-import: a slice may use what another slice of its layer exposes for it in @x/<slice>.
-      if (to.layer === from.layer && from.slice && relative(join(ROOT, 'src', to.layer, to.slice), target) === join('@x', from.slice)) continue
+      const sameSlice = to.layer === from.layer && (!SLICED.has(to.layer) || to.slice === from.slice)
       const below = LAYERS.indexOf(to.layer) < LAYERS.indexOf(from.layer)
-      const same = to.layer === from.layer && (!SLICED.has(to.layer) || to.slice === from.slice)
+      const otherFeature = from.layer === 'features' && to.layer === 'features' && !sameSlice
+      const deep = SLICED.has(to.layer) && !sameSlice && relative(join(ROOT, 'src', to.layer, to.slice), target).length > 0
       if (to.layer === 'adapters' && !['adapters', 'app'].includes(from.layer) && !(from.layer === 'shared' && relative(join(ROOT, 'src/shared'), file).startsWith('api/')))
         problems.push(`${where}  ${from.layer} uses an adapter (${spec}): go through shared/api`)
-      else if (!below && !same) problems.push(`${where}  ${from.layer}${from.slice ? `/${from.slice}` : ''} imports ${to.layer}${to.slice ? `/${to.slice}` : ''} (${spec})`)
-      else if (below && SLICED.has(to.layer) && relative(join(ROOT, 'src', to.layer, to.slice), target).length)
-        problems.push(`${where}  import ${to.layer}/${to.slice} through its public API (@/${to.layer}/${to.slice}), not ${spec}`)
+      else if (!below && !sameSlice && !otherFeature)
+        problems.push(`${where}  ${from.layer}${from.slice ? `/${from.slice}` : ''} imports ${to.layer}${to.slice ? `/${to.slice}` : ''} (${spec})`)
+      else if (deep) problems.push(`${where}  import ${to.layer}/${to.slice} through its public API (@/${to.layer}/${to.slice}), not ${spec}`)
     }
   })
 }
@@ -60,4 +60,4 @@ if (problems.length) {
   console.error(`Layer rules broken (${problems.length}):\n${problems.map((p) => `  ${p}`).join('\n')}`)
   process.exit(1)
 }
-console.log('layers: imports follow shared → entities → features → widgets → pages → app.')
+console.log('layers: imports follow shared → features → pages → app.')

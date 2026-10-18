@@ -9,7 +9,7 @@ import { useStore } from '@/shared/store/StoreProvider'
 import { listFromShare, topicFromShare } from '@/core/domain/content'
 import type { Topic, ListDef } from '@/core/domain/types'
 import { Header, List, MoreText, Row, Section } from '@/shared/ui'
-import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/entities/topic'
+import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/features/topics'
 import { SignIn } from '@/features/auth'
 import { t } from '@/shared/i18n'
 

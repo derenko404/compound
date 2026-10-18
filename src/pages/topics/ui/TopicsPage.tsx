@@ -7,20 +7,20 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/primitives/dialog'
 import { RESOURCE_KINDS, topicOf, topics, program, topicSnapshot } from '@/core/domain/content'
 import { ShareSheet } from '@/features/share-link'
-import { focusOf, monthName, targetFinish, nextUp, pace, topicProgress } from '@/entities/today'
+import { focusOf, monthName, targetFinish, nextUp, pace, topicProgress } from '@/features/today'
 import type { Topic, Note, Project, Resource, ResourceKind, Skill } from '@/core/domain/types'
 import { useNoteCount, useNotes, useStore } from '@/shared/store/StoreProvider'
 import { lockOn } from '@/shared/fx/fx'
 import { playFocus } from '@/shared/fx/sound'
 import { currentLocale, t } from '@/shared/i18n'
-import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/entities/topic'
-import { NoteCard } from '@/entities/note'
-import { NoteSheet } from '@/features/note-edit'
+import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/features/topics'
+import { NoteCard } from '@/features/notes'
+import { NoteSheet } from '@/features/notes'
 import { useLoadMore } from '@/shared/lib/useLoadMore'
 import {
   TopicSheet, SkillSheet, ProjectSheet, ResourceSheet,
   blankSkill, blankProject, blankResource, newTopic, useTopicSave,
-} from '@/features/topic-edit'
+} from '@/features/topics'
 
 const route = getRouteApi('/topics/$ch')
 

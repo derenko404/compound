@@ -4,7 +4,7 @@ import { fmtStamp } from '@/shared/lib/dates'
 import { hostOf, youtubeId } from '@/core/domain/finds'
 import type { Note } from '@/core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
-import { Linkify } from '@/entities/topic/@x/note'
+import { Linkify } from '@/features/topics'
 import { RemoveButton, Dot, Entry } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
