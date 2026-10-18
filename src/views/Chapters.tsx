@@ -81,17 +81,6 @@ function ChapterPage({ ch }: { ch: ChapterId }) {
         </Section>
       )}
 
-      {finds.length > 0 && (
-        <Section title="Your finds" aside={<Link to="/finds">All finds</Link>}>
-          <div className="list">
-            {finds.map((b) => (
-              <Row key={b.id} ch={ch} title={<a href={b.url} target="_blank" rel="noreferrer" className="text-foreground">{b.title || hostOf(b.url)}</a>}
-                sub={b.note || b.tags.map((t) => `#${t}`).join(' ') || undefined} tag={`${kindName(b.kind)} · ${hostOf(b.url)}`} />
-            ))}
-          </div>
-        </Section>
-      )}
-
       {lists.length > 0 && (
         <Section title="Checklists">
           <Checklists ch={ch} lists={lists} />
@@ -115,6 +104,17 @@ function ChapterPage({ ch }: { ch: ChapterId }) {
           </div>
         </div>
       </Section>
+
+      {finds.length > 0 && (
+        <Section title="Your finds" aside={<Link to="/finds">All finds</Link>}>
+          <div className="list">
+            {finds.map((b) => (
+              <Row key={b.id} ch={ch} title={<a href={b.url} target="_blank" rel="noreferrer" className="text-foreground">{b.title || hostOf(b.url)}</a>}
+                sub={b.note || b.tags.map((t) => `#${t}`).join(' ') || undefined} tag={`${kindName(b.kind)} · ${hostOf(b.url)}`} />
+            ))}
+          </div>
+        </Section>
+      )}
     </>
   )
 }
