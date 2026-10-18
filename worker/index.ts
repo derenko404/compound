@@ -31,7 +31,21 @@ interface TgMessage {
 }
 
 // Workers AI retires models (the plain 3.1 8B went on 2026-05-30); check the catalog if AI calls start failing.
-const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8'
+// 70B: the 8B models picked note chapters badly and can't be held to a JSON schema. About 7 neurons a call.
+const MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
+
+// What each chapter covers, so the AI can file notes; ids and names come from src/data/plan.ts.
+const CHAPTER_HINTS: Record<ChapterId, string> = {
+  tech: 'system design, backend, cloud, databases, code, AI engineering',
+  product: 'product sense, UI/UX design, metrics, A/B tests',
+  mgmt: 'teams, 1:1s, hiring, project management',
+  biz: 'startups, adtech, how companies work, strategy',
+  eng: 'pronunciation, speaking, writing, public speaking',
+  money: 'budget, savings, investing',
+  smoke: 'cravings, triggers',
+  gym: 'workouts, food, weight, sleep',
+  own: 'anything personal that fits nothing above',
+}
 const UA = 'Mozilla/5.0 (compatible; RoadmapFinds/1.0)'
 const HELP = [
   'Send me a link, with a note if you like, and I\'ll save it to Finds.',
@@ -123,16 +137,18 @@ async function saveNote(env: Env, text: string) {
 async function pickChapter(env: Env, body: string): Promise<ChapterId | null> {
   try {
     const response = await run(env, {
-      max_tokens: 10,
+      max_tokens: 30,
+      response_format: { type: 'json_schema', json_schema: { type: 'object', properties: { chapter: { type: 'string', enum: ALL_CHAPTERS } }, required: ['chapter'] } },
       messages: [
         {
           role: 'system',
-          content: `File a personal note under one chapter. Reply with the chapter id only.\n${ALL_CHAPTERS.map((c) => `${c}: ${CH[c].name}`).join('\n')}\nUse "own" when nothing else fits.`,
+          content: `File a personal note under one chapter of a self-development roadmap. Chapters:\n${ALL_CHAPTERS.map((c) => `${c} = ${CH[c].name}: ${CHAPTER_HINTS[c]}`).join('\n')}\nReply with JSON: {"chapter": "<id>"}.`,
         },
         { role: 'user', content: body },
       ],
     })
-    return ALL_CHAPTERS.find((c) => new RegExp(`\\b${c}\\b`).test(response.toLowerCase())) ?? null
+    const { chapter } = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { chapter?: string }
+    return ALL_CHAPTERS.find((c) => c === chapter) ?? null
   } catch (e) {
     console.error('ai', e)
     return null
@@ -174,7 +190,7 @@ async function chat(env: Env, max_tokens: number, messages: { role: string; cont
 }
 
 // Some models hand back JSON replies already parsed, so normalise to text.
-async function run(env: Env, input: { max_tokens: number; messages: { role: string; content: string }[] }) {
+async function run(env: Env, input: { max_tokens: number; messages: { role: string; content: string }[]; response_format?: unknown }) {
   const { response } = await env.AI.run(MODEL, input)
   return typeof response === 'string' ? response : response == null ? '' : JSON.stringify(response)
 }
@@ -254,6 +270,10 @@ async function classify(env: Env, url: string, meta: Meta): Promise<{ kind: Book
   try {
     const response = await run(env, {
       max_tokens: 120,
+      response_format: {
+        type: 'json_schema',
+        json_schema: { type: 'object', properties: { kind: { type: 'string', enum: ['video', 'post', 'site'] }, tags: { type: 'array', items: { type: 'string' }, maxItems: 3 } }, required: ['kind', 'tags'] },
+      },
       messages: [
         {
           role: 'system',
