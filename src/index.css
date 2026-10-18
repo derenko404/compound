@@ -619,9 +619,10 @@ a.qbtn { color: inherit; text-decoration: none; }
 }
 .sheet-foot { position: sticky; bottom: 0; justify-content: flex-end; margin: 0 calc(-1 * var(--space-5)); padding: var(--space-3) var(--space-5); background: var(--card); border-top: 1px solid var(--border); }
 .sheet-start, .sheet-end { display: none; }
-.sheet-delete-row { display: none; }
+/* FormSheet remove: red outline. Desktop: far left of the footer. Phones: the form's last row, full width. */
+.sheet-delete { color: var(--destructive); border-color: color-mix(in srgb, var(--destructive) 45%, transparent); background: color-mix(in srgb, var(--destructive) 8%, transparent); }
 .sheet-foot .sheet-delete { margin-right: auto; }
-.sheet-delete:not([data-variant="destructive"]) { color: var(--destructive); border-color: color-mix(in srgb, var(--destructive) 45%, transparent); background: color-mix(in srgb, var(--destructive) 8%, transparent); }
+.sheet-delete-row { display: none; }
 .sheet-overlay { z-index: var(--z-overlay); }
 @media (max-width: 560px) {
   .sheet, .sheet.sheet-wide { left: 0; right: 0; top: auto; bottom: 0; transform: none; max-width: none; max-height: 92vh; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); animation: sheet-up var(--dur-base) var(--ease-out); }
@@ -633,7 +634,7 @@ a.qbtn { color: inherit; text-decoration: none; }
   .sheet-head.has-actions .sheet-close { display: none; }
   .sheet-action { color: var(--primary); font-weight: var(--weight-bold); }
   .sheet-foot { display: none; }
-  .sheet-delete-row { display: inline-flex; justify-self: stretch; height: var(--control-md); margin-top: var(--space-2); }
+  .sheet-delete-row { display: inline-flex; justify-self: stretch; margin-top: var(--space-3); }
   /* No footer on phones, so the sheet pads its own bottom. */
   .sheet, .sheet.sheet-wide { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px)); }
   /* Drawer handle, inside the header bar. */
@@ -704,17 +705,23 @@ main > :last-child { margin-bottom: 0; }
 @keyframes bounce { 0% { transform: scale(0.7); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
 
 /* Notes, ideas and finds: a card per entry inside a .list. */
-.note { padding: var(--space-4); border-top: 1px solid var(--border); }
+.note { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--space-2); padding: var(--space-4); border-top: 1px solid var(--border); }
+/* Entry onEdit: clickable, so it shows it on hover. */
+.note.editable { cursor: pointer; transition: background var(--dur-fast); }
+@media (hover: hover) { .note.editable:hover { background: color-mix(in srgb, var(--foreground) 4%, transparent); } }
 .note:first-child { border-top: 0; }
 .note-meta { font-size: var(--text-caption); color: var(--muted-foreground); display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-1); }
 .note-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 /* Notebook cards: the whole card opens the editor; links inside it still open the page. */
 /* ConfirmSheet: a small dialog, buttons on the right. */
 /* Phones keep the full-width bottom drawer; wider screens get a small centred dialog. */
+/* ConfirmSheet: a small alert above any open sheet (its backdrop dims the sheet too). */
+.confirm-overlay { z-index: calc(var(--z-sheet) + 1); }
+.sheet.confirm-sheet { z-index: calc(var(--z-sheet) + 2); gap: var(--space-2); padding: var(--space-6) var(--space-5) var(--space-5); }
 @media (min-width: 561px) { .confirm-sheet { max-width: var(--confirm-w); } }
-.confirm-actions { justify-content: flex-end; margin-top: var(--space-2); }
-.nb-card { display: grid; gap: var(--space-2); cursor: pointer; border-radius: var(--radius-sm); }
-.nb-card:focus-visible { outline: 2px solid var(--ring); outline-offset: var(--space-1); }
+.confirm-title { font-family: var(--font-display); font-size: var(--text-title); font-weight: var(--weight-bold); }
+.confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-top: var(--space-4); }
+.nb-card { display: grid; gap: var(--space-2); }
 .nb-link { display: flex; gap: var(--space-3); align-items: flex-start; }
 .nb-thumb { width: var(--thumb-w); aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-sm); flex: none; background: var(--muted); }
 .nb-title { font-weight: var(--weight-bold); }

@@ -2,11 +2,10 @@
 // their look comes from the tokens and patterns in src/index.css.
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
 import { Link, type LinkProps } from '@tanstack/react-router'
-import { Check as CheckIcon, ChevronDown, Search, X } from 'lucide-react'
+import { Check as CheckIcon, ChevronDown, Pencil, Search, X } from 'lucide-react'
 import type { Chapter, ChapterId } from '@/lib/types'
 import { burst } from '@/fx/fx'
 import { playTick, playUntick } from '@/fx/sound'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 // Rows read their colour from --c; each chapter's --c-<id> is set by <ChapterColors>.
@@ -182,21 +181,6 @@ export function Header({ title, lead, action, children }: {
   )
 }
 
-// Two-tap delete: the first tap arms it for 3 seconds.
-export function ConfirmButton({ label, armed, onConfirm, className = 'ml-auto' }: { label: string; armed: string; onConfirm: () => void; className?: string }) {
-  const [arm, setArm] = useState(false)
-  useEffect(() => {
-    if (!arm) return
-    const t = setTimeout(() => setArm(false), 3000)
-    return () => clearTimeout(t)
-  }, [arm])
-  return (
-    <Button variant={arm ? 'destructive' : 'outline'} className={className} onClick={() => (arm ? onConfirm() : setArm(true))}>
-      {arm ? armed : label}
-    </Button>
-  )
-}
-
 // Text that saves itself shortly after typing stops.
 export function useDebounced<T>(fn: (v: T) => void, ms = 800) {
   const t = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -256,10 +240,18 @@ export function Fold({ title, meta, icon, ch, open, children }: {
 }
 
 // One entry in a list of notes, ideas or finds: a meta line, then the content.
-export const Entry = ({ ch, meta, children }: { ch?: ChapterId | null; meta?: ReactNode; children: ReactNode }) => (
-  <div className="note" style={ch ? cvar(ch) : { '--c': 'var(--primary)' } as CSSProperties}>
-    {meta && <div className="note-meta">{meta}</div>}
-    {children}
+// onEdit: a click anywhere on the entry opens it (links and buttons inside keep their own action). A pencil on the
+// right shows it and is the keyboard way in; the entry lights up on hover.
+export const Entry = ({ ch, meta, onEdit, editLabel = 'Edit', children }: {
+  ch?: ChapterId | null; meta?: ReactNode; onEdit?: () => void; editLabel?: string; children: ReactNode
+}) => (
+  <div className={`note${onEdit ? ' editable' : ''}`} style={ch ? cvar(ch) : { '--c': 'var(--primary)' } as CSSProperties}
+    onClick={onEdit ? (e) => { if (!(e.target as HTMLElement).closest('a, button')) onEdit() } : undefined}>
+    <div className="min-w-0">
+      {meta && <div className="note-meta">{meta}</div>}
+      {children}
+    </div>
+    {onEdit && <button type="button" className="icon-btn" aria-label={editLabel} onClick={onEdit}><Pencil aria-hidden="true" /></button>}
   </div>
 )
 

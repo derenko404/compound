@@ -362,8 +362,10 @@ function HabitSheet({ habit, ...sheet }: { habit: Habit; open: boolean; onOpenCh
 
   return (
     <FormSheet {...sheet} title={isNew ? 'New tracker' : `Edit ${habit.name}`} submit={isNew ? 'Add tracker' : 'Save'}
-      onDelete={isNew ? undefined : () => { dispatch({ type: 'deleteHabit', id: habit.id }); toast(`${habit.name} deleted.`) }}
-      confirmDelete={{ title: `Delete ${habit.name}?`, description: "Its history goes with it. This can't be undone." }}
+      remove={isNew ? undefined : {
+        label: 'Delete habit', title: `Delete ${habit.name}?`, description: "Its history goes with it. This can't be undone.",
+        onConfirm: () => { dispatch({ type: 'deleteHabit', id: habit.id }); toast(`${habit.name} deleted.`) },
+      }}
       onSubmit={() => {
         if (!h.name.trim()) return fail('Give it a name first.')
         if (h.type === 'gym' && !h.days.length) return fail('Pick at least one day.')

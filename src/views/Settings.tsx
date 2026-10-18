@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CloudUpload, Download, LogIn, LogOut, RefreshCw, Send, Unlink, Upload } from 'lucide-react'
+import { CloudUpload, Copy, Download, KeyRound, LogIn, LogOut, RefreshCw, Send, Trash2, Unlink, Upload } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { getReminder, requestPermission, setReminder, supported } from '@/fx/notify'
@@ -9,15 +12,94 @@ import { getTheme, setTheme, type Theme } from '@/fx/theme'
 import { toast } from '@/fx/fx'
 import {
   clearLocalSnapshot, disconnectTelegram, exportAll, importFile, importLocal, loadLocalSnapshot, parseExport, supabase,
-  telegramCode, telegramLink,
+  telegramCode, telegramLink, apiTokens, createApiToken, revokeApiToken, type ApiToken,
 } from '@/store/backends'
 import { useStore } from '@/store/StoreProvider'
 import type { State } from '@/lib/types'
 import { keyOf } from '@/lib/dates'
 import { Header, Panel, Section, Segmented, SettingRow } from '@/components/kit'
-import { ConfirmSheet } from '@/components/edit'
+import { ConfirmSheet, FormSheet, TextField, fail } from '@/components/edit'
 
 const BOT = import.meta.env.VITE_TELEGRAM_BOT as string | undefined
+
+const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+
+async function copy(text: string, what: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    toast(`${what} copied.`)
+  } catch {
+    toast.error("Couldn't copy. Select it and copy by hand.")
+  }
+}
+
+// What to paste into an AI: where to connect, the token, and where the guide is.
+const aiPrompt = (token: string) => {
+  const o = location.origin
+  return [
+    'Connect to my Roadmap Log, a self-development app.',
+    `MCP server: ${o}/mcp with the header "Authorization: Bearer ${token}" (or the URL ${o}/mcp/${token} if you can't set headers).`,
+    `Or the REST API: ${o}/api/v1 with the same header. Docs: ${o}/api/v1/openapi.json.`,
+    `Read ${o}/llms.txt first, then build me a track for <topic>.`,
+  ].join('\n')
+}
+
+// AI access: personal access tokens for the API and MCP server. A token is shown once, right after it's made.
+function AiAccessRows() {
+  const qc = useQueryClient()
+  const tokens = useQuery({ queryKey: ['api-tokens'], queryFn: () => apiTokens(supabase!) })
+  const [naming, setNaming] = useState(false)
+  const [name, setName] = useState('')
+  const [made, setMade] = useState<string | null>(null)
+  const [revoking, setRevoking] = useState<ApiToken | null>(null)
+  return (
+    <>
+      <SettingRow title="AI access" sub="Let an AI (Claude, ChatGPT…) build tracks and lists for you. Each token has full access to your data.">
+        <Button onClick={() => { setName(''); setNaming(true) }}><KeyRound aria-hidden="true" />New token</Button>
+      </SettingRow>
+      {(tokens.data ?? []).map((t) => (
+        <SettingRow key={t.id} title={t.name} sub={`${t.prefix}… · made ${fmtDay(t.created_at)} · ${t.last_used_at ? `last used ${fmtDay(t.last_used_at)}` : 'never used'}`}>
+          <Button variant="outline" onClick={() => setRevoking(t)}><Trash2 aria-hidden="true" />Revoke</Button>
+        </SettingRow>
+      ))}
+      <FormSheet open={naming} onOpenChange={setNaming} title="New token" submit="Make token"
+        onSubmit={() => {
+          if (!name.trim()) return fail('Name it first, e.g. "Claude".')
+          void createApiToken(supabase!, name.trim()).then((t) => {
+            setMade(t)
+            void qc.invalidateQueries({ queryKey: ['api-tokens'] })
+          }).catch(() => toast.error("Couldn't make the token. Try again."))
+        }}>
+        <TextField label="Name" value={name} onChange={setName} placeholder="Claude" hint="Which AI or app uses it, so you know what to revoke." required full />
+      </FormSheet>
+      <FormSheet open={!!made} onOpenChange={(o) => !o && setMade(null)} title="Your token" submit="Done" onSubmit={() => {}}
+        description="Copy it now: it won't be shown again. Anyone with it can read and change your data.">
+        {made && <>
+          <div className="field span-all">
+            <Label htmlFor="new-token">Token</Label>
+            <div className="flex gap-2">
+              <Input id="new-token" readOnly value={made} className="font-mono" onFocus={(e) => e.target.select()} />
+              <Button type="button" variant="outline" onClick={() => void copy(made, 'Token')}><Copy aria-hidden="true" />Copy</Button>
+            </div>
+          </div>
+          <div className="field span-all">
+            <Label htmlFor="ai-prompt">Prompt for your AI</Label>
+            <Textarea id="ai-prompt" readOnly rows={6} value={aiPrompt(made)} onFocus={(e) => e.target.select()} />
+            <Button type="button" variant="outline" className="justify-self-start" onClick={() => void copy(aiPrompt(made), 'Prompt')}><Copy aria-hidden="true" />Copy prompt</Button>
+          </div>
+        </>}
+      </FormSheet>
+      <ConfirmSheet open={!!revoking} onOpenChange={(o) => !o && setRevoking(null)} confirm="Revoke"
+        title={`Revoke ${revoking?.name ?? 'this token'}?`} description="Anything using it stops working at once."
+        onConfirm={async () => {
+          if (!revoking) return
+          await revokeApiToken(supabase!, revoking.id)
+          await qc.invalidateQueries({ queryKey: ['api-tokens'] })
+          toast('Token revoked.')
+        }} />
+    </>
+  )
+}
 
 // Connect Telegram: a one-time code goes into the t.me link; the bot checks it and links this chat to the account.
 // While not linked, the link status is checked every few seconds so the page updates once the bot has done it.
@@ -52,8 +134,11 @@ function TelegramRows() {
   )
 }
 
+// Set by vite.config.ts at build time. A dev server started before that config change doesn't have it.
+const BUILD = typeof __BUILD__ !== 'undefined' ? __BUILD__ : { time: new Date().toISOString(), commit: 'dev' }
+
 const fmtBuild = () => {
-  const d = new Date(__BUILD__.time)
+  const d = new Date(BUILD.time)
   return `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
 }
 
@@ -142,6 +227,14 @@ export function Settings() {
         </Panel>
       </Section>
 
+      <Section title="AI access">
+        <Panel>
+          {mode === 'cloud' && supabase
+            ? <AiAccessRows />
+            : <SettingRow title="AI access" sub="Sign in first, then make a token so an AI can build tracks and lists for you." />}
+        </Panel>
+      </Section>
+
       {BOT && (
         <Section title="Telegram">
           <Panel>
@@ -190,7 +283,7 @@ export function Settings() {
 
       <Section title="About">
         <Panel>
-          <SettingRow title="Version" sub={`${fmtBuild()} · ${__BUILD__.commit}`}>
+          <SettingRow title="Version" sub={`${fmtBuild()} · ${BUILD.commit}`}>
             <Button variant="outline" size="icon" aria-label="Check for updates" title="Check for updates" disabled={checking}
               onClick={() => { setChecking(true); void checkForUpdates().finally(() => setChecking(false)) }}>
               <RefreshCw className={checking ? 'motion-safe:animate-spin' : undefined} aria-hidden="true" />

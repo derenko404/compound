@@ -15,11 +15,12 @@ function DialogClose(props: React.ComponentProps<typeof DialogPrimitive.Close>) 
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
-// Centered on wide screens, a bottom sheet on phones.
-function DialogContent({ className, children, ...props }: React.ComponentProps<typeof DialogPrimitive.Content>) {
+// Centered on wide screens, a bottom sheet on phones. overlayClassName: for a dialog opened over another one,
+// so its backdrop covers the first.
+function DialogContent({ className, overlayClassName, children, ...props }: React.ComponentProps<typeof DialogPrimitive.Content> & { overlayClassName?: string }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay data-slot="dialog-overlay" className="sheet-overlay fixed inset-0 bg-black/45" />
+      <DialogPrimitive.Overlay data-slot="dialog-overlay" className={cn("sheet-overlay fixed inset-0 bg-black/45", overlayClassName)} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(

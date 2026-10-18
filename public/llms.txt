@@ -1,0 +1,80 @@
+# Roadmap Log
+
+> A personal self-development app. People learn in **tracks** (skills with topics to tick, resources, projects), keep **lists** (books to read, films to watch…), plan **routines** for Today, save notes, ideas and links in a **notebook**, and keep **habits** on Wellbeing. You can read and build all of this for the user through the API or the MCP server.
+
+## Connect
+
+- MCP server (streamable HTTP): `/mcp` with the header `Authorization: Bearer <token>`. If you can't set headers, use `/mcp/<token>`.
+- REST API: `/api/v1` with the same header. Description: `/api/v1/openapi.json`.
+- The user makes the token in the app: Settings → AI access. It has full access to their data, so never show it back to them or put it anywhere else.
+
+Tools (MCP) and routes (REST) are the same operations:
+
+| Tool | REST |
+| --- | --- |
+| list_tracks, get_track | GET /tracks, GET /tracks/{id} |
+| create_track, update_track, delete_track | POST /tracks, PATCH /tracks/{id}, DELETE /tracks/{id} |
+| list_lists, get_list | GET /lists, GET /lists/{id} |
+| create_list, update_list, delete_list | POST /lists, PATCH /lists/{id}, DELETE /lists/{id} |
+| list_routines, add_routine, delete_routine | GET /routines, POST /routines, DELETE /routines/{id} |
+| list_notes, add_note | GET /notes, POST /notes |
+| list_habits | GET /habits |
+| get_focus, set_focus | GET /focus, PUT /focus |
+
+Before changing anything, look at what's there (`list_tracks`, `list_lists`) so you don't make a duplicate.
+
+## A good track
+
+A track is one area someone wants to get good at: "English", "System design", "Personal finance". It has no dates inside: what's next is always the first topic not yet ticked, so a slow week never puts anyone behind a schedule.
+
+- **name**: short, it shows on tags and buttons. One or two words.
+- **description** (About): 2–4 short paragraphs, separated by an empty line. What this area is, why it matters for this person, and how to approach it (the order, how much a week, what to skip).
+- **goals**: 2–4 outcomes in plain words, where the person will be at the end. "Explain a system design trade-off in an interview", not "Learn system design".
+- **months**: optional target duration. Leave it out unless the person gave one.
+- **skills**, in the order to learn them. 3–7 skills per track. Each skill:
+  - **name**: the skill, e.g. "Caching".
+  - **intro**: one or two sentences, what it is and why it matters.
+  - **topics**: 3–10 concrete topics, in order, each small enough to learn in one or two sessions: "Cache-aside vs write-through", "Cache invalidation and TTLs". Not "Learn caching".
+- **resources**: the best few, not everything. 5–15 per track. Each has a **title**, a **url** (only real, well-known URLs you are sure of; leave it out otherwise), a **kind** (book, course, video, article, podcast, tool, doc, practice, other), a one-line **note** on why it's worth it, and **free** if it costs nothing. Prefer free, current and widely recommended.
+- **projects**: 2–5 things to build or do that use the skills, from small to big. Each has a **name**, a **goal**, a few **steps**, **done** (how to know it's finished), **trains** (the skill names it practises) and a **size**: small (a few hours to a few days), medium (one to a few weeks) or big (a month or more). Codes like EN1, EN2 are given automatically.
+
+Write in plain, friendly English. Short sentences. Never use semicolons.
+
+## A good list
+
+A list is a set of things to get through: "100 films everyone should watch", "50 sci-fi books".
+
+- **name**: short, may start with an emoji: "🎬 Films".
+- **title**: the full title: "100 films everyone should watch".
+- **detail_label**: what the small line under each item is: "Year", "Author", "Artist", "Country".
+- **items**: each with a **title** and a **detail** ("1972"). Real, well-known items only, best first or in a sensible order.
+
+## Other things you can add
+
+- **Routines** (Today): `add_routine` with a title, optional details, a track id, and when: `"daily"`, `{ "kind": "weekly", "days": ["mon", "thu"] }`, `{ "kind": "monthly", "day": 1 }` (or -1 for the last day) or `{ "kind": "once", "date": "YYYY-MM-DD" }`. They count for the streak unless `counts_for_streak` is false.
+- **Notes**: `add_note` with text, an optional url (makes it a link) and tags (the tag `idea` makes it an idea).
+- **Focus**: one learning track is the focus. Today shows its next topic, its current project and its next resource. `set_focus` changes it.
+
+## Updating
+
+`update_track` and `update_list` change only the fields you send. A list you send (skills, resources, projects, goals, items) replaces the old one. Get the track or list first and send items back with their ids, or the user's ticks on them are lost.
+
+## Example: create_track
+
+```json
+{
+  "name": "English",
+  "description": "Clear spoken English for work: meetings, calls and presentations.\n\nAim to be understood the first time, not for a perfect accent. Twenty minutes a day beats two hours on Sunday.",
+  "goals": ["Lead a meeting in English without notes", "People rarely ask you to repeat yourself"],
+  "skills": [
+    { "name": "Pronunciation", "intro": "The sounds and rhythm that make you easy to understand.", "topics": ["The sounds that differ from your language", "Word stress", "Sentence rhythm and intonation"] },
+    { "name": "Speaking at work", "intro": "Phrases and habits for meetings and calls.", "topics": ["Opening and closing a meeting", "Disagreeing politely", "Asking someone to repeat or slow down"] }
+  ],
+  "resources": [
+    { "title": "YouGlish", "url": "https://youglish.com", "kind": "tool", "note": "Hear any word said by native speakers in real videos.", "free": true }
+  ],
+  "projects": [
+    { "name": "Record yourself before and after", "goal": "Record the same 2-minute text today and again in 3 months.", "steps": ["Pick a 2-minute text", "Record it today", "Record it again in 3 months and compare"], "done": "Two recordings, and you can hear the difference.", "trains": ["Pronunciation"], "size": "small" }
+  ]
+}
+```

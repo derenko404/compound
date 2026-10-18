@@ -42,7 +42,10 @@ function RoutineSheet({ routine, open, onOpenChange }: { routine: Routine; open:
 
   return (
     <FormSheet open={open} onOpenChange={onOpenChange} title={isNew ? 'New task' : 'Edit task'} submit={isNew ? 'Add task' : 'Save'}
-      onDelete={isNew ? undefined : () => { dispatch({ type: 'deleteRoutine', id: r.id }); toast('Deleted.') }}
+      remove={isNew ? undefined : {
+        label: 'Delete task', title: `Delete ${routine.title}?`,
+        onConfirm: () => { dispatch({ type: 'deleteRoutine', id: r.id }); toast('Deleted.') },
+      }}
       onSubmit={() => {
         if (!r.title.trim()) return fail('Give the task a name first.')
         if (kind === 'weekly' && !days.length) return fail('Pick at least one day.')

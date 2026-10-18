@@ -17,8 +17,10 @@ function ListSheet({ list, open, onOpenChange, onSaved, onDeleted }: { list: Lis
   const isNew = !list.id
   return (
     <FormSheet open={open} onOpenChange={onOpenChange} title={isNew ? 'New list' : `Edit ${list.name}`} submit={isNew ? 'Create list' : 'Save'}
-      onDelete={isNew ? undefined : () => { dispatch({ type: 'deleteList', id: list.id }); toast('List deleted.'); onDeleted?.() }}
-      confirmDelete={{ title: `Delete ${list.name}?`, description: "Its items, ticks and notes go with it. This can't be undone." }}
+      remove={isNew ? undefined : {
+        label: 'Delete list', title: `Delete ${list.name}?`, description: "Its items, ticks and notes go with it. This can't be undone.",
+        onConfirm: () => { dispatch({ type: 'deleteList', id: list.id }); toast('List deleted.'); onDeleted?.() },
+      }}
       onSubmit={() => {
         if (!l.name.trim()) return fail('Give the list a name first.')
         const id = l.id || freshId(l.name, state.lists.map((x) => x.id))
@@ -40,7 +42,10 @@ function ItemSheet({ list, item, open, onOpenChange }: { list: ListDef; item: Li
   const isNew = !list.items.some((x) => x.id === item.id)
   return (
     <FormSheet open={open} onOpenChange={onOpenChange} title={isNew ? `Add to ${list.name}` : 'Edit item'} submit={isNew ? 'Add' : 'Save'}
-      onDelete={isNew ? undefined : () => dispatch({ type: 'putList', list: { ...list, items: list.items.filter((x) => x.id !== item.id) } })}
+      remove={isNew ? undefined : {
+        label: 'Delete item', title: `Delete ${item.title}?`, description: "Its tick and note go with it. This can't be undone.",
+        onConfirm: () => dispatch({ type: 'putList', list: { ...list, items: list.items.filter((x) => x.id !== item.id) } }),
+      }}
       onSubmit={() => {
         if (!it.title.trim()) return fail('Give it a title first.')
         const next = { ...it, title: it.title.trim(), sub: it.sub?.trim() || undefined }

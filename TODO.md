@@ -8,26 +8,26 @@ Decisions: tokens have **full access** (read, write, delete) to their owner's da
 
 ### 1. Personal access tokens
 
-- [ ] Migration: `api_tokens` (id, user_id, name, token_hash, created_at, last_used_at), RLS "own rows". Store only a hash (SHA-256); the token is shown once.
-- [ ] Settings → **AI access**: create a token (name it, copy once), list tokens with last used, revoke.
-- [ ] Copyable prompt next to the token: "Use the Roadmap Log API at … with this token to build me a track for <topic>…".
+- [x] Migration: `api_tokens` (id, user_id, name, token_hash, created_at, last_used_at), RLS "own rows". Store only a hash (SHA-256); the token is shown once.
+- [x] Settings → **AI access**: create a token (name it, copy once), list tokens with last used, revoke.
+- [x] Copyable prompt next to the token: "Use the Roadmap Log API at … with this token to build me a track for <topic>…".
 
 ### 2. API in the Worker
 
-- [ ] Route `/api/*` and `/mcp` through the Worker (`run_worker_first` in `wrangler.jsonc`).
-- [ ] Auth: `Authorization: Bearer <token>` → hash → `api_tokens` → user_id; update `last_used_at`. Every query scoped to that user_id (the Worker uses the secret key, which bypasses RLS).
-- [ ] REST `/api/v1`: tracks (list, get, create with full content, update, delete), routines, notes, lists, habits, settings/program. Validate input against the `types.ts` shapes; assign ids and project codes (`nextProjectCode`) server-side.
-- [ ] OpenAPI description at `/api/v1/openapi.json`.
+- [x] Route `/api/*` and `/mcp` through the Worker (`run_worker_first` in `wrangler.jsonc`).
+- [x] Auth: `Authorization: Bearer <token>` → hash → `api_tokens` → user_id; update `last_used_at`. Every query scoped to that user_id (the Worker uses the secret key, which bypasses RLS).
+- [x] REST `/api/v1`: tracks (list, get, create with full content, update, delete), routines, notes, lists, habits, settings/program. Validate input against the `types.ts` shapes; assign ids and project codes (`nextProjectCode`) server-side.
+- [x] OpenAPI description at `/api/v1/openapi.json`.
 
 ### 3. MCP server
 
-- [ ] Remote MCP (streamable HTTP) at `/mcp` on the same handlers. Tools: `list_tracks`, `get_track`, `create_track`, `update_track`, `delete_track`, `list_lists`, `create_list`, `update_list`, `add_routine`, `add_note`, `add_find`, …
-- [ ] Test with Claude (custom connector), ChatGPT connectors, Gemini CLI.
+- [x] Remote MCP (streamable HTTP) at `/mcp` on the same handlers. Tools: `list_tracks`, `get_track`, `create_track`, `update_track`, `delete_track`, `list_lists`, `create_list`, `update_list`, `add_routine`, `add_note`, `add_find`, …
+- [ ] Test with Claude (custom connector), ChatGPT connectors, Gemini CLI. ChatGPT and claude.ai connectors may want OAuth instead of a pasted token.
 
 ### 4. Instructions for AIs
 
-- [ ] `/llms.txt`: what a track is, the data shape, what a good track looks like (goals → skills with topics in order → resources by type → projects), project codes, limits.
-- [ ] Link it from the Settings prompt and the OpenAPI description.
+- [x] `/llms.txt`: what a track is, the data shape, what a good track looks like (goals → skills with topics in order → resources by type → projects), project codes, limits.
+- [x] Link it from the Settings prompt and the OpenAPI description.
 
 ## Share a track by link
 
@@ -44,7 +44,7 @@ Goal: send a track to a friend; they open the link, preview it, and add their ow
 Goal: lists work like tracks, as portable content. Send a list to a friend, and let any AI create a list the same way it creates a track ("50 sci-fi films everyone should see"), through AI access above.
 
 - [ ] Share: same flow as tracks (share button, snapshot of the list's name, title, label and items only, never ticks or notes; preview page with **Add to my lists**). Reuse the `shared_tracks` table with a `kind` column, or one `shared` table for both.
-- [ ] Create with any AI, same as tracks: lists in the API and MCP (`list_lists`, `create_list` with items, `update_list`), and a list example in `/llms.txt`. No AI inside the app.
+- [x] Create with any AI, same as tracks: lists in the API and MCP (`list_lists`, `create_list` with items, `update_list`), and a list example in `/llms.txt`. No AI inside the app.
 
 ## Push reminders
 
@@ -66,7 +66,3 @@ Decisions: from the reminder time, every 2 hours until 22:00, only while items a
 ## Later
 
 - [ ] Update CLAUDE.md and README once the rework is done.
-
-# Modal
-
-- Remove delete button from edit modals and replace with separate delete buttons + confirmation

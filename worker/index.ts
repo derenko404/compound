@@ -1,8 +1,9 @@
-// Cloudflare Worker: serves the app from dist/ and takes links from the Telegram bot at /tg.
-// Only /tg reaches this code (run_worker_first in wrangler.jsonc); everything else goes straight to assets.
+// Cloudflare Worker: serves the app from dist/, takes links from the Telegram bot at /tg, and serves AI access
+// (/api/v1 and /mcp). Only those paths reach this code (run_worker_first in wrangler.jsonc); the rest is static assets.
 import { createClient } from '@supabase/supabase-js'
 import { cleanTag, findUrls, kindFromUrl } from '../src/lib/finds'
 import type { LinkKind, Chapter, ChapterId } from '../src/lib/types'
+import { handleApi, handleMcp } from './routes'
 
 interface Env {
   ASSETS: { fetch(req: Request): Promise<Response> }
@@ -66,7 +67,10 @@ const dbFor = (env: Env) => createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SEC
 
 export default {
   async fetch(req: Request, env: Env, ctx: Ctx): Promise<Response> {
-    const { pathname } = new URL(req.url)
+    const { pathname, origin } = new URL(req.url)
+    // AI access: the REST API and the MCP server, both with a token from Settings → AI access.
+    if (pathname.startsWith('/api/')) return handleApi(req, dbFor(env), origin)
+    if (pathname === '/mcp' || pathname.startsWith('/mcp/')) return handleMcp(req, dbFor(env), origin)
     if (pathname !== '/tg') return env.ASSETS.fetch(req)
     if (req.method !== 'POST' || req.headers.get('x-telegram-bot-api-secret-token') !== env.TELEGRAM_WEBHOOK_SECRET)
       return new Response('Forbidden', { status: 403 })

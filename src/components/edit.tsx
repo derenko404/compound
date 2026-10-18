@@ -3,6 +3,9 @@ import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowDown, ArrowUp, CornerDownLeft, Pencil, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { Dialog as DialogPrimitive } from 'radix-ui'
+
+const DialogPrimitiveTitle = DialogPrimitive.Title
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -12,18 +15,19 @@ import { PALETTE, WEEKDAYS_SHORT, chapters, uid } from '@/lib/content'
 import type { ChapterId, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { toast } from '@/fx/fx'
-import { Chip, Chips, ConfirmButton, Dot } from './kit'
+import { Chip, Chips, Dot } from './kit'
 
 /* ---------- Sheet with a form ---------- */
 
-// "Delete X?" with what it removes. Opens as a small dialog; Delete is red and on the right.
+// "Delete X?" with what it removes: a small alert over whatever is open (a form included), Cancel and a red Delete
+// side by side. No header line or close button: Cancel closes it.
 export function ConfirmSheet({ open, onOpenChange, title, description, confirm = 'Delete', onConfirm }: {
   open: boolean; onOpenChange: (o: boolean) => void; title: string; description: string; confirm?: string; onConfirm: () => void
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="confirm-sheet">
-        <DialogTitle>{title}</DialogTitle>
+      <DialogContent className="confirm-sheet" overlayClassName="confirm-overlay">
+        <DialogPrimitiveTitle className="confirm-title">{title}</DialogPrimitiveTitle>
         <DialogDescription>{description}</DialogDescription>
         <div className="actions confirm-actions">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -34,8 +38,12 @@ export function ConfirmSheet({ open, onOpenChange, title, description, confirm =
   )
 }
 
-// confirmDelete: for things that are hard to lose (a note, a track), Delete asks in a dialog instead of a second tap.
-export function FormSheet({ open, onOpenChange, title, description, children, onSubmit, submit = 'Save', onDelete, confirmDelete, wide }: {
+// remove: deleting the thing being edited, always confirmed in a dialog. label names what goes ("Delete task"); title
+// asks ("Delete Weekly review?"). Desktop: the footer's far left, away from Cancel and Save. Phones (no footer): the
+// form's last row, full width.
+export interface SheetRemove { label: string; title: string; description?: string; onConfirm: () => void }
+
+export function FormSheet({ open, onOpenChange, title, description, children, onSubmit, submit = 'Save', remove, wide }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
@@ -43,15 +51,11 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
   children: ReactNode
   onSubmit: () => boolean | void // return false to keep the sheet open
   submit?: string
-  onDelete?: () => void
-  confirmDelete?: { title: string; description: string }
+  remove?: SheetRemove
   wide?: boolean
 }) {
   const formId = useId()
   const [asking, setAsking] = useState(false)
-  const del = (className: string, armed: string) => confirmDelete
-    ? <Button type="button" variant="outline" className={`${className} text-destructive`} onClick={() => setAsking(true)}>Delete</Button>
-    : <ConfirmButton className={className} label="Delete" armed={armed} onConfirm={() => { onDelete!(); onOpenChange(false) }} />
   const cancel = <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,16 +72,16 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
           }}
         >
           {children}
-          {/* Delete: a full-width row at the end of the form on phones, the footer's far left on desktop. */}
-          {onDelete && del('sheet-delete sheet-delete-row', 'Tap again to delete')}
+          {remove && <Button type="button" variant="outline" className="sheet-delete sheet-delete-row" onClick={() => setAsking(true)}>{remove.label}</Button>}
           <div className="actions sheet-foot">
-            {onDelete && del('sheet-delete', 'Click again to delete')}
+            {remove && <Button type="button" variant="outline" className="sheet-delete" onClick={() => setAsking(true)}>{remove.label}</Button>}
             {cancel}
             <Button type="submit">{submit}</Button>
           </div>
         </form>
-        {confirmDelete && onDelete && (
-          <ConfirmSheet open={asking} onOpenChange={setAsking} {...confirmDelete} onConfirm={() => { onDelete(); onOpenChange(false) }} />
+        {remove && (
+          <ConfirmSheet open={asking} onOpenChange={setAsking} title={remove.title} description={remove.description ?? "This can't be undone."}
+            onConfirm={() => { remove.onConfirm(); onOpenChange(false) }} />
         )}
       </DialogContent>
     </Dialog>

@@ -79,7 +79,10 @@ export function ProjectSheet({ chapter, project, ...sheet }: SheetProps & { chap
   const set = (patch: Partial<Project>) => setP({ ...p, ...patch })
   return (
     <FormSheet {...sheet} wide title={isNew ? 'New project' : `Edit ${project.code}`}
-      onDelete={isNew ? undefined : () => save({ ...chapter, projects: chapter.projects.filter((x) => x.id !== p.id) })}
+      remove={isNew ? undefined : {
+        label: 'Delete project', title: `Delete ${project.code} ${project.name}?`,
+        onConfirm: () => save({ ...chapter, projects: chapter.projects.filter((x) => x.id !== p.id) }),
+      }}
       onSubmit={() => {
         if (!p.name.trim()) return fail('Give the project a name first.')
         // The code is made once, from the track's name; it never changes, so text that mentions it keeps linking.
@@ -108,7 +111,10 @@ export function ResourceSheet({ chapter, resource, ...sheet }: SheetProps & { ch
   const set = (patch: Partial<Resource>) => setR({ ...r, ...patch })
   return (
     <FormSheet {...sheet} title={isNew ? 'New resource' : 'Edit resource'}
-      onDelete={isNew ? undefined : () => save({ ...chapter, resources: chapter.resources.filter((x) => x.id !== r.id) })}
+      remove={isNew ? undefined : {
+        label: 'Delete resource', title: `Delete ${resource.title}?`,
+        onConfirm: () => save({ ...chapter, resources: chapter.resources.filter((x) => x.id !== r.id) }),
+      }}
       onSubmit={() => {
         if (!r.title.trim()) return fail('Give the resource a title first.')
         const next = { ...r, title: r.title.trim(), url: r.url?.trim() || undefined, note: r.note?.trim() || undefined }
@@ -139,7 +145,10 @@ export function SkillSheet({ chapter, skill, ...sheet }: SheetProps & { chapter:
   const noun = 'skill'
   return (
     <FormSheet {...sheet} wide title={isNew ? `New ${noun}` : `Edit ${noun}`}
-      onDelete={isNew ? undefined : () => save({ ...chapter, skills: chapter.skills.filter((x) => x.id !== skill.id) })}
+      remove={isNew ? undefined : {
+        label: 'Delete skill', title: `Delete ${skill.name}?`, description: "Its topics and their ticks go with it. This can't be undone.",
+        onConfirm: () => save({ ...chapter, skills: chapter.skills.filter((x) => x.id !== skill.id) }),
+      }}
       onSubmit={() => {
         if (!name.trim()) return fail(`Give the ${noun} a name first.`)
         const next: Skill = { ...skill, name: name.trim(), intro: intro.trim() || undefined, topics: linesToItems(lines, skill.topics) }

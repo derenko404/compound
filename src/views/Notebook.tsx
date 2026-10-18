@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ExternalLink, Lightbulb } from 'lucide-react'
 import { chapterName, chapterOf, chapters as allChapters } from '@/lib/content'
 import { addDays, fmtLong, fmtStamp, keyOf, parseKey } from '@/lib/dates'
@@ -47,8 +47,10 @@ export function NoteSheet({ open, onOpenChange, note, chapter }: { open: boolean
   const url = findUrls(n.body)[0] ?? null
   return (
     <FormSheet open={open} onOpenChange={onOpenChange} title="Notebook" submit="Save"
-      onDelete={note ? () => { dispatch({ type: 'deleteNote', id: n.id }); toast('Deleted.') } : undefined}
-      confirmDelete={{ title: 'Delete this entry?', description: "It's removed from your notebook for good." }}
+      remove={note ? {
+        label: 'Delete entry', title: 'Delete this entry?', description: "It's removed from your notebook for good.",
+        onConfirm: () => { dispatch({ type: 'deleteNote', id: n.id }); toast('Deleted.') },
+      } : undefined}
       onSubmit={() => {
         if (!n.body.trim()) return fail('Write something first.')
         const isLink = !!url
@@ -80,11 +82,9 @@ export function NoteSheet({ open, onOpenChange, note, chapter }: { open: boolean
 export function NoteCard({ n, onOpen, onTag, showTrack = true }: { n: Note; onOpen: () => void; onTag?: (t: string) => void; showTrack?: boolean }) {
   const { state } = useStore()
   const yt = n.url ? youtubeId(n.url) : null
-  const open = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('a, button')) onOpen() }
-  const key = (e: KeyboardEvent) => { if (e.key === 'Enter' && e.target === e.currentTarget) onOpen() }
   return (
-    <Entry ch={n.chapter}>
-      <div className="nb-card" role="button" tabIndex={0} aria-label={`Edit ${n.body.slice(0, 40) || (n.url ? hostOf(n.url) : 'entry')}`} onClick={open} onKeyDown={key}>
+    <Entry ch={n.chapter} onEdit={onOpen} editLabel={`Edit ${n.body.slice(0, 40) || (n.url ? hostOf(n.url) : 'entry')}`}>
+      <div className="nb-card">
         {n.type === 'link' && n.url && (
           <div className="nb-link">
             {yt && <img className="nb-thumb" src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" loading="lazy" />}

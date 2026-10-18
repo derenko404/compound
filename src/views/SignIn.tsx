@@ -56,34 +56,36 @@ export function SignIn() {
     <div className="mx-auto max-w-md py-16">
       <div className="brand mb-6"><span className="brand-mark" aria-hidden="true" />Roadmap Log</div>
       <h1 className="day-date mb-3">{mode === 'signin' ? 'Sign in to sync' : 'Create your account'}</h1>
-      <p className="lead mb-6">Your progress, notes and ideas are saved to your account and follow you to every device.</p>
-      <Button variant="outline" className="mb-4 w-full bg-card" onClick={google}>
-        <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
-          <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.7z" />
-          <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z" />
-          <path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8l4-3.1z" />
-          <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.8 3.6-4.9 6.7-4.9z" />
-        </svg>
-        Continue with Google
-      </Button>
-      <div className="mb-4 flex items-center gap-3 text-small text-muted-foreground"><span className="h-px flex-1 bg-border" />or with a password<span className="h-px flex-1 bg-border" /></div>
-      <form className="panel grid gap-3" onSubmit={submit}>
-        <div className="field">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" autoComplete="email" required className="bg-background" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="field">
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" required minLength={6} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-            className="bg-background" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
-        {error && <p className="text-small text-destructive" role="alert">{error}</p>}
-        {info && <p className="text-small text-muted-foreground" role="status">{info}</p>}
-        <Button type="submit" disabled={busy}>{busy ? 'One moment…' : mode === 'signin' ? 'Sign in' : 'Create account'}</Button>
-        <Button type="button" variant="link" className="px-0" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setInfo('') }}>
-          {mode === 'signin' ? 'No account yet? Create one' : 'Have an account? Sign in'}
+      <p className="lead">Your progress, notes and ideas are saved to your account and follow you to every device.</p>
+      <div className="mt-6 grid gap-4">
+        <form className="panel grid gap-3" onSubmit={submit}>
+          <div className="field">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" autoComplete="email" required className="bg-background" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="field">
+            <Label htmlFor="password">Password</Label>
+            <Input id="password" type="password" required minLength={6} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              className="bg-background" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          {error && <p className="text-small text-destructive" role="alert">{error}</p>}
+          {info && <p className="text-small text-muted-foreground" role="status">{info}</p>}
+          <Button type="submit" disabled={busy}>{busy ? 'One moment…' : mode === 'signin' ? 'Sign in' : 'Create account'}</Button>
+          <Button type="button" variant="link" className="px-0" onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setInfo('') }}>
+            {mode === 'signin' ? 'No account yet? Create one' : 'Have an account? Sign in'}
+          </Button>
+        </form>
+        <div className="flex items-center gap-3 text-small text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div>
+        <Button variant="outline" className="w-full bg-card" onClick={google}>
+          <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
+            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.7z" />
+            <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z" />
+            <path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8l4-3.1z" />
+            <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.8 3.6-4.9 6.7-4.9z" />
+          </svg>
+          Continue with Google
         </Button>
-      </form>
+      </div>
       <Button variant="link" className="mt-4 px-0" onClick={useLocal}>Use without an account, on this device only</Button>
     </div>
   )

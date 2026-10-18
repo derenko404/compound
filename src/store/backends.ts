@@ -258,6 +258,27 @@ export async function disconnectTelegram(db: SupabaseClient) {
   check(await db.from('telegram_links').delete().not('chat_id', 'is', null))
 }
 
+/* ---------- AI access: personal access tokens ---------- */
+
+export interface ApiToken { id: string; name: string; prefix: string; created_at: string; last_used_at: string | null }
+
+export async function apiTokens(db: SupabaseClient): Promise<ApiToken[]> {
+  return (await rows(db.from('api_tokens').select('id, name, prefix, created_at, last_used_at').order('created_at'))) ?? []
+}
+
+// Makes a token, stores only its SHA-256 hash, and returns the token itself: it can't be shown again.
+export async function createApiToken(db: SupabaseClient, name: string) {
+  const bytes = crypto.getRandomValues(new Uint8Array(32))
+  const token = 'rl_' + btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))].map((b) => b.toString(16).padStart(2, '0')).join('')
+  check(await db.from('api_tokens').insert({ name, token_hash: hash, prefix: token.slice(0, 10) }))
+  return token
+}
+
+export async function revokeApiToken(db: SupabaseClient, id: string) {
+  check(await db.from('api_tokens').delete().eq('id', id))
+}
+
 // Copies everything saved on this device into the signed-in account.
 export async function importLocal(db: SupabaseClient, s: State) {
   const be = cloudBackend(db)

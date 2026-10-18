@@ -138,7 +138,7 @@ export interface Note {
   context: string // written by the AI only (the bot): a link's page title and summary, and the like; read-only in the app
   tags: string[]
   chapter: ChapterId | null
-  source: 'app' | 'telegram'
+  source: 'app' | 'telegram' | 'api'
   created_at: string
 }
 
