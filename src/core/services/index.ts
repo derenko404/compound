@@ -7,6 +7,9 @@ import { RoutineService } from './routine.service'
 import { TopicService } from './topic.service'
 
 export { ApiTokenService } from './api-token.service'
+export { BackupService } from './backup.service'
+export { ShareService } from './share.service'
+export { TelegramConnectService } from './telegram-connect.service'
 export { StateService } from './state.service'
 export type * from './inputs'
 

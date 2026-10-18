@@ -1,6 +1,10 @@
 import type { ApiTokenRepositoryPort } from '../ports/api-tokens'
+import { random } from './random'
 
-/** Who a personal access token belongs to. A used token is marked so Settings can show when it was last used. */
+/**
+ * Personal access tokens for AI access: who a token belongs to (worker), and listing, making and revoking them
+ * (Settings). A used token is marked so Settings can show when it was last used.
+ */
 export class ApiTokenService {
   private readonly tokens: ApiTokenRepositoryPort
 
@@ -14,6 +18,21 @@ export class ApiTokenService {
     if (!found) return null
     await this.tokens.touch(found.id)
     return found.userId
+  }
+
+  list() {
+    return this.tokens.list()
+  }
+
+  // Makes a token, stores only its hash, and returns the token itself: it can't be shown again.
+  async create(name: string) {
+    const token = 'rl_' + random.base64url(32)
+    await this.tokens.create({ name, hash: await ApiTokenService.hash(token), prefix: token.slice(0, 10) })
+    return token
+  }
+
+  revoke(id: string) {
+    return this.tokens.revoke(id)
   }
 
   static async hash(token: string) {
