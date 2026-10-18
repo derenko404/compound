@@ -1,12 +1,13 @@
 // Renders topic content (skills, resources, projects) with cross links.
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { BookOpen, ChevronDown, ExternalLink, FileText, GraduationCap, Headphones, Hammer, Newspaper, PlayCircle, Wrench, Link2 } from 'lucide-react'
 import { RESOURCE_KINDS, topicOf, sizeLabel } from '@/lib/content'
 import { hostOf } from '@/lib/finds'
 import type { Topic, TopicId, Project, ProjectStatus, Resource, ResourceKind, Skill } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
-import { burst } from '@/fx/fx'
+import { burst, celebrate } from '@/fx/fx'
+import { playTick, playUntick } from '@/fx/sound'
 import { Check, Fold, InnerLink, Row, cvar } from '@/components/kit'
 import { RemoveButton } from '@/components/edit'
 
@@ -162,6 +163,8 @@ export function SkillFolds({ ch, skills, current, itemsLabel = 'Steps, in order'
 }
 
 const LABEL: Record<ProjectStatus, string> = { todo: 'Not started', doing: 'In progress', done: 'Done' }
+// The badge in a project's header: grey, amber while in progress, green when done.
+const STATUS_TONE: Record<ProjectStatus, string> = { todo: '--muted-foreground', doing: '--warn', done: '--good' }
 const NEXT: Record<ProjectStatus, ProjectStatus> = { todo: 'doing', doing: 'done', done: 'todo' }
 
 // readOnly: no status button (someone else's shared topic); ch can be left out and the colour comes from around it.
@@ -172,6 +175,15 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
   const [open, setOpen] = useState(hash === p.code)
   const ref = useRef<HTMLDivElement>(null)
   const hasBody = !!(p.goal || p.steps?.length || p.done || p.trains?.length || p.size)
+  const setStatus = (nx: ProjectStatus) => {
+    if (nx === sv) return
+    dispatch({ type: 'project', projectId: p.id, status: nx })
+    if (nx === 'done') celebrate()
+    else if (nx === 'doing') {
+      playTick(0.5)
+      if (ref.current) burst(ref.current, 14)
+    } else playUntick()
+  }
 
   // Arriving from a cross link (#T1) opens and reveals the card.
   useEffect(() => {
@@ -189,13 +201,13 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
           {p.name}
           {hasBody && <ChevronDown className="chev" style={open ? { transform: 'rotate(180deg)' } : undefined} aria-hidden="true" />}
         </button>
-        {readOnly ? null : <button className={`status ${sv}`} aria-label={`${p.name}: ${LABEL[sv]}. Change status`} onClick={(e) => {
-              const nx = NEXT[sv]
-              dispatch({ type: 'project', projectId: p.id, status: nx })
-              if (nx === 'done') {
-                burst(e.currentTarget, 26)
-              }
-            }}>{LABEL[sv]}</button>}
+        {readOnly ? null : (
+          // The status pill is the switch: each tap moves to the next state.
+          <button type="button" className="chip tint status-pill" style={{ '--c': `var(${STATUS_TONE[sv]})` } as CSSProperties}
+            aria-label={`${p.name}: ${LABEL[sv]}. Change status`} onClick={() => setStatus(NEXT[sv])}>
+            {LABEL[sv]}
+          </button>
+        )}
       </div>
       {open && hasBody && (
         <div className="project-body">

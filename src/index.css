@@ -305,11 +305,13 @@
   width: var(--accent-bar); border-radius: 0 var(--radius-xs) var(--radius-xs) 0; background: var(--c);
 }
 
-/* Pills: static chips, filter chips (buttons), status buttons. */
-.chip, .chbtn, .status { display: inline-flex; align-items: center; gap: var(--space-2); border: 1px solid var(--border); border-radius: 999px; background: var(--card); white-space: nowrap; }
+/* Pills: static chips (Badge) and filter chips (buttons). */
+.chip, .chbtn { display: inline-flex; align-items: center; gap: var(--space-2); border: 1px solid var(--border); border-radius: 999px; background: var(--card); white-space: nowrap; }
 .chip { font-size: var(--text-small); padding: var(--space-half) var(--space-3); }
 .icon-badge { padding: var(--space-1); }
 .icon-badge svg { width: var(--icon-sm); height: var(--icon-sm); }
+/* A project's status pill: a tinted chip; each tap moves to the next status. */
+.status-pill { cursor: pointer; font-weight: var(--weight-bold); }
 .chip.tint { color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); border-color: color-mix(in srgb, var(--c) 25%, transparent); }
 .chbtn { font-size: var(--text-small); font-weight: var(--weight-bold); padding: var(--space-2) var(--space-3); cursor: pointer; }
 .chbtn[aria-pressed="true"] { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
@@ -806,9 +808,6 @@ button.nb-tag:hover { background: var(--accent); }
 .followups .icon-btn { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 .followup-date { font-size: var(--text-caption); color: var(--muted-foreground); }
 
-.status { padding: var(--space-half) var(--space-3); font-size: var(--text-caption); font-weight: var(--weight-bold); cursor: pointer; }
-.status.doing { border-color: var(--warn); color: var(--warn); }
-.status.done { border-color: var(--good); color: var(--card); background: var(--good); }
 
 /* =====================================================================
    Plan
@@ -858,7 +857,7 @@ a.res-title:hover .res-ext { color: var(--c); }
 
 .project { border-top: 1px solid var(--border); position: relative; scroll-margin-top: 140px; }
 .project:first-child { border-top: 0; }
-.project-head { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); }
+.project-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); }
 .project-code { font-weight: var(--weight-black); font-family: var(--font-display); color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); border-radius: var(--radius-sm); padding: var(--space-half) var(--space-2); cursor: pointer; }
 .project-name { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); text-align: left; font-weight: var(--weight-bold); cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
 .project-body { padding: 0 var(--space-4) var(--space-4); display: grid; gap: var(--space-3); }
@@ -1013,13 +1012,13 @@ a.res-title:hover .res-ext { color: var(--c); }
   .row.is-openable { grid-template-columns: auto 1fr auto; }
   .row.is-openable.no-check { grid-template-columns: 1fr auto; }
   .row.is-openable .row-tag { grid-column: auto; }
-  .project-head { grid-template-columns: auto 1fr; }
-  .project-head .status { grid-column: 2; justify-self: start; }
+  /* Phones: the status pill stays on the header row; a long name wraps instead. */
+  .project-head { gap: var(--space-2); padding-inline: var(--space-3); }
 }
 
 /* Hover states, only where a real pointer hovers (touch screens would keep them stuck on). */
 @media (hover: hover) {
-  .chbtn:not([aria-pressed="true"]):hover, .status:hover, .qbtn:not([aria-pressed="true"]):hover { border-color: color-mix(in srgb, var(--foreground) 35%, var(--border)); }
+  .chbtn:not([aria-pressed="true"]):hover, .qbtn:not([aria-pressed="true"]):hover { border-color: color-mix(in srgb, var(--foreground) 35%, var(--border)); }
   .chbtn[aria-pressed="true"]:hover { opacity: 0.9; }
   a.chip:hover { border-color: color-mix(in srgb, var(--c, var(--foreground)) 50%, var(--border)); }
   .check:not(.on):hover { background: color-mix(in srgb, var(--c) 14%, transparent); }
