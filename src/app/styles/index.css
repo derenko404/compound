@@ -31,7 +31,7 @@
   --ring: #2b55e0;
   --good: #1f8a5b;
   --warn: #b26a00;
-  /* Topic palette; each topic picks a key (PALETTE in src/lib/content.ts). */
+  /* Topic palette; each topic picks a key (PALETTE in core/domain/content.ts). */
   --p-blue: #2b55e0;
   --p-orange: #c4501a;
   --p-purple: #7a3fd6;
