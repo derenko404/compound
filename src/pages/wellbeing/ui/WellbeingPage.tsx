@@ -6,13 +6,13 @@ import { nextPosition, uid } from '@/core/domain/content'
 import { addDays, dayDiff, fmtShort, keyOf, parseKey } from '@/shared/lib/dates'
 import {
   DONE, HABIT_DEFAULTS, SLIP, chain, cleanStats, dueOn, gymMakeUp, gymStats, habitsOf, smokingStats, started, valueOn, waterStats,
-} from '@/entities/habit/model/habits'
+} from '@/entities/habit'
 import type { Habit, HabitType, State } from '@/core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { Chip, CountRow, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, SortList, Section, Stats } from '@/shared/ui/kit'
 import { FormSheet, RemoveButton, TextField, WeekdaysField, fail, moveTo, useSheet } from '@/shared/ui/form'
 import { usePageBar } from '@/shared/ui/page-bar'
-import { HABIT_ORDER, HABIT_UI } from '@/entities/habit/ui/habit-ui'
+import { HABIT_ORDER, HABIT_UI } from '@/entities/habit'
 import { t } from '@/shared/i18n'
 
 const W = t.wellbeing

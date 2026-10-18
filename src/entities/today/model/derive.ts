@@ -1,6 +1,6 @@
 // Pure functions that turn stored state into what the views show.
 import type { Topic, TopicId, Habit, Routine, State, When } from '@/core/domain/types'
-import { habitRows } from '@/entities/habit/model/habits'
+import { habitRows } from '@/entities/habit/@x/today'
 import { topicOf, topics, matchesWhen, program } from '@/core/domain/content'
 import { addDays, dayDiff, fmtShort, keyOf, parseKey } from '@/shared/lib/dates'
 import { currentLocale, t } from '@/shared/i18n'

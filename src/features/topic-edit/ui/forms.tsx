@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS, freshId, nextPosition, nextProjectCode, uid } from '@/core/domain/content'
 import type { Topic, TopicKind, Project, Resource, Skill } from '@/core/domain/types'
-import { monthName, targetFinish } from '@/entities/today/model/derive'
+import { monthName, targetFinish } from '@/entities/today'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
 import {

@@ -8,7 +8,7 @@ import { requestPermission, supported } from '@/shared/fx/notify'
 import type { Ambient } from '@/shared/fx/sound'
 import {
   CUSTOM_MAX, LENGTH_LABEL, customStep, TIMER_DEFAULTS, clock, lengthOf, remaining, timer, useTimer, type Length, type TimerSettings,
-} from '@/features/timer/model/timer'
+} from '@/features/timer'
 import { t } from '@/shared/i18n'
 
 const LENGTHS: Length[] = ['short', 'long', 'custom']

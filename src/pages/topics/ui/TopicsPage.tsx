@@ -4,8 +4,8 @@ import { Crosshair, Info, Pencil, Share2, Trash2 } from 'lucide-react'
 import { usePageBar } from '@/shared/ui/page-bar'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/primitives/dialog'
 import { RESOURCE_KINDS, topicOf, topics, program, topicSnapshot } from '@/core/domain/content'
-import { ShareSheet } from '@/features/share-link/ui/ShareSheet'
-import { focusOf, monthName, targetFinish, nextUp, pace, topicProgress } from '@/entities/today/model/derive'
+import { ShareSheet } from '@/features/share-link'
+import { focusOf, monthName, targetFinish, nextUp, pace, topicProgress } from '@/entities/today'
 import type { Topic, Note, Project, Resource, ResourceKind, Skill } from '@/core/domain/types'
 import { useNoteCount, useNotes, useStore } from '@/shared/store/StoreProvider'
 import { lockOn } from '@/shared/fx/fx'
@@ -15,12 +15,14 @@ import {
   Chip, ChipsList, Header, List, Meter, Row, SearchField, Section, SortList, Tabs, cvar, empty,
 } from '@/shared/ui/kit'
 import { ConfirmSheet, RemoveButton, moveTo, useSheet } from '@/shared/ui/form'
-import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/entities/topic/ui/guide'
-import { NoteCard, NoteSheet, useLoadMore } from '@/pages/notebook/ui/NotebookPage'
+import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/entities/topic'
+import { NoteCard } from '@/entities/note'
+import { NoteSheet } from '@/features/note-edit'
+import { useLoadMore } from '@/shared/lib/useLoadMore'
 import {
   TopicSheet, SkillSheet, ProjectSheet, ResourceSheet,
   blankSkill, blankProject, blankResource, newTopic, useTopicSave,
-} from '@/features/topic-edit/ui/forms'
+} from '@/features/topic-edit'
 
 const route = getRouteApi('/topics/$ch')
 

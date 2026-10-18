@@ -9,8 +9,8 @@ import { useStore } from '@/shared/store/StoreProvider'
 import { listFromShare, topicFromShare } from '@/core/domain/content'
 import type { Topic, ListDef } from '@/core/domain/types'
 import { Header, List, MoreText, Row, Section } from '@/shared/ui/kit'
-import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/entities/topic/ui/guide'
-import { SignIn } from '@/pages/sign-in/ui/SignInPage'
+import { Bullets, Linkify, ProjectCard, ResourceGroups, SkillFolds } from '@/entities/topic'
+import { SignIn } from '@/features/auth'
 import { t } from '@/shared/i18n'
 
 const route = getRouteApi('/share/$id')
