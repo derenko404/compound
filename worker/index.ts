@@ -3,7 +3,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { cleanTag, findUrls, kindFromUrl } from '../src/core/domain/finds'
 import type { LinkKind, Topic, TopicId } from '../src/core/domain/types'
-import { handleApi, handleMcp } from './routes'
+import { ApiServer, endpoints } from './api'
+
+const api = new ApiServer(endpoints)
 
 interface Env {
   ASSETS: { fetch(req: Request): Promise<Response> }
@@ -86,8 +88,7 @@ export default {
   async fetch(req: Request, env: Env, ctx: Ctx): Promise<Response> {
     const { pathname, origin } = new URL(req.url)
     // AI access: the REST API and the MCP server, both with a token from Settings → AI access.
-    if (pathname.startsWith('/api/')) return handleApi(req, dbFor(env), origin)
-    if (pathname === '/mcp' || pathname.startsWith('/mcp/')) return handleMcp(req, dbFor(env), origin)
+    if (api.handles(pathname)) return api.handle(req, dbFor(env), origin)
     if (pathname !== '/tg') return env.ASSETS.fetch(req)
     if (req.method !== 'POST' || req.headers.get('x-telegram-bot-api-secret-token') !== env.TELEGRAM_WEBHOOK_SECRET)
       return new Response('Forbidden', { status: 403 })
