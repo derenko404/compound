@@ -1,10 +1,10 @@
 // Helpers over the editable content in State. Shared with the Telegram worker, so keep it free of DOM and app imports.
-import type { Chapter, ChapterId, ChapterKind, ListDef, Note, Program, ProjectSize, ResourceKind, State, When } from './types'
+import type { Topic, TopicId, TopicKind, ListDef, Note, Program, ProjectSize, ResourceKind, State, When } from './types'
 
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-// Chapter colours: each key has a light and a dark value in index.css (--p-<key>).
+// Topic colours: each key has a light and a dark value in index.css (--p-<key>).
 export const PALETTE = ['blue', 'orange', 'purple', 'green', 'pink', 'amber', 'slate', 'teal', 'gray', 'red', 'indigo', 'lime'] as const
 
 
@@ -26,12 +26,12 @@ export const program = (s: State): Program => ({ focus: null, ...s.settings.prog
 export const byPosition = <T extends { position: number }>(xs: T[]) => [...xs].sort((a, b) => a.position - b.position)
 export const nextPosition = (xs: { position: number }[]) => xs.reduce((m, x) => Math.max(m, x.position), -1) + 1
 
-export const chapters = (s: State, kind?: ChapterKind) => byPosition(s.chapters.filter((c) => !c.archived && (!kind || c.kind === kind)))
-export const chapterOf = (s: State, id: ChapterId | null | undefined): Chapter | undefined => (id ? s.chapters.find((c) => c.id === id) : undefined)
-export const chapterName = (s: State, id: ChapterId | null | undefined) => chapterOf(s, id)?.name ?? 'No track'
+export const topics = (s: State, kind?: TopicKind) => byPosition(s.topics.filter((c) => !c.archived && (!kind || c.kind === kind)))
+export const topicOf = (s: State, id: TopicId | null | undefined): Topic | undefined => (id ? s.topics.find((c) => c.id === id) : undefined)
+export const topicName = (s: State, id: TopicId | null | undefined) => topicOf(s, id)?.name ?? 'No topic'
 
-// The chapter notes fall back to when nothing else fits.
-export const FALLBACK_CHAPTER = 'own'
+// The topic notes fall back to when nothing else fits.
+export const FALLBACK_TOPIC = 'own'
 
 export const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)
 
@@ -76,18 +76,18 @@ export function describeWhen(w: When) {
   }
 }
 
-// Project codes: the track's first two letters plus a number (TE1, TE2…). A track whose first two letters
-// an earlier track already uses takes three, so codes stay unique across tracks.
+// Project codes: the topic's first two letters plus a number (TE1, TE2…). A topic whose first two letters
+// an earlier topic already uses takes three, so codes stay unique across topics.
 const letters = (name: string) => name.toUpperCase().normalize('NFKD').replace(/[^A-Z]/g, '')
 
-export function codePrefix(c: Chapter, all: Chapter[]) {
+export function codePrefix(c: Topic, all: Topic[]) {
   const mine = letters(c.name) || 'PR'
   const earlier = all.filter((x) => x.id !== c.id && (x.position < c.position || (x.position === c.position && x.id < c.id)))
   const clash = earlier.some((x) => letters(x.name).slice(0, 2) === mine.slice(0, 2))
   return clash && mine.length > 2 ? mine.slice(0, 3) : mine.slice(0, 2)
 }
 
-export function nextProjectCode(c: Chapter, all: Chapter[]) {
+export function nextProjectCode(c: Topic, all: Topic[]) {
   const prefix = codePrefix(c, all)
   const used = c.projects.map((p) => (p.code.startsWith(prefix) ? Number(p.code.slice(prefix.length)) || 0 : 0))
   return `${prefix}${Math.max(0, ...used) + 1}`
@@ -97,19 +97,19 @@ export function nextProjectCode(c: Chapter, all: Chapter[]) {
 /* ---------- Share by link ---------- */
 
 // What a share holds: the content only. Ticks, notes and progress live in other tables and never go along.
-export const trackSnapshot = (c: Chapter): Chapter => {
+export const topicSnapshot = (c: Topic): Topic => {
   const { position: _p, created_at: _c, archived: _a, ...rest } = c
   return { ...rest, position: 0 }
 }
 export const listSnapshot = (l: ListDef): ListDef => ({ ...l, position: 0 })
 
-// Someone else's shared track as a new track of mine: fresh ids everywhere, a free id and colour, codes from my tracks.
-export function trackFromShare(shared: Chapter, mine: Chapter[]): Chapter {
-  const c: Chapter = {
-    ...normalizeChapter(shared), kind: 'learn', id: freshId(shared.name, mine.map((x) => x.id)), position: nextPosition(mine),
+// Someone else's shared topic as a new topic of mine: fresh ids everywhere, a free id and colour, codes from my topics.
+export function topicFromShare(shared: Topic, mine: Topic[]): Topic {
+  const c: Topic = {
+    ...normalizeTopic(shared), kind: 'learn', id: freshId(shared.name, mine.map((x) => x.id)), position: nextPosition(mine),
     created_at: new Date().toISOString(), archived: undefined,
   }
-  c.skills = c.skills.map((k) => ({ ...k, id: uid(), topics: k.topics.map((t) => ({ ...t, id: uid() })) }))
+  c.skills = c.skills.map((k) => ({ ...k, id: uid(), steps: k.steps.map((t) => ({ ...t, id: uid() })) }))
   c.resources = c.resources.map((r) => ({ ...r, id: uid() }))
   const prefix = codePrefix(c, [...mine, c])
   c.projects = c.projects.map((p, i) => ({ ...p, id: uid(), code: `${prefix}${i + 1}` }))
@@ -120,7 +120,7 @@ export const listFromShare = (shared: ListDef, mine: ListDef[]): ListDef => ({
   ...shared, id: freshId(shared.name, mine.map((x) => x.id)), position: nextPosition(mine),
 })
 
-// Tracks are stored as JSON, so one saved in an older shape could break a page. Every loaded track is brought to the
+// Topics are stored as JSON, so one saved in an older shape could break a page. Every loaded topic is brought to the
 // current shape: missing lists become empty, entries in an old format (skills as plain names, checklists) are dropped.
 export const PROJECT_SIZES: { value: ProjectSize; label: string; means: string }[] = [
   { value: 'small', label: 'Small', means: 'a few hours to a few days' },
@@ -134,14 +134,14 @@ export const sizeLabel = (s: ProjectSize) => {
 
 const list = <T,>(x: unknown, ok: (v: T) => boolean = () => true): T[] => (Array.isArray(x) ? (x as T[]).filter((v) => v && typeof v === 'object' && ok(v)) : [])
 
-export function normalizeChapter(raw: Chapter): Chapter {
-  const c = raw as Chapter & Record<string, unknown>
+export function normalizeTopic(raw: Topic): Topic {
+  const c = raw as Topic & Record<string, unknown>
   return {
     ...c,
     outcomes: Array.isArray(c.outcomes) ? c.outcomes.filter((x) => typeof x === 'string') : [],
-    projects: list<Chapter['projects'][number]>(c.projects).map((p) => ({ ...p, trains: Array.isArray(p.trains) ? p.trains : undefined, size: PROJECT_SIZES.some((s) => s.value === p.size) ? p.size : undefined })),
+    projects: list<Topic['projects'][number]>(c.projects).map((p) => ({ ...p, trains: Array.isArray(p.trains) ? p.trains : undefined, size: PROJECT_SIZES.some((s) => s.value === p.size) ? p.size : undefined })),
     resources: list(c.resources),
-    skills: list<Chapter['skills'][number]>(c.skills, (k) => Array.isArray(k.topics)),
+    skills: list<Topic['skills'][number]>(c.skills, (k) => Array.isArray(k.steps)),
   }
 }
 
@@ -149,14 +149,14 @@ const normalizeNote = (n: Note): Note => ({
   ...n,
   type: n.type ?? (n.url ? 'link' : 'note'),
   body: n.body ?? '', url: n.url ?? null, kind: n.kind ?? null, context: n.context ?? '',
-  chapter: n.chapter ?? null, source: n.source ?? 'app',
+  topic: n.topic ?? null, source: n.source ?? 'app',
   tags: Array.isArray(n.tags) ? n.tags : [],
 })
 
-// Routines that used to fill from the tracks (old shape) are dropped: Today's track rows replace them.
-// So are habit chapters (old kind 'health'): habits have their own table now.
+// Routines that used to fill from the topics (old shape) are dropped: Today's topic rows replace them.
+// So are habit topics (old kind 'health'): habits have their own table now.
 export const normalizeState = (s: State): State => ({
-  ...s, chapters: (s.chapters ?? []).filter((c) => c.kind === 'learn' || c.kind === 'general').map(normalizeChapter), notes: (s.notes ?? []).map(normalizeNote),
+  ...s, topics: (s.topics ?? []).filter((c) => c.kind === 'learn' || c.kind === 'general').map(normalizeTopic), notes: (s.notes ?? []).map(normalizeNote),
   routines: (s.routines ?? []).filter((r) => !('fill' in r)),
   habits: s.habits ?? [],
   habitLogs: s.habitLogs ?? {},

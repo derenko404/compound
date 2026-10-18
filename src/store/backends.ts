@@ -1,9 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { emptyState, type Chapter, type ChapterId, type ListDef, type Note, type Op, type ProjectStatus, type State } from '@/lib/types'
+import { emptyState, type Topic, type TopicId, type ListDef, type Note, type Op, type ProjectStatus, type State } from '@/lib/types'
 import { normalizeState } from '@/lib/content'
 
 // What the Notebook asks for. q may hold #tags (matched exactly) and words (matched in the text, AI context and link).
-export interface NotesFilter { chapter?: ChapterId | null; links?: boolean; q?: string }
+export interface NotesFilter { topic?: TopicId | null; q?: string }
 
 export interface Backend {
   kind: 'local' | 'cloud'
@@ -47,7 +47,7 @@ export const localBackend: Backend = {
     const { tags, text } = parseQuery(f.q)
     const all = normalizeState(await this.load()).notes
     return all
-      .filter((n) => (!f.chapter || n.chapter === f.chapter) && (!f.links || !!n.url) && tags.every((t) => n.tags.includes(t))
+      .filter((n) => (!f.topic || n.topic === f.topic) && tags.every((t) => n.tags.includes(t))
         && text.every((w) => [n.body, n.context, n.url ?? ''].join(' ').toLowerCase().includes(w)))
       .sort((a, b) => b.created_at.localeCompare(a.created_at))
       .slice(offset, offset + limit)
@@ -76,8 +76,7 @@ const rows = async (p: PromiseLike<{ data: Row; error: unknown }>): Promise<Row>
 // oxlint-disable-next-line no-explicit-any
 function filterNotes(q: any, f: NotesFilter) {
   const { tags, text } = parseQuery(f.q)
-  if (f.chapter) q = q.eq('chapter', f.chapter)
-  if (f.links) q = q.not('url', 'is', null)
+  if (f.topic) q = q.eq('topic', f.topic)
   if (tags.length) q = q.contains('tags', tags)
   // PostgREST's or() takes a comma list, so commas and brackets are dropped from search words.
   for (const w of text.map((x) => x.replace(/[,()%*]/g, '')).filter(Boolean))
@@ -89,12 +88,12 @@ export function cloudBackend(db: SupabaseClient): Backend {
   return {
     kind: 'cloud',
     async load() {
-      const [settings, days, plan, projects, chapters, lists, listProgress, routines, habits, habitLogs] = await Promise.all([
+      const [settings, days, plan, projects, topics, lists, listProgress, routines, habits, habitLogs] = await Promise.all([
         rows(db.from('settings').select('*').maybeSingle()),
         rows(db.from('day_logs').select('*')),
         rows(db.from('plan_progress').select('*')),
         rows(db.from('project_status').select('*')),
-        rows(db.from('chapters').select('data')),
+        rows(db.from('topics').select('data')),
         rows(db.from('lists').select('data')),
         rows(db.from('list_progress').select('*')),
         rows(db.from('routines').select('data')),
@@ -109,7 +108,7 @@ export function cloudBackend(db: SupabaseClient): Backend {
       for (const d of (days ?? []) as Row[]) s.days[d.day] = { done: d.done, mood: d.mood }
       for (const p of (plan ?? []) as Row[]) s.plan[p.task_id] = p.done_at
       for (const p of (projects ?? []) as Row[]) s.projects[p.project_id] = p.status as ProjectStatus
-      s.chapters = (chapters ?? []).map((r: Row) => r.data)
+      s.topics = (topics ?? []).map((r: Row) => r.data)
       s.lists = (lists ?? []).map((r: Row) => r.data)
       s.routines = (routines ?? []).map((r: Row) => r.data)
       s.habits = habits ?? []
@@ -127,7 +126,7 @@ export function cloudBackend(db: SupabaseClient): Backend {
       const q = filterNotes(db.from('notes').select('*'), f).order('created_at', { ascending: false }).range(offset, offset + limit - 1)
       return ((await rows(q)) ?? []).map((n: Row): Note => ({
         id: n.id, type: n.type, body: n.body, url: n.url, kind: n.kind, context: n.context, tags: n.tags,
-        chapter: n.chapter, source: n.source, created_at: n.created_at,
+        topic: n.topic, source: n.source, created_at: n.created_at,
       }))
     },
 
@@ -158,11 +157,11 @@ export function cloudBackend(db: SupabaseClient): Backend {
             check(await db.from('list_progress').upsert({ list_id: op.list, item_id: op.item, done_at: op.progress.done_at ?? null, note: op.progress.note ?? null }))
           else check(await db.from('list_progress').delete().eq('list_id', op.list).eq('item_id', op.item))
           return
-        case 'putChapter':
-          check(await db.from('chapters').upsert({ id: op.chapter.id, data: op.chapter, updated_at: new Date().toISOString() }))
+        case 'putTopic':
+          check(await db.from('topics').upsert({ id: op.topic.id, data: op.topic, updated_at: new Date().toISOString() }))
           return
-        case 'deleteChapter':
-          check(await db.from('chapters').delete().eq('id', op.id))
+        case 'deleteTopic':
+          check(await db.from('topics').delete().eq('id', op.id))
           return
         case 'putList':
           check(await db.from('lists').upsert({ id: op.list.id, data: op.list, updated_at: new Date().toISOString() }))
@@ -230,7 +229,7 @@ export async function importFile(backend: Backend, current: State, file: State) 
     listProgress: { ...current.listProgress, ...file.listProgress },
     habitLogs: { ...current.habitLogs, ...file.habitLogs },
     notes: byId(current.notes, file.notes),
-    chapters: byId(current.chapters, file.chapters),
+    topics: byId(current.topics, file.topics),
     lists: byId(current.lists, file.lists),
     routines: byId(current.routines, file.routines),
     habits: byId(current.habits, file.habits),
@@ -261,12 +260,12 @@ export async function disconnectTelegram(db: SupabaseClient) {
 
 /* ---------- Share by link ---------- */
 
-export type ShareKind = 'track' | 'list'
+export type ShareKind = 'topic' | 'list'
 export interface Share { id: string; kind: ShareKind; name: string; created_at: string }
-export interface SharedContent { kind: ShareKind; name: string; data: Chapter | ListDef; created_at: string; mine: boolean | null }
+export interface SharedContent { kind: ShareKind; name: string; data: Topic | ListDef; created_at: string; mine: boolean | null }
 
 // Saves a snapshot under a random id and returns the id (the link is /share/<id>).
-export async function createShare(db: SupabaseClient, kind: ShareKind, name: string, data: Chapter | ListDef) {
+export async function createShare(db: SupabaseClient, kind: ShareKind, name: string, data: Topic | ListDef) {
   const abc = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   const id = [...crypto.getRandomValues(new Uint8Array(12))].map((b) => abc[b % abc.length]).join('')
   check(await db.from('shares').insert({ id, kind, name, data }))
@@ -322,7 +321,7 @@ export async function importLocal(db: SupabaseClient, s: State) {
   for (const note of s.notes) ops.push({ type: 'putNote', note })
   for (const [list, items] of Object.entries(s.listProgress))
     for (const [item, progress] of Object.entries(items)) ops.push({ type: 'listItem', list, item, progress })
-  for (const chapter of s.chapters) ops.push({ type: 'putChapter', chapter })
+  for (const topic of s.topics) ops.push({ type: 'putTopic', topic })
   for (const list of s.lists) ops.push({ type: 'putList', list })
   for (const routine of s.routines) ops.push({ type: 'putRoutine', routine })
   for (const habit of s.habits) ops.push({ type: 'putHabit', habit })

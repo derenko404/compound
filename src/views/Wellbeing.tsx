@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
-import { ChevronDown, Minus, Pencil, Plus } from 'lucide-react'
+import { ChevronDown, GlassWater } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { WEEKDAYS_SHORT, nextPosition, uid } from '@/lib/content'
@@ -9,9 +9,8 @@ import {
 } from '@/lib/habits'
 import type { Habit, HabitType, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
-import { toast } from '@/fx/fx'
-import { Chip, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, Section, Stats } from '@/components/kit'
-import { FormSheet, PlusButton, RowEdit, TextField, WeekdaysField, fail, move, useSheet } from '@/components/edit'
+import { Chip, CountRow, DoneButton, Chips, Fold, Header, IconBadge, List, Meter, Row, SortList, Section, Stats } from '@/components/kit'
+import { FormSheet, PlusButton, RemoveButton, TextField, WeekdaysField, fail, moveTo, useSheet } from '@/components/edit'
 import { usePageBar } from '@/components/bar'
 import { HABIT_ORDER, HABIT_UI } from '@/components/habits'
 
@@ -137,37 +136,21 @@ function SlipButton({ h }: { h: Habit }) {
   const log = useHabitLog(h)
   if (log.value === SLIP) return <Button variant="outline" onClick={() => log.set(null)}>Undo today's slip</Button>
   return (
-    <Button variant="outline" onClick={() => { log.set(SLIP); toast("Logged. A slip isn't a relapse. Keep going.") }}>Log a slip today</Button>
+    <Button variant="outline" onClick={() => log.set(SLIP)}>Log a slip today</Button>
   )
 }
 
-// Today's glasses for a water habit, and a way to change them.
-function useWaterLog(h: Habit) {
+// Today's glasses as a row to tap: fill one more, or tap the last filled one to take it back.
+function WaterCount({ h }: { h: Habit }) {
   const { state } = useStore()
   const log = useHabitLog(h)
   const { today: n, target } = waterStats(state, h, new Date())
-  const add = (d: number) => {
-    const v = Math.max(0, n + d)
-    log.set(v || null)
-  }
-  return { add, n, target }
-}
-
-// Header: take one back if you tapped too many.
-function WaterUndo({ h }: { h: Habit }) {
-  const { add, n } = useWaterLog(h)
-  return <button type="button" className="icon-btn" aria-label="Remove a glass" disabled={!n} onClick={() => add(-1)}><Minus aria-hidden="true" /></button>
-}
-
-// Bottom: one press, one glass. Fills once the day's target is reached.
-function WaterAdd({ h }: { h: Habit }) {
-  const { add, n, target } = useWaterLog(h)
-  return <DoneButton repeat icon={Plus} on={n >= target} label="Add a glass" done="Add a glass" onToggle={() => add(1)} />
+  return <CountRow n={n} target={target} onSet={(v) => log.set(v || null)} icon={GlassWater} unit={['glass', 'glasses']} />
 }
 
 // What a card shows folded (value, one line, today's action) and unfolded (details).
-// quick: a small control or hint in the header. done: today's full-width tick at the bottom.
-interface Skin { value: ReactNode; line?: ReactNode; quick?: ReactNode; done?: ReactNode; details?: ReactNode; actions?: ReactNode }
+// done: today's control at the bottom (a full-width tick, or water's row of glasses).
+interface Skin { value: ReactNode; line?: ReactNode; done?: ReactNode; details?: ReactNode; actions?: ReactNode }
 
 function skinOf(s: State, h: Habit, today: Date): Skin {
   switch (h.type) {
@@ -255,8 +238,7 @@ function skinOf(s: State, h: Habit, today: Date): Skin {
       const st = waterStats(s, h, today)
       return {
         value: <>{st.today}/{st.target}<small> glasses</small></>,
-        quick: <WaterUndo h={h} />,
-        done: <WaterAdd h={h} />,
+        done: <WaterCount h={h} />,
         details: <>
           <div className="bars">
             {st.week.map((d) => (
@@ -307,10 +289,10 @@ function HabitCard({ h }: { h: Habit }) {
           <IconBadge icon={ui.icon} label={ui.label} color={ui.color} />
           <span className="hcard-text">
             <span className="hcard-name">{h.name}<ChevronDown className={open ? 'rotate-180' : undefined} aria-hidden="true" /></span>
-            <span className="hcard-value">{skin ? skin.value : waiting}</span>
           </span>
         </button>
-        {skin?.quick}
+        {/* The count: on the right of the header, or under the name on wide screens with a done button. */}
+        <span className="hcard-value">{skin ? skin.value : waiting}</span>
       </div>
       {skin?.line && <div className="hcard-line">{skin.line}</div>}
       {skin?.done}
@@ -362,15 +344,10 @@ function HabitSheet({ habit, ...sheet }: { habit: Habit; open: boolean; onOpenCh
 
   return (
     <FormSheet {...sheet} title={isNew ? 'New tracker' : `Edit ${habit.name}`} submit={isNew ? 'Add tracker' : 'Save'}
-      remove={isNew ? undefined : {
-        label: 'Delete habit', title: `Delete ${habit.name}?`, description: "Its history goes with it. This can't be undone.",
-        onConfirm: () => { dispatch({ type: 'deleteHabit', id: habit.id }); toast(`${habit.name} deleted.`) },
-      }}
       onSubmit={() => {
         if (!h.name.trim()) return fail('Give it a name first.')
         if (h.type === 'gym' && !h.days.length) return fail('Pick at least one day.')
         dispatch({ type: 'putHabit', habit: { ...h, name: h.name.trim(), why: h.why?.trim() || null } })
-        toast(isNew ? `${h.name.trim()} added.` : 'Saved.')
       }}>
       {isNew && (
         <div className="field span-all">
@@ -421,11 +398,11 @@ export function Wellbeing() {
   const habits = habitsOf(state)
   const [edit, setEdit] = useState(false)
   usePageBar({
-    actions: habits.length ? [{ label: 'Edit', icon: Pencil, onSelect: () => setEdit(true) }] : [],
+    edit: habits.length ? () => setEdit(true) : undefined,
     done: edit ? () => setEdit(false) : undefined,
   })
-  const reorder = (i: number, d: -1 | 1) => {
-    const ys = move(habits, i, d)
+  const reorder = (from: number, to: number) => {
+    const ys = moveTo(habits, from, to)
     dispatch({ type: 'batch', ops: ys.flatMap((x, j) => (x.position === j ? [] : [{ type: 'putHabit' as const, habit: { ...x, position: j } }])) })
   }
   return (
@@ -436,13 +413,14 @@ export function Wellbeing() {
       <MoodWidget />
       <Section title="Habits">
         {edit ? (
-          <List>
-            {habits.map((h, i) => (
+          <SortList onMove={reorder}>
+            {habits.map((h) => (
               <Row key={h.id} title={h.name} sub={HABIT_UI[h.type].label} style={tone(HABIT_UI[h.type].color)}
-                tag={<RowEdit label={h.name} onEdit={() => sheet.open(h)}
-                  onUp={i > 0 ? () => reorder(i, -1) : undefined} onDown={i < habits.length - 1 ? () => reorder(i, 1) : undefined} />} />
+                check={<RemoveButton label={`Delete ${h.name}`} title={`Delete ${h.name}?`} description="Its history goes with it. This can't be undone."
+                  onConfirm={() => { dispatch({ type: 'deleteHabit', id: h.id }) }} />}
+                onOpen={() => sheet.open(h)} sort />
             ))}
-          </List>
+          </SortList>
         ) : habits.length
           ? <div className="widgets">{habits.map((h) => <HabitCard key={h.id} h={h} />)}</div>
           : <List empty="No habits yet. Tap + to add a tracker: gym, water, quitting smoking, or a habit of your own." />}

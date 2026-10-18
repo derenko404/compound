@@ -6,13 +6,13 @@ import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS } from '../src/lib/content'
 /* ---------- The tools: names, descriptions and input schemas (MCP), also the REST docs ---------- */
 
 const id = { type: 'string', description: 'The id, as returned by a list call.' }
-const topic = { oneOf: [{ type: 'string' }, { type: 'object', properties: { id: { type: 'string' }, text: { type: 'string' } }, required: ['text'] }] }
+const step = { oneOf: [{ type: 'string' }, { type: 'object', properties: { id: { type: 'string' }, text: { type: 'string' } }, required: ['text'] }] }
 const skill = {
   type: 'object', required: ['name'],
   properties: {
     id: { type: 'string', description: 'Keep an existing skill\'s id when updating, so its ticks stay.' },
     name: { type: 'string' }, intro: { type: 'string', description: 'What the skill is and why it matters, 1–2 sentences.' },
-    topics: { type: 'array', items: topic, description: 'What to learn, in order. Short, concrete topics.' },
+    steps: { type: 'array', items: step, description: 'What to learn, in order. Short, concrete steps.' },
   },
 }
 const resource = {
@@ -32,9 +32,9 @@ const project = {
     size: { type: 'string', enum: PROJECT_SIZES.map((s) => s.value) },
   },
 }
-const trackFields = {
+const topicFields = {
   name: { type: 'string', description: 'Short: it shows on tags and buttons. "English", "System design".' },
-  description: { type: 'string', description: 'About: what this track is, why it matters, how to approach it.' },
+  description: { type: 'string', description: 'About: what this topic is, why it matters, how to approach it.' },
   goals: { type: 'array', items: { type: 'string' }, description: 'Where the learner will be at the end.' },
   months: { type: 'integer', description: 'Optional target duration in months.' },
   color: { type: 'string', enum: [...PALETTE] },
@@ -49,11 +49,11 @@ const listFields = {
 }
 
 export const TOOLS: { name: OpName; description: string; inputSchema: object }[] = [
-  { name: 'list_tracks', description: 'All tracks (learning areas) with counts of skills, topics (and how many are done), resources and projects.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'get_track', description: 'One track in full: about, goals, skills with topics (and which are done), resources, projects.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
-  { name: 'create_track', description: 'Create a learning track. Read /llms.txt for what a good track looks like. Project codes are given automatically.', inputSchema: { type: 'object', properties: trackFields, required: ['name'] } },
-  { name: 'update_track', description: 'Change a track. Only fields you send change; a list you send (skills, resources, projects, goals) replaces the old one, so send items back with their ids to keep their ticks.', inputSchema: { type: 'object', properties: { id, ...trackFields }, required: ['id'] } },
-  { name: 'delete_track', description: 'Delete a track. Personal can\'t be deleted.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
+  { name: 'list_topics', description: 'All topics (learning areas) with counts of skills, steps (and how many are done), resources and projects.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'get_topic', description: 'One topic in full: about, goals, skills with steps (and which are done), resources, projects.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
+  { name: 'create_topic', description: 'Create a learning topic. Read /llms.txt for what a good topic looks like. Project codes are given automatically.', inputSchema: { type: 'object', properties: topicFields, required: ['name'] } },
+  { name: 'update_topic', description: 'Change a topic. Only fields you send change; a list you send (skills, resources, projects, goals) replaces the old one, so send items back with their ids to keep their ticks.', inputSchema: { type: 'object', properties: { id, ...topicFields }, required: ['id'] } },
+  { name: 'delete_topic', description: 'Delete a topic. Personal can\'t be deleted.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
   { name: 'list_lists', description: 'All lists (books to read, films to watch…) with how many items are done.', inputSchema: { type: 'object', properties: {} } },
   { name: 'get_list', description: 'One list with its items, ticks and notes.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
   { name: 'create_list', description: 'Create a list, e.g. "50 sci-fi films everyone should see", with its items.', inputSchema: { type: 'object', properties: listFields, required: ['name', 'items'] } },
@@ -65,18 +65,18 @@ export const TOOLS: { name: OpName; description: string; inputSchema: object }[]
     inputSchema: {
       type: 'object', required: ['title'],
       properties: {
-        title: { type: 'string' }, details: { type: 'string' }, track: { type: 'string', description: 'A track id; Personal if left out.' },
+        title: { type: 'string' }, details: { type: 'string' }, topic: { type: 'string', description: 'A topic id; Personal if left out.' },
         when: { description: '"daily", { kind: "weekly", days: ["mon","wed"] }, { kind: "monthly", day: 1 (or -1 for the last day) } or { kind: "once", date: "YYYY-MM-DD" }.' },
         counts_for_streak: { type: 'boolean', description: 'Default true.' },
       },
     },
   },
   { name: 'delete_routine', description: 'Delete a routine.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
-  { name: 'list_notes', description: 'Recent notebook entries (notes, ideas, links), newest first.', inputSchema: { type: 'object', properties: { query: { type: 'string' }, track: { type: 'string' }, limit: { type: 'integer' } } } },
-  { name: 'add_note', description: 'Save a note, an idea (tag "idea") or a link to the notebook.', inputSchema: { type: 'object', properties: { text: { type: 'string' }, url: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } }, track: { type: 'string' } } } },
+  { name: 'list_notes', description: 'Recent notebook entries (notes, ideas, links), newest first.', inputSchema: { type: 'object', properties: { query: { type: 'string' }, topic: { type: 'string' }, limit: { type: 'integer' } } } },
+  { name: 'add_note', description: 'Save a note, an idea (tag "idea") or a link to the notebook.', inputSchema: { type: 'object', properties: { text: { type: 'string' }, url: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } }, topic: { type: 'string' } } } },
   { name: 'list_habits', description: 'Wellbeing habits (gym, water, quit smoking, new and broken habits).', inputSchema: { type: 'object', properties: {} } },
-  { name: 'get_focus', description: 'The focus track: the one Today studies from.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'set_focus', description: 'Make a learning track the focus.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
+  { name: 'get_focus', description: 'The focus topic: the one Today studies from.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'set_focus', description: 'Make a learning topic the focus.', inputSchema: { type: 'object', properties: { id }, required: ['id'] } },
 ]
 
 /* ---------- Shared: auth and calling an operation ---------- */
@@ -95,8 +95,8 @@ async function run(c: Caller, name: OpName, args: unknown) {
 /* ---------- REST: /api/v1 ---------- */
 
 const ROUTES: [string, RegExp, OpName][] = [
-  ['GET', /^\/tracks$/, 'list_tracks'], ['POST', /^\/tracks$/, 'create_track'],
-  ['GET', /^\/tracks\/([^/]+)$/, 'get_track'], ['PATCH', /^\/tracks\/([^/]+)$/, 'update_track'], ['DELETE', /^\/tracks\/([^/]+)$/, 'delete_track'],
+  ['GET', /^\/topics$/, 'list_topics'], ['POST', /^\/topics$/, 'create_topic'],
+  ['GET', /^\/topics\/([^/]+)$/, 'get_topic'], ['PATCH', /^\/topics\/([^/]+)$/, 'update_topic'], ['DELETE', /^\/topics\/([^/]+)$/, 'delete_topic'],
   ['GET', /^\/lists$/, 'list_lists'], ['POST', /^\/lists$/, 'create_list'],
   ['GET', /^\/lists\/([^/]+)$/, 'get_list'], ['PATCH', /^\/lists\/([^/]+)$/, 'update_list'], ['DELETE', /^\/lists\/([^/]+)$/, 'delete_list'],
   ['GET', /^\/routines$/, 'list_routines'], ['POST', /^\/routines$/, 'add_routine'], ['DELETE', /^\/routines\/([^/]+)$/, 'delete_routine'],
@@ -139,7 +139,7 @@ function openapi(origin: string) {
   }
   return {
     openapi: '3.1.0',
-    info: { title: 'Compound API', version: '1', description: `Build tracks and lists in Compound. Guide: ${origin}/llms.txt` },
+    info: { title: 'Compound API', version: '1', description: `Build topics and lists in Compound. Guide: ${origin}/llms.txt` },
     servers: [{ url: origin }],
     components: { securitySchemes: { token: { type: 'http', scheme: 'bearer' } } },
     security: [{ token: [] }],
@@ -173,7 +173,7 @@ async function answer(m: Rpc, c: Caller, origin: string) {
         protocolVersion: m.params?.protocolVersion ?? '2025-06-18',
         capabilities: { tools: {} },
         serverInfo: { name: 'compound', version: '1' },
-        instructions: `Compound is a self-development app: learning tracks (skills with topics, resources, projects), lists, routines, a notebook and habits. Before building a track or list, read ${origin}/llms.txt for what a good one looks like.`,
+        instructions: `Compound is a self-development app: learning topics (skills with steps, resources, projects), lists, routines, a notebook and habits. Before building a topic or list, read ${origin}/llms.txt for what a good one looks like.`,
       })
     case 'ping':
       return ok({})

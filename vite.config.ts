@@ -30,7 +30,7 @@ export default defineConfig({
       manifest: {
         name: 'Compound',
         short_name: 'Compound',
-        description: 'Daily routines, learning tracks, habits, notes and lists.',
+        description: 'Daily routines, learning topics, habits, notes and lists.',
         theme_color: '#17212b',
         background_color: '#eef2ee',
         display: 'standalone',

@@ -1,32 +1,32 @@
-// Renders track content (skills, resources, projects) with cross links.
+// Renders topic content (skills, resources, projects) with cross links.
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { BookOpen, ChevronDown, ExternalLink, FileText, GraduationCap, Headphones, Hammer, Newspaper, PlayCircle, Wrench, Link2 } from 'lucide-react'
-import { RESOURCE_KINDS, chapterOf, sizeLabel } from '@/lib/content'
+import { RESOURCE_KINDS, topicOf, sizeLabel } from '@/lib/content'
 import { hostOf } from '@/lib/finds'
-import type { Chapter, ChapterId, Project, ProjectStatus, Resource, ResourceKind, Skill } from '@/lib/types'
+import type { Topic, TopicId, Project, ProjectStatus, Resource, ResourceKind, Skill } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
-import { burst, toast } from '@/fx/fx'
+import { burst } from '@/fx/fx'
 import { Check, Fold, InnerLink, Row, cvar } from '@/components/kit'
-import { RowEdit } from '@/components/edit'
+import { RemoveButton } from '@/components/edit'
 
 interface LinkIndex {
   re: RegExp | null
-  projects: Map<string, ChapterId>
-  resources: Map<string, { url: string; ch: ChapterId }>
-  numbered: ChapterId[]
+  projects: Map<string, TopicId>
+  resources: Map<string, { url: string; ch: TopicId }>
+  numbered: TopicId[]
 }
 
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const cache = new WeakMap<Chapter[], LinkIndex>()
+const cache = new WeakMap<Topic[], LinkIndex>()
 
-// Project codes, "Chapter N" and resource titles (plus "(ACRONYM)" aliases) that text can mention.
-function linkIndex(all: Chapter[]): LinkIndex {
+// Project codes, "Topic N" and resource titles (plus "(ACRONYM)" aliases) that text can mention.
+function linkIndex(all: Topic[]): LinkIndex {
   const hit = cache.get(all)
   if (hit) return hit
   const live = all.filter((c) => !c.archived)
-  const projects = new Map<string, ChapterId>()
-  const resources = new Map<string, { url: string; ch: ChapterId }>()
+  const projects = new Map<string, TopicId>()
+  const resources = new Map<string, { url: string; ch: TopicId }>()
   for (const c of live) {
     for (const p of c.projects) if (p.code && !projects.has(p.code)) projects.set(p.code, c.id)
     for (const r of c.resources) {
@@ -38,7 +38,7 @@ function linkIndex(all: Chapter[]): LinkIndex {
   const numbered = live.filter((c) => c.kind === 'learn').sort((a, b) => a.position - b.position).map((c) => c.id)
   const alts = [
     ...[...projects.keys()].map((k) => `\\b${esc(k)}\\b`),
-    numbered.length ? `\\bChapter [1-${Math.min(9, numbered.length)}]\\b` : '',
+    numbered.length ? `\\bTopic [1-${Math.min(9, numbered.length)}]\\b` : '',
     ...[...resources.keys()].sort((a, b) => b.length - a.length).map((k) => `(?<![\\w-])${esc(k)}(?![\\w-])`),
   ].filter(Boolean)
   const idx = { re: alts.length ? new RegExp(`(${alts.join('|')})`, 'g') : null, projects, resources, numbered }
@@ -48,7 +48,7 @@ function linkIndex(all: Chapter[]): LinkIndex {
 
 export function Linkify({ text }: { text: string }) {
   const { state } = useStore()
-  const ix = linkIndex(state.chapters)
+  const ix = linkIndex(state.topics)
   if (!ix.re) return <>{text}</>
   const parts = text.split(ix.re)
   return (
@@ -56,10 +56,10 @@ export function Linkify({ text }: { text: string }) {
       {parts.map((p, i) => {
         if (i % 2 === 0 || !p) return <Fragment key={i}>{p}</Fragment>
         const pch = ix.projects.get(p)
-        if (pch) return <InnerLink key={i} ch={pch} to="/tracks/$ch" params={{ ch: pch }} hash={p}>{p}</InnerLink>
-        const m = /^Chapter ([1-9])$/.exec(p)
+        if (pch) return <InnerLink key={i} ch={pch} to="/topics/$ch" params={{ ch: pch }} hash={p}>{p}</InnerLink>
+        const m = /^Topic ([1-9])$/.exec(p)
         const nch = m ? ix.numbered[Number(m[1]) - 1] : undefined
-        if (nch) return <InnerLink key={i} ch={nch} to="/tracks/$ch" params={{ ch: nch }}>{p}</InnerLink>
+        if (nch) return <InnerLink key={i} ch={nch} to="/topics/$ch" params={{ ch: nch }}>{p}</InnerLink>
         const r = ix.resources.get(p)
         if (r) return <a key={i} href={r.url} target="_blank" rel="noopener" className="xref-res" style={cvar(r.ch)}>{p}</a>
         return <Fragment key={i}>{p}</Fragment>
@@ -68,12 +68,12 @@ export function Linkify({ text }: { text: string }) {
   )
 }
 
-// A chapter label linking to that chapter's page.
-export function ChapterTag({ ch, label }: { ch: ChapterId | null | undefined; label?: string }) {
+// A topic label linking to that topic's page.
+export function TopicTag({ ch, label }: { ch: TopicId | null | undefined; label?: string }) {
   const { state } = useStore()
-  const c = chapterOf(state, ch)
+  const c = topicOf(state, ch)
   if (!c) return <>{label ?? ''}</>
-  return <InnerLink ch={c.id} to="/tracks/$ch" params={{ ch: c.id }}>{label ?? c.name}</InnerLink>
+  return <InnerLink ch={c.id} to="/topics/$ch" params={{ ch: c.id }}>{label ?? c.name}</InnerLink>
 }
 
 const KIND_ICON: Record<ResourceKind, typeof BookOpen> = {
@@ -81,7 +81,7 @@ const KIND_ICON: Record<ResourceKind, typeof BookOpen> = {
   doc: FileText, practice: Hammer, podcast: Headphones, other: Link2,
 }
 
-// Topic and resource ticks live in the same progress table as plan tasks, under their item ids.
+// Step and resource ticks live in the same progress table as plan tasks, under their item ids.
 export function useTick() {
   const { state, dispatch } = useStore()
   return {
@@ -92,22 +92,18 @@ export function useTick() {
   }
 }
 
-export interface ItemEdit<T> {
-  edit: (item: T) => void
-  move?: (item: T, d: -1 | 1) => void
-}
-
 // A resource: tick, the title as a link with ↗, and one quiet line with the note, the site and whether it's free.
 // No type icon: the list is already grouped by type.
-function ResourceRow({ ch, r, editing, readOnly }: { ch?: ChapterId; r: Resource; editing?: ItemEdit<Resource>; readOnly?: boolean }) {
+// onEdit: edit mode, where the row opens its form and the title isn't a link.
+function ResourceRow({ ch, r, onEdit, onRemove, readOnly }: { ch?: TopicId; r: Resource; onEdit?: (r: Resource) => void; onRemove?: (r: Resource) => void; readOnly?: boolean }) {
   const tick = useTick()
   const words = r.title.split(' ')
   const last = words.pop()
   return (
-    <Row ch={ch} done={!readOnly && tick.on(r.id)}
-      check={readOnly ? undefined : <Check on={tick.on(r.id)} label={r.title} onToggle={(v) => tick.set(r.id, v)} />}
+    <Row ch={ch} done={!readOnly && !onEdit && tick.on(r.id)} onOpen={onEdit && (() => onEdit(r))}
+      check={onRemove ? <RemoveButton label={`Delete ${r.title}`} title={`Delete ${r.title}?`} onConfirm={() => onRemove(r)} /> : readOnly || onEdit ? undefined : <Check on={tick.on(r.id)} label={r.title} onToggle={(v) => tick.set(r.id, v)} />}
       // The last word and the ↗ never split, so the icon can't wrap onto a line of its own.
-      title={r.url ? <a href={r.url} target="_blank" rel="noopener" className="res-title">{words.length ? `${words.join(' ')} ` : ''}<span className="whitespace-nowrap">{last}<ExternalLink className="res-ext" aria-label="opens in a new tab" /></span></a> : r.title}
+      title={r.url && !onEdit ? <a href={r.url} target="_blank" rel="noopener" className="res-title">{words.length ? `${words.join(' ')} ` : ''}<span className="whitespace-nowrap">{last}<ExternalLink className="res-ext" aria-label="opens in a new tab" /></span></a> : r.title}
       // The note on its own line, then where it lives and whether it's free.
       sub={(r.note || r.url || r.free) ? (
         <>
@@ -115,14 +111,13 @@ function ResourceRow({ ch, r, editing, readOnly }: { ch?: ChapterId; r: Resource
           {(r.url || r.free) && <span className="res-meta">{r.url && <span className="res-host">{hostOf(r.url)}</span>}{r.free && <span className="res-free">Free</span>}</span>}
         </>
       ) : undefined}
-      tag={editing ? <RowEdit label={r.title} onEdit={() => editing.edit(r)} /> : undefined}
     />
   )
 }
 
 // Resources grouped by type (books, courses, articles…).
-// readOnly: no ticks (someone else's shared track); ch can then be left out and the colour comes from around it.
-export function ResourceGroups({ ch, resources, editing, readOnly }: { ch?: ChapterId; resources: Resource[]; editing?: ItemEdit<Resource>; readOnly?: boolean }) {
+// readOnly: no ticks (someone else's shared topic); ch can then be left out and the colour comes from around it.
+export function ResourceGroups({ ch, resources, onEdit, onRemove, readOnly }: { ch?: TopicId; resources: Resource[]; onEdit?: (r: Resource) => void; onRemove?: (r: Resource) => void; readOnly?: boolean }) {
   const tick = useTick()
   const groups = RESOURCE_KINDS.map((k) => ({ ...k, items: resources.filter((r) => (r.kind ?? 'other') === k.id) })).filter((g) => g.items.length)
   return (
@@ -131,8 +126,8 @@ export function ResourceGroups({ ch, resources, editing, readOnly }: { ch?: Chap
         const done = g.items.filter((r) => tick.on(r.id)).length
         const Icon = KIND_ICON[g.id]
         return (
-          <Fold key={g.id} ch={ch} open={gi === 0 || !!editing} icon={<Icon className="res-icon" aria-hidden="true" />} title={g.label} meta={readOnly ? g.items.length : `${done}/${g.items.length}`}>
-            {g.items.map((r) => <ResourceRow key={r.id} ch={ch} r={r} editing={editing} readOnly={readOnly} />)}
+          <Fold key={g.id} ch={ch} open={gi === 0 || !!onEdit} icon={<Icon className="res-icon" aria-hidden="true" />} title={g.label} meta={readOnly ? g.items.length : `${done}/${g.items.length}`}>
+            {g.items.map((r) => <ResourceRow key={r.id} ch={ch} r={r} onEdit={onEdit} onRemove={onRemove} readOnly={readOnly} />)}
           </Fold>
         )
       })}
@@ -140,29 +135,25 @@ export function ResourceGroups({ ch, resources, editing, readOnly }: { ch?: Chap
   )
 }
 
-// Skills as folds: intro and topics in order, each tickable. The skill you're on starts open, marked "now".
-// readOnly: no ticks (someone else's shared track).
-export function SkillFolds({ ch, skills, current, itemsLabel = 'Topics, in order', editing, readOnly }: {
-  ch?: ChapterId; skills: Skill[]; current?: string; itemsLabel?: string; editing?: ItemEdit<Skill>; readOnly?: boolean
+// Skills as folds: intro and steps in order, each tickable. The skill you're on starts open, marked "now".
+// readOnly: no ticks (someone else's shared topic).
+export function SkillFolds({ ch, skills, current, itemsLabel = 'Steps, in order', readOnly }: {
+  ch?: TopicId; skills: Skill[]; current?: string; itemsLabel?: string; readOnly?: boolean
 }) {
   const tick = useTick()
   return (
     <div className="grid gap-3">
       {skills.map((k) => {
-        const done = k.topics.filter((t) => tick.on(t.id)).length
+        const done = k.steps.filter((t) => tick.on(t.id)).length
         return (
-          <Fold key={k.id} ch={ch} open={k.id === current || undefined} title={k.id === current ? `${k.name}, now` : k.name} meta={editing
-            // Controls inside the summary mustn't toggle the fold.
-            ? <span onClick={(e) => e.preventDefault()}><RowEdit label={k.name} onEdit={() => editing.edit(k)}
-                onUp={editing.move && (() => editing.move!(k, -1))} onDown={editing.move && (() => editing.move!(k, 1))} movable={!!editing.move} /></span>
-            : readOnly ? `${k.topics.length} topics` : `${done}/${k.topics.length}`}>
+          <Fold key={k.id} ch={ch} open={k.id === current || undefined} title={k.id === current ? `${k.name}, now` : k.name} meta={readOnly ? `${k.steps.length} steps` : `${done}/${k.steps.length}`}>
             {k.intro && <p className="fold-intro"><Linkify text={k.intro} /></p>}
-            {k.topics.length > 0 && <div className="list-label">{itemsLabel}</div>}
-            {k.topics.map((it) => (
+            {k.steps.length > 0 && <div className="list-label">{itemsLabel}</div>}
+            {k.steps.map((it) => (
               <Row key={it.id} ch={ch} done={!readOnly && tick.on(it.id)} title={<span className="font-normal"><Linkify text={it.text} /></span>}
                 check={readOnly ? undefined : <Check on={tick.on(it.id)} label={it.text} onToggle={(v) => tick.set(it.id, v)} />} />
             ))}
-            {!k.topics.length && <div className="empty">No topics yet.</div>}
+            {!k.steps.length && <div className="empty">No steps yet.</div>}
           </Fold>
         )
       })}
@@ -173,8 +164,8 @@ export function SkillFolds({ ch, skills, current, itemsLabel = 'Topics, in order
 const LABEL: Record<ProjectStatus, string> = { todo: 'Not started', doing: 'In progress', done: 'Done' }
 const NEXT: Record<ProjectStatus, ProjectStatus> = { todo: 'doing', doing: 'done', done: 'todo' }
 
-// readOnly: no status button (someone else's shared track); ch can be left out and the colour comes from around it.
-export function ProjectCard({ ch, p, editing, readOnly }: { ch?: ChapterId; p: Project; editing?: ItemEdit<Project>; readOnly?: boolean }) {
+// readOnly: no status button (someone else's shared topic); ch can be left out and the colour comes from around it.
+export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; readOnly?: boolean }) {
   const { state, dispatch } = useStore()
   const { hash } = useLocation()
   const sv = state.projects[p.id] ?? 'todo'
@@ -198,15 +189,11 @@ export function ProjectCard({ ch, p, editing, readOnly }: { ch?: ChapterId; p: P
           {p.name}
           {hasBody && <ChevronDown className="chev" style={open ? { transform: 'rotate(180deg)' } : undefined} aria-hidden="true" />}
         </button>
-        {readOnly ? null : editing
-          ? <RowEdit label={p.name} onEdit={() => editing.edit(p)}
-              onUp={editing.move && (() => editing.move!(p, -1))} onDown={editing.move && (() => editing.move!(p, 1))} />
-          : <button className={`status ${sv}`} aria-label={`${p.name}: ${LABEL[sv]}. Change status`} onClick={(e) => {
+        {readOnly ? null : <button className={`status ${sv}`} aria-label={`${p.name}: ${LABEL[sv]}. Change status`} onClick={(e) => {
               const nx = NEXT[sv]
               dispatch({ type: 'project', projectId: p.id, status: nx })
               if (nx === 'done') {
                 burst(e.currentTarget, 26)
-                toast(`Project ${p.code || p.name} done.`)
               }
             }}>{LABEL[sv]}</button>}
       </div>

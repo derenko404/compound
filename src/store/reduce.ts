@@ -20,10 +20,10 @@ export function reduce(s: State, op: Op): State {
       return { ...s, notes: s.notes.some((n) => n.id === op.note.id) ? s.notes.map((n) => (n.id === op.note.id ? op.note : n)) : [op.note, ...s.notes] }
     case 'deleteNote':
       return { ...s, notes: s.notes.filter((n) => n.id !== op.id) }
-    case 'putChapter':
-      return { ...s, chapters: put(s.chapters, op.chapter) }
-    case 'deleteChapter':
-      return { ...s, chapters: s.chapters.filter((c) => c.id !== op.id) }
+    case 'putTopic':
+      return { ...s, topics: put(s.topics, op.topic) }
+    case 'deleteTopic':
+      return { ...s, topics: s.topics.filter((c) => c.id !== op.id) }
     case 'putList':
       return { ...s, lists: put(s.lists, op.list) }
     case 'deleteList': {

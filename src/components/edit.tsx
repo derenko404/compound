@@ -1,6 +1,6 @@
 // Building blocks for editing content: form sheets, fields, pickers and row controls.
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowDown, ArrowUp, CornerDownLeft, Pencil, Plus, X } from 'lucide-react'
+import { CornerDownLeft, Minus, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Dialog as DialogPrimitive } from 'radix-ui'
@@ -11,8 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { PALETTE, WEEKDAYS_SHORT, chapters, uid } from '@/lib/content'
-import type { ChapterId, State } from '@/lib/types'
+import { PALETTE, WEEKDAYS_SHORT, topics, uid } from '@/lib/content'
+import type { TopicId, State } from '@/lib/types'
 import { useStore } from '@/store/StoreProvider'
 import { toast } from '@/fx/fx'
 import { Chip, Chips, Dot } from './kit'
@@ -42,6 +42,18 @@ export function ConfirmSheet({ open, onOpenChange, title, description, confirm =
 // asks ("Delete Weekly review?"). Desktop: the footer's far left, away from Cancel and Save. Phones (no footer): the
 // form's last row, full width.
 export interface SheetRemove { label: string; title: string; description?: string; onConfirm: () => void }
+
+// Deleting a row in edit mode, as on iOS: a red ⊖ in place of its tick (Row check), always confirmed first.
+// Clicks inside stop here, so the row behind doesn't open its form.
+export function RemoveButton({ label, title, description, onConfirm }: SheetRemove) {
+  const [asking, setAsking] = useState(false)
+  return (
+    <span className="contents" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+      <button type="button" className="row-remove" aria-label={label} onClick={() => setAsking(true)}><Minus aria-hidden="true" /></button>
+      <ConfirmSheet open={asking} onOpenChange={setAsking} title={title} description={description ?? "This can't be undone."} onConfirm={onConfirm} />
+    </span>
+  )
+}
 
 export function FormSheet({ open, onOpenChange, title, description, children, onSubmit, submit = 'Save', remove, wide }: {
   open: boolean
@@ -226,13 +238,13 @@ export function linesToItems(lines: string[], old: { id: string; text: string }[
   })
 }
 
-// Personal (and other general tracks) first, then the roadmap tracks, then wellbeing habits.
-export function ChapterSelect({ id, value, onChange, state, allowNone }: {
-  id?: string; value: ChapterId | null; onChange: (c: ChapterId | null) => void; state: State; allowNone?: string
+// Personal (and other general topics) first, then the roadmap topics, then wellbeing habits.
+export function TopicSelect({ id, value, onChange, state, allowNone }: {
+  id?: string; value: TopicId | null; onChange: (c: TopicId | null) => void; state: State; allowNone?: string
 }) {
   const groups = [
-    { label: '', items: chapters(state, 'general') },
-    { label: 'Tracks', items: chapters(state, 'learn') },
+    { label: '', items: topics(state, 'general') },
+    { label: 'Topics', items: topics(state, 'learn') },
   ].filter((g) => g.items.length)
   return (
     <Select value={value ?? 'none'} onValueChange={(v) => onChange(v === 'none' ? null : v)}>
@@ -251,9 +263,9 @@ export function ChapterSelect({ id, value, onChange, state, allowNone }: {
   )
 }
 
-export const ChapterField = ({ label = 'Track', value, onChange, allowNone }: { label?: string; value: ChapterId | null; onChange: (c: ChapterId | null) => void; allowNone?: string }) => {
+export const TopicField = ({ label = 'Topic', value, onChange, allowNone }: { label?: string; value: TopicId | null; onChange: (c: TopicId | null) => void; allowNone?: string }) => {
   const { state } = useStore()
-  return <Field label={label}>{(id) => <ChapterSelect id={id} state={state} value={value} onChange={onChange} allowNone={allowNone} />}</Field>
+  return <Field label={label}>{(id) => <TopicSelect id={id} state={state} value={value} onChange={onChange} allowNone={allowNone} />}</Field>
 }
 
 export function ColorField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -287,23 +299,6 @@ export function WeekdaysField({ value, onChange }: { value: number[]; onChange: 
   )
 }
 
-/* ---------- Edit controls on rows ---------- */
-
-// Row controls in edit mode: move up/down and edit; deleting lives in the edit sheet.
-// Move buttons always take their place (disabled at the ends), so every row's buttons line up.
-export function RowEdit({ onEdit, onUp, onDown, label, movable }: {
-  onEdit?: () => void; onUp?: () => void; onDown?: () => void; label: string; movable?: boolean
-}) {
-  const showMove = movable ?? !!(onUp || onDown)
-  return (
-    <div className="row-edit">
-      {showMove && <button type="button" className="icon-btn" aria-label={`Move ${label} up`} disabled={!onUp} onClick={onUp}><ArrowUp /></button>}
-      {showMove && <button type="button" className="icon-btn" aria-label={`Move ${label} down`} disabled={!onDown} onClick={onDown}><ArrowDown /></button>}
-      {onEdit && <button type="button" className="icon-btn" aria-label={`Edit ${label}`} onClick={onEdit}><Pencil /></button>}
-    </div>
-  )
-}
-
 export function AddButton({ label, onClick, variant = 'outline' }: { label: string; onClick: () => void; variant?: 'outline' | 'default' }) {
   return <Button type="button" variant={variant} onClick={onClick}><Plus />{label}</Button>
 }
@@ -318,10 +313,8 @@ export function Fab({ label, onClick }: { label: string; onClick: () => void }) 
   return <button type="button" className="fab" aria-label={label} title={label} onClick={onClick}><Plus /></button>
 }
 
-export const move = <T,>(xs: T[], i: number, d: -1 | 1) => {
-  const j = i + d
-  if (j < 0 || j >= xs.length) return xs
+export const moveTo = <T,>(xs: T[], from: number, to: number) => {
   const ys = [...xs]
-  ;[ys[i], ys[j]] = [ys[j], ys[i]]
+  ys.splice(to, 0, ...ys.splice(from, 1))
   return ys
 }

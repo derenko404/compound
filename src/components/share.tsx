@@ -1,21 +1,22 @@
-// Share by link: the sheet that makes a link for a track or a list.
+// Share by link: the sheet that makes a link for a topic or a list.
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Copy, Share2 } from 'lucide-react'
+import { Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/fx/fx'
 import { SHARE_DAYS, createShare, supabase, type ShareKind } from '@/store/backends'
 import { useStore } from '@/store/StoreProvider'
-import type { Chapter, ListDef } from '@/lib/types'
+import type { Topic, ListDef } from '@/lib/types'
 import { FormSheet } from './edit'
+import { CopyButton } from './kit'
 
-const NOUN: Record<ShareKind, string> = { track: 'track', list: 'list' }
+const NOUN: Record<ShareKind, string> = { topic: 'topic', list: 'list' }
 
 // Makes the link on the first tap (a snapshot: editing later doesn't change it), then offers Copy.
 export function ShareSheet({ kind, name, data, open, onOpenChange }: {
-  kind: ShareKind; name: string; data: Chapter | ListDef; open: boolean; onOpenChange: (o: boolean) => void
+  kind: ShareKind; name: string; data: Topic | ListDef; open: boolean; onOpenChange: (o: boolean) => void
 }) {
   const { mode } = useStore()
   const qc = useQueryClient()
@@ -33,14 +34,6 @@ export function ShareSheet({ kind, name, data, open, onOpenChange }: {
       setBusy(false)
     }
   }
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(link!)
-      toast('Link copied.')
-    } catch {
-      toast.error("Couldn't copy. Select the link and copy it by hand.")
-    }
-  }
   return (
     <FormSheet open={open} onOpenChange={onOpenChange} title={`Share ${name}`} submit="Done" onSubmit={() => {}}
       description={`Anyone with the link can see this ${NOUN[kind]} and add a copy to their own, for ${SHARE_DAYS} days. Your data will not be changed.`}>
@@ -51,7 +44,7 @@ export function ShareSheet({ kind, name, data, open, onOpenChange }: {
           <Label htmlFor="share-link">Link</Label>
           <div className="share-actions">
             <Input id="share-link" readOnly value={link} onFocus={(e) => e.target.select()} />
-            <Button type="button" variant="outline" onClick={() => void copy()}><Copy aria-hidden="true" />Copy</Button>
+            <CopyButton text={link} />
           </div>
         </div>
       ) : (

@@ -1,34 +1,34 @@
-// Roadmap views for Today: the focus track, and this week as a strip.
-import { WEEKDAYS_SHORT, chapterOf } from '@/lib/content'
+// Roadmap views for Today: the focus topic, and this week as a strip.
+import { WEEKDAYS_SHORT, topicOf } from '@/lib/content'
 import { addDays, keyOf } from '@/lib/dates'
 import { Link } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
-import { currentProject, dayProgress, focusOf, nextUp, trackProgress } from '@/lib/derive'
+import { currentProject, dayProgress, focusOf, nextUp, topicProgress } from '@/lib/derive'
 import { useStore } from '@/store/StoreProvider'
 import { cvar } from './kit'
 
-// The focus track: which skill you're on, the next few topics, and the project in progress.
+// The focus topic: which skill you're on, the next few steps, and the project in progress.
 export function FocusCard() {
   const { state } = useStore()
-  const focus = chapterOf(state, focusOf(state))
+  const focus = topicOf(state, focusOf(state))
   if (!focus) return (
-    <Link to="/tracks" className="focus-card">
+    <Link to="/topics" className="focus-card">
       <div className="focus-label">Focus</div>
-      <div className="muted text-small">No focus track yet. Pick one on Tracks: it gets the study sessions and the weekend project.</div>
+      <div className="muted text-small">No focus topic yet. Pick one on Topics: it gets the study sessions and the weekend project.</div>
     </Link>
   )
-  const { done, total } = trackProgress(state, focus)
+  const { done, total } = topicProgress(state, focus)
   const next = nextUp(state, focus)
-  const upcoming = next ? next.skill.topics.filter((t) => !state.plan[t.id]).slice(0, 3) : []
+  const upcoming = next ? next.skill.steps.filter((t) => !state.plan[t.id]).slice(0, 3) : []
   const project = currentProject(state, focus)
   return (
-    <Link to="/tracks/$ch" params={{ ch: focus.id }} className="focus-card" style={cvar(focus.id)}>
+    <Link to="/topics/$ch" params={{ ch: focus.id }} className="focus-card" style={cvar(focus.id)}>
       <div className="focus-head">
         <div>
           <div className="focus-label">Focus</div>
           <div className="focus-name"><span className="dot" />{focus.name}</div>
         </div>
-        <span className="focus-count">{done} of {total} topics</span>
+        <span className="focus-count">{done} of {total} steps</span>
         <ChevronRight className="chev" aria-hidden="true" />
       </div>
       {next ? (
@@ -36,7 +36,7 @@ export function FocusCard() {
           <div className="focus-label">Skill {next.index + 1} of {focus.skills.length}: {next.skill.name}</div>
           <ol className="focus-next">{upcoming.map((t) => <li key={t.id}>{t.text}</li>)}</ol>
         </div>
-      ) : <div className="focus-task">Every skill on this track is done.</div>}
+      ) : <div className="focus-task">Every skill on this topic is done.</div>}
       {project && (
         <div className="focus-task">
           <div className="focus-label">{(state.projects[project.id] ?? 'todo') === 'doing' ? 'Project in progress' : 'Next project'}</div>

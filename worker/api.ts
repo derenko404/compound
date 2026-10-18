@@ -2,9 +2,9 @@
 // Every call runs as the user who owns the token. The worker's Supabase client uses the secret key (bypasses RLS),
 // so every query here filters on user_id itself.
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS, codePrefix, freshId, nextPosition, normalizeChapter } from '../src/lib/content'
+import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS, codePrefix, freshId, nextPosition, normalizeTopic } from '../src/lib/content'
 import { cleanTag, findUrls, kindFromUrl } from '../src/lib/finds'
-import type { Chapter, ListDef, Project, Resource, ResourceKind, Routine, Skill, When } from '../src/lib/types'
+import type { Topic, ListDef, Project, Resource, ResourceKind, Routine, Skill, When } from '../src/lib/types'
 
 export interface Caller { db: SupabaseClient; user: string }
 
@@ -45,9 +45,9 @@ export async function userForToken(db: SupabaseClient, token: string) {
 
 /* ---------- Reading the user's data ---------- */
 
-async function tracks(c: Caller): Promise<Chapter[]> {
-  const { data } = check(await c.db.from('chapters').select('data').eq('user_id', c.user))
-  return ((data ?? []) as { data: Chapter }[]).map((r) => normalizeChapter(r.data)).sort((a, b) => a.position - b.position)
+async function topics(c: Caller): Promise<Topic[]> {
+  const { data } = check(await c.db.from('topics').select('data').eq('user_id', c.user))
+  return ((data ?? []) as { data: Topic }[]).map((r) => normalizeTopic(r.data)).sort((a, b) => a.position - b.position)
 }
 
 async function ticks(c: Caller): Promise<Set<string>> {
@@ -60,8 +60,8 @@ async function lists(c: Caller): Promise<ListDef[]> {
   return ((data ?? []) as { data: ListDef }[]).map((r) => r.data).sort((a, b) => a.position - b.position)
 }
 
-const putTrack = async (c: Caller, t: Chapter) =>
-  check(await c.db.from('chapters').upsert({ user_id: c.user, id: t.id, data: t, updated_at: now() }, { onConflict: 'user_id,id' }))
+const putTopic = async (c: Caller, t: Topic) =>
+  check(await c.db.from('topics').upsert({ user_id: c.user, id: t.id, data: t, updated_at: now() }, { onConflict: 'user_id,id' }))
 const putList = async (c: Caller, l: ListDef) =>
   check(await c.db.from('lists').upsert({ user_id: c.user, id: l.id, data: l, updated_at: now() }, { onConflict: 'user_id,id' }))
 
@@ -71,12 +71,12 @@ const str = (x: unknown, max = 2000) => (typeof x === 'string' ? x.trim().slice(
 const strs = (x: unknown) => (Array.isArray(x) ? x.map((v) => str(v, 400)).filter(Boolean) : [])
 const arr = (x: unknown): Json[] => (Array.isArray(x) ? x.filter((v) => v && typeof v === 'object') : [])
 
-// Topics may come as plain text or as { id, text }. Keeping an id keeps its tick.
+// Steps may come as plain text or as { id, text }. Keeping an id keeps its tick.
 const skillsIn = (x: unknown): Skill[] => arr(x).map((k) => ({
   id: str(k.id, 80) || uuid(),
   name: str(k.name, 200) || fail(400, 'Every skill needs a name.'),
   intro: str(k.intro) || undefined,
-  topics: (Array.isArray(k.topics) ? k.topics : []).map((t: Json) => (typeof t === 'string' ? { id: uuid(), text: str(t, 400) } : { id: str(t?.id, 80) || uuid(), text: str(t?.text, 400) }))
+  steps: (Array.isArray(k.steps) ? k.steps : []).map((t: Json) => (typeof t === 'string' ? { id: uuid(), text: str(t, 400) } : { id: str(t?.id, 80) || uuid(), text: str(t?.text, 400) }))
     .filter((t: { text: string }) => t.text),
 }))
 
@@ -94,9 +94,9 @@ const resourcesIn = (x: unknown): Resource[] => arr(x).map((r) => {
 })
 
 const sizes = new Set<string>(PROJECT_SIZES.map((s) => s.value))
-// Codes (TE1, TE2…) are given here, from the track's name, continuing after the codes it already has.
-function projectsIn(x: unknown, track: Chapter, all: Chapter[]): Project[] {
-  const prefix = codePrefix(track, all)
+// Codes (TE1, TE2…) are given here, from the topic's name, continuing after the codes it already has.
+function projectsIn(x: unknown, topic: Topic, all: Topic[]): Project[] {
+  const prefix = codePrefix(topic, all)
   let n = 0
   return arr(x).map((p) => ({
     id: str(p.id, 80) || uuid(),
@@ -110,41 +110,41 @@ function projectsIn(x: unknown, track: Chapter, all: Chapter[]): Project[] {
   }))
 }
 
-const freeColor = (all: Chapter[]) => PALETTE.find((p) => !all.some((c) => c.color === p)) ?? PALETTE[all.length % PALETTE.length]
+const freeColor = (all: Topic[]) => PALETTE.find((p) => !all.some((c) => c.color === p)) ?? PALETTE[all.length % PALETTE.length]
 
 /* ---------- Output: what an AI reads back ---------- */
 
-const trackOut = (t: Chapter, done: Set<string>) => ({
+const topicOut = (t: Topic, done: Set<string>) => ({
   id: t.id, name: t.name, kind: t.kind, color: t.color, description: t.description ?? '', goals: t.outcomes, months: t.months ?? null,
-  skills: t.skills.map((k) => ({ id: k.id, name: k.name, intro: k.intro ?? '', topics: k.topics.map((x) => ({ id: x.id, text: x.text, done: done.has(x.id) })) })),
+  skills: t.skills.map((k) => ({ id: k.id, name: k.name, intro: k.intro ?? '', steps: k.steps.map((x) => ({ id: x.id, text: x.text, done: done.has(x.id) })) })),
   resources: t.resources.map((r) => ({ ...r, done: done.has(r.id) })),
   projects: t.projects,
 })
 
-const trackSummary = (t: Chapter, done: Set<string>) => {
-  const topics = t.skills.flatMap((k) => k.topics)
-  return { id: t.id, name: t.name, kind: t.kind, skills: t.skills.length, topics: topics.length, topics_done: topics.filter((x) => done.has(x.id)).length, resources: t.resources.length, projects: t.projects.length }
+const topicSummary = (t: Topic, done: Set<string>) => {
+  const steps = t.skills.flatMap((k) => k.steps)
+  return { id: t.id, name: t.name, kind: t.kind, skills: t.skills.length, steps: steps.length, steps_done: steps.filter((x) => done.has(x.id)).length, resources: t.resources.length, projects: t.projects.length }
 }
 
 /* ---------- Operations ---------- */
 
-const findTrack = (all: Chapter[], id: unknown) => all.find((t) => t.id === id) ?? fail(404, `No track with id "${String(id)}".`)
+const findTopic = (all: Topic[], id: unknown) => all.find((t) => t.id === id) ?? fail(404, `No topic with id "${String(id)}".`)
 
 export const ops = {
-  async list_tracks(c: Caller) {
-    const [all, done] = await Promise.all([tracks(c), ticks(c)])
-    return all.map((t) => trackSummary(t, done))
+  async list_topics(c: Caller) {
+    const [all, done] = await Promise.all([topics(c), ticks(c)])
+    return all.map((t) => topicSummary(t, done))
   },
 
-  async get_track(c: Caller, a: Json) {
-    const [all, done] = await Promise.all([tracks(c), ticks(c)])
-    return trackOut(findTrack(all, a.id), done)
+  async get_topic(c: Caller, a: Json) {
+    const [all, done] = await Promise.all([topics(c), ticks(c)])
+    return topicOut(findTopic(all, a.id), done)
   },
 
-  async create_track(c: Caller, a: Json) {
-    const all = await tracks(c)
-    const name = str(a.name, 60) || fail(400, 'A track needs a name.')
-    const t: Chapter = {
+  async create_topic(c: Caller, a: Json) {
+    const all = await topics(c)
+    const name = str(a.name, 60) || fail(400, 'A topic needs a name.')
+    const t: Topic = {
       id: freshId(name, all.map((x) => x.id)), kind: 'learn', position: nextPosition(all), name,
       color: (PALETTE as readonly string[]).includes(a.color) ? a.color : freeColor(all),
       description: str(a.description, 6000) || undefined, outcomes: strs(a.goals),
@@ -152,16 +152,16 @@ export const ops = {
       skills: skillsIn(a.skills), resources: resourcesIn(a.resources), projects: [], hint: str(a.hint, 200) || undefined,
     }
     t.projects = projectsIn(a.projects, t, [...all, t])
-    await putTrack(c, t)
-    return trackOut(t, new Set())
+    await putTopic(c, t)
+    return topicOut(t, new Set())
   },
 
   // Only the fields given change. Lists given (skills, resources, projects, goals) replace the old ones;
   // send items back with their ids to keep their ticks.
-  async update_track(c: Caller, a: Json) {
-    const all = await tracks(c)
-    const t = { ...findTrack(all, a.id) }
-    if (a.name !== undefined) t.name = str(a.name, 60) || fail(400, 'A track needs a name.')
+  async update_topic(c: Caller, a: Json) {
+    const all = await topics(c)
+    const t = { ...findTopic(all, a.id) }
+    if (a.name !== undefined) t.name = str(a.name, 60) || fail(400, 'A topic needs a name.')
     if (a.description !== undefined) t.description = str(a.description, 6000) || undefined
     if (a.goals !== undefined) t.outcomes = strs(a.goals)
     if (a.months !== undefined) t.months = Number.isInteger(a.months) && a.months > 0 ? a.months : undefined
@@ -169,14 +169,14 @@ export const ops = {
     if (a.skills !== undefined) t.skills = skillsIn(a.skills)
     if (a.resources !== undefined) t.resources = resourcesIn(a.resources)
     if (a.projects !== undefined) t.projects = projectsIn(a.projects, t, all)
-    await putTrack(c, t)
-    return trackOut(t, await ticks(c))
+    await putTopic(c, t)
+    return topicOut(t, await ticks(c))
   },
 
-  async delete_track(c: Caller, a: Json) {
-    const t = findTrack(await tracks(c), a.id)
+  async delete_topic(c: Caller, a: Json) {
+    const t = findTopic(await topics(c), a.id)
     if (t.kind === 'general') fail(400, 'Personal is built in and can\'t be deleted.')
-    check(await c.db.from('chapters').delete().eq('user_id', c.user).eq('id', t.id))
+    check(await c.db.from('topics').delete().eq('user_id', c.user).eq('id', t.id))
     return { deleted: t.id }
   },
 
@@ -229,10 +229,10 @@ export const ops = {
 
   async add_routine(c: Caller, a: Json) {
     const routines = await ops.list_routines(c)
-    const all = await tracks(c)
+    const all = await topics(c)
     const r: Routine = {
       id: uuid(), position: nextPosition(routines), title: str(a.title, 200) || fail(400, 'A routine needs a title.'),
-      sub: str(a.details, 400) || undefined, chapter: all.some((t) => t.id === a.track) ? a.track : 'own',
+      sub: str(a.details, 400) || undefined, topic: all.some((t) => t.id === a.topic) ? a.topic : 'own',
       when: whenIn(a.when), core: a.counts_for_streak !== false, created_at: now(),
     }
     check(await c.db.from('routines').upsert({ user_id: c.user, id: r.id, data: r, updated_at: now() }, { onConflict: 'user_id,id' }))
@@ -245,8 +245,8 @@ export const ops = {
   },
 
   async list_notes(c: Caller, a: Json) {
-    let q = c.db.from('notes').select('id, type, body, url, context, tags, chapter, created_at').eq('user_id', c.user)
-    if (a.track) q = q.eq('chapter', a.track)
+    let q = c.db.from('notes').select('id, type, body, url, context, tags, topic, created_at').eq('user_id', c.user)
+    if (a.topic) q = q.eq('topic', a.topic)
     for (const w of str(a.query, 200).split(/\s+/).filter(Boolean).map((x) => x.replace(/[,()%*]/g, '')))
       q = q.or(`body.ilike.%${w}%,context.ilike.%${w}%,url.ilike.%${w}%`)
     const { data } = check(await q.order('created_at', { ascending: false }).limit(Math.min(Number(a.limit) || 20, 100)))
@@ -257,11 +257,11 @@ export const ops = {
     const body = str(a.text, 8000)
     const url = str(a.url, 1000) || findUrls(body)[0] || null
     if (!body && !url) fail(400, 'A note needs text or a url.')
-    const all = await tracks(c)
+    const all = await topics(c)
     const tags = [...new Set(strs(a.tags).map(cleanTag).filter(Boolean))]
     const row = {
       user_id: c.user, type: url ? 'link' : tags.includes('idea') ? 'idea' : 'note', body, url, kind: url ? kindFromUrl(url) ?? 'site' : null,
-      tags, chapter: all.some((t) => t.id === a.track) ? a.track : 'own', source: 'api',
+      tags, topic: all.some((t) => t.id === a.topic) ? a.topic : 'own', source: 'api',
     }
     const { data } = check(url
       ? await c.db.from('notes').upsert(row, { onConflict: 'user_id,url' }).select().single()
@@ -280,8 +280,8 @@ export const ops = {
   },
 
   async set_focus(c: Caller, a: Json) {
-    const t = findTrack(await tracks(c), a.id)
-    if (t.kind !== 'learn') fail(400, 'Only a learning track can be the focus.')
+    const t = findTopic(await topics(c), a.id)
+    if (t.kind !== 'learn') fail(400, 'Only a learning topic can be the focus.')
     const { data } = check(await c.db.from('settings').select('program').eq('user_id', c.user).maybeSingle())
     check(await c.db.from('settings').upsert({ user_id: c.user, program: { ...data?.program, focus: t.id }, updated_at: now() }, { onConflict: 'user_id' }))
     return { focus: t.id }

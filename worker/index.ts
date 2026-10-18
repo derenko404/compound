@@ -2,7 +2,7 @@
 // (/api/v1 and /mcp). Only those paths reach this code (run_worker_first in wrangler.jsonc); the rest is static assets.
 import { createClient } from '@supabase/supabase-js'
 import { cleanTag, findUrls, kindFromUrl } from '../src/lib/finds'
-import type { LinkKind, Chapter, ChapterId } from '../src/lib/types'
+import type { LinkKind, Topic, TopicId } from '../src/lib/types'
 import { handleApi, handleMcp } from './routes'
 
 interface Env {
@@ -39,27 +39,27 @@ const linksIn = (m: TgMessage, text = m.text ?? m.caption ?? '') => [
 ]
 
 // Workers AI retires models (the plain 3.1 8B went on 2026-05-30); check the catalog if AI calls start failing.
-// 70B: the 8B models picked note chapters badly and can't be held to a JSON schema. About 7 neurons a call.
+// 70B: the 8B models picked note topics badly and can't be held to a JSON schema. About 7 neurons a call.
 const MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
 
-// Tracks come from the account's chapters table. A new account always has Personal, so the fallback only covers
+// Topics come from the account's topics table. A new account always has Personal, so the fallback only covers
 // an account that hasn't opened the app yet.
-interface Ch { id: ChapterId; name: string; hint: string }
+interface Ch { id: TopicId; name: string; hint: string }
 const FALLBACK: Ch[] = [{ id: 'own', name: 'Personal', hint: 'anything personal' }]
 
-async function loadChapters(env: Env, user: string): Promise<Ch[]> {
-  const { data, error } = await dbFor(env).from('chapters').select('data').eq('user_id', user)
-  if (error) console.error('chapters', error)
-  const live = ((data ?? []) as { data: Chapter }[]).map((r) => r.data).filter((c) => !c.archived)
+async function loadTopics(env: Env, user: string): Promise<Ch[]> {
+  const { data, error } = await dbFor(env).from('topics').select('data').eq('user_id', user)
+  if (error) console.error('topics', error)
+  const live = ((data ?? []) as { data: Topic }[]).map((r) => r.data).filter((c) => !c.archived)
   return live.length ? live.map((c) => ({ id: c.id, name: c.name, hint: c.hint || c.description?.slice(0, 120) || '' })) : FALLBACK
 }
 
-const chapterList = (chs: Ch[]) => chs.map((c) => `${c.id} = ${c.name}${c.hint ? `: ${c.hint}` : ''}`).join('\n')
-const chapterIn = (chs: Ch[], id: unknown) => chs.find((c) => c.id === id) ?? null
+const topicList = (chs: Ch[]) => chs.map((c) => `${c.id} = ${c.name}${c.hint ? `: ${c.hint}` : ''}`).join('\n')
+const topicIn = (chs: Ch[], id: unknown) => chs.find((c) => c.id === id) ?? null
 const UA = 'Mozilla/5.0 (compatible; CompoundBot/1.0)'
 const HELP = [
   'Send me a link, with a note if you like, and I\'ll save it to your notebook. Reply to a link later to add a note to it.',
-  'Any other text is saved as a note. Start it with a track to pick one, e.g. "english practise th sounds"; otherwise the AI picks. The AI also adds tags and spots ideas (or add #idea); #tags you type are kept too.',
+  'Any other text is saved as a note. Start it with a topic to pick one, e.g. "english practise th sounds"; otherwise the AI picks. The AI also adds tags and spots ideas (or add #idea); #tags you type are kept too.',
   '/ai <link> [question] reads the page, sums it up and saves it to your notebook. /ai <question> just asks the AI.',
 ].join('\n\n')
 
@@ -152,7 +152,7 @@ async function handle(msg: TgMessage, env: Env) {
   note = note.replace(/\s+/g, ' ').trim()
 
   const db = dbFor(env)
-  const chs = await loadChapters(env, user)
+  const chs = await loadTopics(env, user)
   const lines: string[] = []
   for (const url of urls) {
     const meta = await pageMeta(url)
@@ -162,13 +162,13 @@ async function handle(msg: TgMessage, env: Env) {
     const summary = isAi ? await analyze(env, url, meta, note) : ''
     // Upsert on the link: resending it updates the page details and keeps the old text unless new text came with it.
     const { error } = await db.from('notes').upsert(
-      { user_id: user, type: 'link', url, kind, context: [meta.title, summary || meta.description].filter(Boolean).join('\n'), tags: ai.tags, chapter: ai.chapter ?? chapterIn(chs, 'own')?.id ?? null, ...(note && { body: note }), source: 'telegram' },
+      { user_id: user, type: 'link', url, kind, context: [meta.title, summary || meta.description].filter(Boolean).join('\n'), tags: ai.tags, topic: ai.topic ?? topicIn(chs, 'own')?.id ?? null, ...(note && { body: note }), source: 'telegram' },
       { onConflict: 'user_id,url' },
     )
     if (error) {
       console.error('save', error)
       lines.push(`Couldn't save ${url}: ${error.message}`)
-    } else lines.push(`Saved as ${kind}${ai.chapter ? ` in ${chapterIn(chs, ai.chapter)?.name}` : ''}: ${meta.title || url}\n${url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
+    } else lines.push(`Saved as ${kind}${ai.topic ? ` in ${topicIn(chs, ai.topic)?.name}` : ''}: ${meta.title || url}\n${url}${ai.tags.length ? `\n${ai.tags.map((t) => `#${t}`).join(' ')}` : ''}${summary ? `\n\n${summary}` : ''}`)
   }
   await say(lines.join('\n\n'))
 }
@@ -189,33 +189,33 @@ async function noteOnLinks(env: Env, user: string, urls: string[], text: string)
 
 /* ---------- Notes: plain text for the notebook ---------- */
 
-// "english text": the first word picks the chapter when it names one (its id, its name, or its name's first word).
-function chapterWord(chs: Ch[], word: string): Ch | null {
+// "english text": the first word picks the topic when it names one (its id, its name, or its name's first word).
+function topicWord(chs: Ch[], word: string): Ch | null {
   const w = word.toLowerCase()
   return chs.find((c) => c.id === w || c.name.toLowerCase() === w || c.name.toLowerCase().split(/\s+/)[0] === w) ?? null
 }
 
 async function saveNote(env: Env, user: string, text: string) {
-  const chs = await loadChapters(env, user)
+  const chs = await loadTopics(env, user)
   const [first, ...rest] = text.split(/\s+/)
-  const named = rest.length ? chapterWord(chs, first) : null
+  const named = rest.length ? topicWord(chs, first) : null
   const body = named ? text.slice(first.length).trim() : text
-  // One AI call files the note: track (unless the first word named one), topic tags, and whether it's an idea.
+  // One AI call files the note: topic (unless the first word named one), step tags, and whether it's an idea.
   const ai = await fileNote(env, body, chs)
-  const chapter = named ?? ai.chapter ?? chapterIn(chs, 'own')
+  const topic = named ?? ai.topic ?? topicIn(chs, 'own')
   const typed = [...body.matchAll(/#([\p{L}\d_-]+)/gu)].map((m) => cleanTag(m[1]))
   const idea = ai.idea || typed.includes('idea')
   // Ideas also carry the #idea tag, the same as ideas made in the app.
   const tags = [...new Set([...(idea ? ['idea'] : []), ...typed, ...ai.tags])]
-  const { error } = await dbFor(env).from('notes').insert({ user_id: user, type: idea ? 'idea' : 'note', chapter: chapter?.id ?? null, body, tags, source: 'telegram' })
+  const { error } = await dbFor(env).from('notes').insert({ user_id: user, type: idea ? 'idea' : 'note', topic: topic?.id ?? null, body, tags, source: 'telegram' })
   if (error) {
     console.error('note', error)
     return `Couldn't save the note: ${error.message}`
   }
-  return `Noted${idea ? ' as an idea' : ''}${chapter ? ` in ${chapter.name}` : ''}${tags.length ? `\n${tags.map((t) => `#${t}`).join(' ')}` : ''}`
+  return `Noted${idea ? ' as an idea' : ''}${topic ? ` in ${topic.name}` : ''}${tags.length ? `\n${tags.map((t) => `#${t}`).join(' ')}` : ''}`
 }
 
-async function fileNote(env: Env, body: string, chs: Ch[]): Promise<{ chapter: Ch | null; tags: string[]; idea: boolean }> {
+async function fileNote(env: Env, body: string, chs: Ch[]): Promise<{ topic: Ch | null; tags: string[]; idea: boolean }> {
   try {
     const response = await run(env, {
       max_tokens: 80,
@@ -224,32 +224,32 @@ async function fileNote(env: Env, body: string, chs: Ch[]): Promise<{ chapter: C
         json_schema: {
           type: 'object',
           properties: {
-            chapter: { type: 'string', enum: chs.map((c) => c.id) },
+            topic: { type: 'string', enum: chs.map((c) => c.id) },
             tags: { type: 'array', items: { type: 'string' }, maxItems: 3 },
             idea: { type: 'boolean' },
           },
-          required: ['chapter', 'tags', 'idea'],
+          required: ['topic', 'tags', 'idea'],
         },
       },
       messages: [
         {
           role: 'system',
           content:
-            'You file a personal note in a self-development notebook. Reply with JSON: {"chapter": "<id>", "tags": [1 to 3 short lowercase topic words], "idea": true | false}. ' +
+            'You file a personal note in a self-development notebook. Reply with JSON: {"topic": "<id>", "tags": [1 to 3 short lowercase subject words], "idea": true | false}. ' +
             'idea = true only when the note proposes something to build, start or try (a product, project, plan or experiment), not for facts, learnings, reminders or questions. ' +
-            `chapter = the part of the roadmap it belongs to:\n${chapterList(chs)}`,
+            `topic = the part of the roadmap it belongs to:\n${topicList(chs)}`,
         },
         { role: 'user', content: body },
       ],
     })
-    const j = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { chapter?: string; tags?: unknown; idea?: unknown }
+    const j = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { topic?: string; tags?: unknown; idea?: unknown }
     const tags = Array.isArray(j.tags)
       ? [...new Set(j.tags.filter((t): t is string => typeof t === 'string').map(cleanTag).filter((t) => t && t !== 'idea'))].slice(0, 3)
       : []
-    return { chapter: chapterIn(chs, j.chapter), tags, idea: j.idea === true }
+    return { topic: topicIn(chs, j.topic), tags, idea: j.idea === true }
   } catch (e) {
     console.error('ai', e)
-    return { chapter: null, tags: [], idea: false }
+    return { topic: null, tags: [], idea: false }
   }
 }
 
@@ -364,7 +364,7 @@ const clip = (s: string, n: number) => {
 
 /* ---------- Kind and tags from Workers AI ---------- */
 
-async function classify(env: Env, url: string, meta: Meta, chs: Ch[]): Promise<{ kind: LinkKind | null; tags: string[]; chapter: ChapterId | null }> {
+async function classify(env: Env, url: string, meta: Meta, chs: Ch[]): Promise<{ kind: LinkKind | null; tags: string[]; topic: TopicId | null }> {
   try {
     const response = await run(env, {
       max_tokens: 120,
@@ -375,30 +375,30 @@ async function classify(env: Env, url: string, meta: Meta, chs: Ch[]): Promise<{
           properties: {
             kind: { type: 'string', enum: ['video', 'post', 'site'] },
             tags: { type: 'array', items: { type: 'string' }, maxItems: 3 },
-            chapter: { type: 'string', enum: chs.map((c) => c.id) },
+            topic: { type: 'string', enum: chs.map((c) => c.id) },
           },
-          required: ['kind', 'tags', 'chapter'],
+          required: ['kind', 'tags', 'topic'],
         },
       },
       messages: [
         {
           role: 'system',
           content:
-            'You file links into a personal bookmark list. Reply with JSON: {"kind": "video" | "post" | "site", "tags": [1 to 3 short lowercase topic words], "chapter": "<id>"}. ' +
+            'You file links into a personal bookmark list. Reply with JSON: {"kind": "video" | "post" | "site", "tags": [1 to 3 short lowercase subject words], "topic": "<id>"}. ' +
             'video = a video or talk to watch; post = one article, blog post, thread or social post; site = a whole site, tool, product, course or docs. ' +
-            `chapter = the part of the owner's self-development roadmap it helps with:\n${chapterList(chs)}`,
+            `topic = the part of the owner's self-development roadmap it helps with:\n${topicList(chs)}`,
         },
         { role: 'user', content: `URL: ${url}\nTitle: ${meta.title}\nDescription: ${meta.description}` },
       ],
     })
-    const j = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { kind?: string; tags?: unknown; chapter?: string }
+    const j = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? '{}') as { kind?: string; tags?: unknown; topic?: string }
     const kind = j.kind === 'video' || j.kind === 'post' || j.kind === 'site' ? j.kind : null
     const tags = Array.isArray(j.tags)
       ? [...new Set(j.tags.filter((t): t is string => typeof t === 'string').map((t) => t.toLowerCase().replace(/^#/, '').trim().replace(/\s+/g, '-')).filter(Boolean))].slice(0, 3)
       : []
-    return { kind, tags, chapter: chapterIn(chs, j.chapter)?.id ?? null }
+    return { kind, tags, topic: topicIn(chs, j.topic)?.id ?? null }
   } catch (e) {
     console.error('ai', e)
-    return { kind: null, tags: [], chapter: null }
+    return { kind: null, tags: [], topic: null }
   }
 }

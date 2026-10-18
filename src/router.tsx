@@ -2,20 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, createRootRoute, createRoute, createRouter, redirect, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   CalendarCheck, CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, HeartPulse, ListChecks, Route as RouteIcon, MoreHorizontal, NotebookPen,
-  Settings as SettingsIcon, type LucideIcon,
+  Settings as SettingsIcon, Timer as TimerIcon, type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { BarBack, BarMenu, BarProvider, useBar } from '@/components/bar'
-import { ChapterColors } from '@/components/kit'
+import { TopicColors } from '@/components/kit'
 import { seedOps } from '@/data/seed'
 import { mountFx } from '@/fx/fx'
 import { startReminderLoop } from '@/fx/notify'
 import { keyOf } from '@/lib/dates'
 import { todayItems } from '@/lib/derive'
 import { useStore } from '@/store/StoreProvider'
-import { ChapterIndex, Chapters } from '@/views/Chapters'
+import { TopicIndex, Topics } from '@/views/Topics'
 import { Wellbeing } from '@/views/Wellbeing'
 import { ListPage, Lists } from '@/views/Lists'
 import { Notebook } from '@/views/Notebook'
@@ -23,22 +23,25 @@ import { Settings } from '@/views/Settings'
 import { PENDING_SHARE, SharePage } from '@/views/Share'
 import { SignIn } from '@/views/SignIn'
 import { Today } from '@/views/Today'
+import { Timer } from '@/views/Timer'
+import { clock, remaining, useTimer } from '@/fx/timer'
 
-type Tab = { to: '/today' | '/tracks' | '/notebook' | '/lists' | '/wellbeing' | '/settings'; label: string; icon: LucideIcon }
+type Tab = { to: '/today' | '/topics' | '/notebook' | '/lists' | '/wellbeing' | '/timer' | '/settings'; label: string; icon: LucideIcon }
 
 // Phones: MAIN in the bottom bar, MORE in its sheet.
 const MAIN: Tab[] = [
   { to: '/today', label: 'Today', icon: CalendarCheck },
-  { to: '/tracks', label: 'Tracks', icon: RouteIcon },
+  { to: '/topics', label: 'Topics', icon: RouteIcon },
   { to: '/notebook', label: 'Notebook', icon: NotebookPen },
   { to: '/wellbeing', label: 'Wellbeing', icon: HeartPulse },
 ]
 const MORE: Tab[] = [
   { to: '/lists', label: 'Lists', icon: ListChecks },
+  { to: '/timer', label: 'Timer', icon: TimerIcon },
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
 // Wide screens show every view as a tab, in this order.
-const TABS = [MAIN[0], MAIN[1], MAIN[2], MORE[0], MAIN[3], MORE[1]]
+const TABS = [MAIN[0], MAIN[1], MAIN[2], MORE[0], MAIN[3], MORE[1], MORE[2]]
 
 function BottomNav() {
   const [more, setMore] = useState(false)
@@ -93,6 +96,18 @@ function useSeed() {
   return pending
 }
 
+// While the timer runs, other pages show the time left in the top bar. Tapping it opens the timer.
+function TimerPill() {
+  const { state, now } = useTimer()
+  const { pathname } = useLocation()
+  if (!state.endsAt || pathname === '/timer') return null
+  return (
+    <Link to="/timer" className="bar-timer" aria-label={`Timer: ${clock(remaining(state, now))} left`}>
+      <TimerIcon aria-hidden="true" />{clock(remaining(state, now))}
+    </Link>
+  )
+}
+
 // Top-level pages show the brand and sync state; inner pages show only their back link. The right side is the page's ⋯ menu.
 function TopBar({ sync, mode }: { sync: string; mode: string }) {
   const bar = useBar()
@@ -104,6 +119,7 @@ function TopBar({ sync, mode }: { sync: string; mode: string }) {
       </div>
       {/* Keeps the bar the same height on pages without a ⋯. */}
       <div className="flex min-h-(--control-md) min-w-0 items-center gap-1">
+        <TimerPill />
         <BarMenu bar={bar} />
       </div>
     </header>
@@ -159,7 +175,7 @@ function Shell() {
             <nav className="tabs" aria-label="Views">
               {TABS.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="tab"><Icon aria-hidden="true" />{label}</Link>)}
             </nav>
-            <ChapterColors chapters={state.chapters} />
+            <TopicColors topics={state.topics} />
             <main>{ready && !seeding ? <Outlet /> : <div className="empty">Loading your progress…</div>}</main>
             <BottomNav />
           </>
@@ -178,12 +194,13 @@ const page = (path: string, component: () => React.ReactNode) => createRoute({ g
 const routeTree = root.addChildren([
   createRoute({ getParentRoute: () => root, path: '/', beforeLoad: () => { throw redirect({ to: '/today' }) } }),
   page('/today', Today),
-  page('/tracks', ChapterIndex),
-  page('/tracks/$ch', Chapters),
+  page('/topics', TopicIndex),
+  page('/topics/$ch', Topics),
   page('/notebook', Notebook),
   page('/lists', Lists),
   page('/lists/$id', ListPage),
   page('/wellbeing', Wellbeing),
+  page('/timer', Timer),
   page('/settings', Settings),
   page('/share/$id', SharePage),
 ])

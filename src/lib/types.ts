@@ -1,10 +1,10 @@
-// Chapter ids are free text: the seeded ones ('tech', 'eng', 'smoke', …) plus ids made for new chapters.
-export type ChapterId = string
+// Topic ids are free text: the seeded ones ('tech', 'eng', 'smoke', …) plus ids made for new topics.
+export type TopicId = string
 export type ProjectStatus = 'todo' | 'doing' | 'done'
 
 /* ---------- Content: everything the user can edit ---------- */
 
-export type ChapterKind = 'learn' | 'general'
+export type TopicKind = 'learn' | 'general'
 export type ResourceKind = 'book' | 'course' | 'video' | 'article' | 'podcast' | 'tool' | 'doc' | 'practice' | 'other'
 
 export type ProjectSize = 'small' | 'medium' | 'big'
@@ -29,15 +29,15 @@ export interface Resource {
   free?: boolean
 }
 
-export interface Topic { id: string; text: string }
-// What to learn: a skill with its topics in order, each tickable. Resources are a separate list on the track.
-export interface Skill { id: string; name: string; intro?: string; topics: Topic[] }
+export interface Step { id: string; text: string }
+// What to learn: a skill with its steps in order, each tickable. Resources are a separate list on the topic.
+export interface Skill { id: string; name: string; intro?: string; steps: Step[] }
 
 export interface Milestone { mins: number; label: string; text: string }
 
-export interface Chapter {
-  id: ChapterId
-  kind: ChapterKind
+export interface Topic {
+  id: TopicId
+  kind: TopicKind
   position: number
   name: string // one name everywhere: tags, cards, headers, the bot
   color: string // palette key, see PALETTE in content.ts
@@ -45,8 +45,8 @@ export interface Chapter {
   outcomes: string[] // "where you'll be": plain text goals
   created_at?: string // ISO; the duration counts from here
   months?: number // optional duration from created_at; the target finish is worked out from it, and pace warns when it would land later
-  // The track is its skills in order: "next" is always the first unticked topic. No dates inside a track;
-  // the focus (heavy) track is Program.focus.
+  // The topic is its skills in order: "next" is always the first unticked step. No dates inside a topic;
+  // the focus (heavy) topic is Program.focus.
   projects: Project[] // in order: the weekend slot takes the first unfinished one
   resources: Resource[]
   skills: Skill[]
@@ -76,7 +76,7 @@ export interface Routine {
   position: number
   title: string
   sub?: string
-  chapter: ChapterId
+  topic: TopicId
   when: When
   core?: boolean // counts for the streak
   created_at: string
@@ -85,7 +85,7 @@ export interface Routine {
 // Stored in settings.program.
 export interface Program {
   seeded?: number // seed version applied
-  focus: ChapterId | null // the heavy track: it gets the study sessions and the weekend project
+  focus: TopicId | null // the heavy topic: it gets the study sessions and the weekend project
 }
 
 /* ---------- Progress and records ---------- */
@@ -137,7 +137,7 @@ export interface Note {
   kind: LinkKind | null // links only
   context: string // written by the AI only (the bot): a link's page title and summary, and the like; read-only in the app
   tags: string[]
-  chapter: ChapterId | null
+  topic: TopicId | null
   source: 'app' | 'telegram' | 'api'
   created_at: string
 }
@@ -153,7 +153,7 @@ export interface State {
   plan: Record<string, string>
   projects: Record<string, ProjectStatus>
   notes: Note[]
-  chapters: Chapter[]
+  topics: Topic[]
   lists: ListDef[]
   listProgress: Record<string, Record<string, ListItem>>
   routines: Routine[]
@@ -168,7 +168,7 @@ export const emptyState = (): State => ({
   plan: {},
   projects: {},
   notes: [],
-  chapters: [],
+  topics: [],
   lists: [],
   listProgress: {},
   routines: [],
@@ -185,8 +185,8 @@ export type Op =
   | { type: 'project'; projectId: string; status: ProjectStatus }
   | { type: 'putNote'; note: Note }
   | { type: 'deleteNote'; id: string }
-  | { type: 'putChapter'; chapter: Chapter }
-  | { type: 'deleteChapter'; id: string }
+  | { type: 'putTopic'; topic: Topic }
+  | { type: 'deleteTopic'; id: string }
   | { type: 'putList'; list: ListDef }
   | { type: 'deleteList'; id: string }
   | { type: 'listItem'; list: string; item: string; progress: ListItem }

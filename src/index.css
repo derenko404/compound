@@ -7,8 +7,8 @@
    motion value in the app comes from here; components never hard-code them.
    ===================================================================== */
 
-/* Colours: shadcn token names, Compound palette. Chapter colours are information:
-   every task carries its chapter's colour through --c. */
+/* Colours: shadcn token names, Compound palette. Topic colours are information:
+   every task carries its topic's colour through --c. */
 :root {
   --background: #eef2ee;
   --foreground: #17212b;
@@ -25,12 +25,13 @@
   --accent: #e2e8e2;
   --accent-foreground: #17212b;
   --destructive: #c8322b;
+  --on-destructive: #ffffff; /* the minus in the red ⊖, in both themes */
   --border: #d5dcd5;
   --input: #d5dcd5;
   --ring: #2b55e0;
   --good: #1f8a5b;
   --warn: #b26a00;
-  /* Chapter palette; each chapter picks a key (PALETTE in src/lib/content.ts). */
+  /* Topic palette; each topic picks a key (PALETTE in src/lib/content.ts). */
   --p-blue: #2b55e0;
   --p-orange: #c4501a;
   --p-purple: #7a3fd6;
@@ -43,7 +44,7 @@
   --p-red: #c8322b;
   --p-indigo: #4338ca;
   --p-lime: #4d7c0f;
-  /* Today's rows from the tracks (focus track, light track, project): hues apart from the tracks' own. */
+  /* Today's rows from the topics (focus topic, light topic, project): hues apart from the topics' own. */
   --slot-focus: #0e7490;
   --slot-light: #4d7c0f;
   --slot-project: #a16207;
@@ -202,15 +203,17 @@
   --icon-md: 18px;
   --icon-lg: 22px;
   --control-sm: 36px; /* icon buttons, small buttons */
-  --control-md: 44px; /* inputs, selects: comfortable tap target */
+  --control-md: 44px; /* buttons, icon buttons: comfortable tap target */
+  --control-field: 52px; /* form fields: inputs, selects, list lines */
   --control-lg: 56px; /* the floating add button */
   --menu-w: 200px; /* dropdown menus */
+  --dial-lg: 248px; /* the timer's ring */
   --confirm-w: 400px; /* confirm dialogs */
   --thumb-w: 96px; /* video thumbnails in the notebook */
   --nav-h: 60px;      /* bottom navigation on phones, without the safe area */
   --header-h: 60px;   /* the sticky app header, without the safe area */
   --dot: 9px;
-  --accent-bar: 3px; /* chapter colour strip on rows, cards and folds */
+  --accent-bar: 3px; /* topic colour strip on rows, cards and folds */
   --page-max: 880px;
   --gutter: var(--space-4);
 
@@ -296,7 +299,7 @@
 .list, .fold { overflow: hidden; }
 .panel { padding: var(--space-4); }
 
-/* A chapter-coloured strip on the left edge of rows, projects and cards. */
+/* A topic-coloured strip on the left edge of rows, projects and cards. */
 .row::before, .project::before {
   content: ""; position: absolute; left: 0; top: var(--space-3); bottom: var(--space-3);
   width: var(--accent-bar); border-radius: 0 var(--radius-xs) var(--radius-xs) 0; background: var(--c);
@@ -315,7 +318,7 @@
 /* Segmented bar (Segmented, WeekdaysField): one rounded bar split into equal segments; picked ones filled.
    Columns come from the component. */
 .segmented { display: grid; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--card); }
-.segment { height: var(--control-md); padding: 0 var(--space-2); border: 0; border-left: 1px solid var(--border); background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
+.segment { height: var(--control-field); padding: 0 var(--space-2); border: 0; border-left: 1px solid var(--border); background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
 .segment:first-child { border-left: 0; }
 .segment:hover { color: var(--foreground); background: var(--accent); }
 .segment[aria-pressed="true"], .segment[aria-checked="true"] { background: var(--primary); color: var(--primary-foreground); }
@@ -340,11 +343,11 @@
 .entries { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
 /* LinesField: the ↵ button sits inside the box; it lights up once there's something to add. */
 .lines-input { position: relative; }
-.lines-input textarea { min-height: var(--control-md); padding-right: var(--control-md); resize: none; overflow: hidden; field-sizing: fixed; }
+.lines-input textarea { min-height: var(--control-field); padding-right: var(--control-field); resize: none; overflow: hidden; field-sizing: fixed; }
 /* Long unbroken text (a URL, "hellohello…") wraps instead of widening the box and the whole sheet. */
 [data-slot="textarea"] { overflow-wrap: anywhere; min-width: 0; max-width: 100%; }
 /* Square, with the same gap to the box's top, bottom and right edge (inside the 1px border). */
-.lines-add { --gap: var(--space-1); position: absolute; right: calc(var(--gap) + 1px); top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: calc(var(--control-md) - 2 * var(--gap) - 2px); height: calc(var(--control-md) - 2 * var(--gap) - 2px); border: 0; border-radius: var(--radius-sm); background: var(--primary); color: var(--primary-foreground); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
+.lines-add { --gap: var(--space-1); position: absolute; right: calc(var(--gap) + 1px); top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: calc(var(--control-field) - 2 * var(--gap) - 2px); height: calc(var(--control-field) - 2 * var(--gap) - 2px); border: 0; border-radius: var(--radius-sm); background: var(--primary); color: var(--primary-foreground); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
 .lines-add svg { width: var(--icon-sm); height: var(--icon-sm); }
 .lines-add:disabled { background: var(--muted); color: var(--muted-foreground); cursor: default; }
 .entry { display: inline-flex; align-items: center; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--muted); }
@@ -386,7 +389,6 @@ details > summary::-webkit-details-marker { display: none; }
 .plus-btn { display: inline-grid; place-items: center; width: var(--control-md); height: var(--control-md); border-radius: 50%; background: var(--primary); color: var(--primary-foreground); border: 0; cursor: pointer; flex: none; box-shadow: var(--shadow-card); }
 .plus-btn svg { width: var(--icon-lg); height: var(--icon-lg); }
 .plus-btn:hover { filter: brightness(1.08); }
-.row-edit { display: flex; gap: var(--space-half); align-items: center; }
 
 /* Tooltip on any element with data-tip: hover, focus, or .tip-open (set on tap). */
 [data-tip] { position: relative; }
@@ -417,8 +419,11 @@ details > summary::-webkit-details-marker { display: none; }
 .fab:active { transform: scale(0.96); }
 @media (max-width: 720px) { .fab { bottom: calc(var(--nav-h) + var(--space-3) + env(safe-area-inset-bottom, 0px)); } }
 
+
 /* Slim progress bar (Meter in kit.tsx). */
 .meter { height: var(--space-2); border-radius: 999px; background: var(--muted); overflow: hidden; }
+.meter-lg { height: var(--space-3); }
+.meter.is-empty { background: repeating-linear-gradient(-45deg, var(--muted) 0 var(--space-1), var(--border) var(--space-1) var(--space-2)); }
 /* Progress: a Meter with its count. */
 .progress-line { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-3); font-size: var(--text-small); color: var(--muted-foreground); }
 .progress-line b { color: var(--foreground); }
@@ -445,7 +450,7 @@ details > summary::-webkit-details-marker { display: none; }
 .wday.today { background: var(--muted); color: var(--foreground); font-weight: var(--weight-bold); }
 .wday.today[data-state="part"] i, .wday.today[data-state="empty"] i { border-color: var(--primary); background: conic-gradient(var(--primary) var(--pct), transparent 0); }
 
-/* The quarter's focus chapter (FocusCard). */
+/* The quarter's focus topic (FocusCard). */
 .focus-card { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); color: inherit; text-decoration: none; background-image: linear-gradient(160deg, color-mix(in srgb, var(--c) 10%, transparent), transparent 55%); transition: box-shadow var(--dur-fast); }
 .focus-card:hover { box-shadow: var(--shadow-card); }
 .focus-head { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--space-2); }
@@ -465,15 +470,15 @@ details > summary::-webkit-details-marker { display: none; }
 a.seg-tab { text-decoration: none; }
 @media (hover: hover) { .seg-tab:not([aria-selected="true"]):not([data-status="active"]):hover { color: var(--foreground); } }
 
-/* Plan: a track's progress and pace. */
-.track-row { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2) var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); color: inherit; text-decoration: none; position: relative; }
-.track-row:first-child { border-top: 0; }
-.track-row-name { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--weight-bold); }
-.track-row-count { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
-.track-row .meter { grid-column: 1 / -1; }
-.track-row .meter i { background: var(--c); }
-.track-row-pace { grid-column: 1 / -1; font-size: var(--text-small); color: var(--muted-foreground); }
-.track-row-pace.late { color: var(--warn); }
+/* Plan: a topic's progress and pace. */
+.topic-row { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2) var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); color: inherit; text-decoration: none; position: relative; }
+.topic-row:first-child { border-top: 0; }
+.topic-row-name { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--weight-bold); }
+.topic-row-count { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.topic-row .meter { grid-column: 1 / -1; }
+.topic-row .meter i { background: var(--c); }
+.topic-row-pace { grid-column: 1 / -1; font-size: var(--text-small); color: var(--muted-foreground); }
+.topic-row-pace.late { color: var(--warn); }
 .qbtn:disabled { cursor: default; opacity: 1; }
 .qbtn.past { opacity: .55; }
 a.qbtn { color: inherit; text-decoration: none; }
@@ -483,16 +488,16 @@ a.qbtn { color: inherit; text-decoration: none; }
 .focus-set svg { width: var(--icon-sm); height: var(--icon-sm); }
 @media (hover: hover) { .focus-set:hover { color: var(--foreground); border-color: var(--foreground); } }
 
-/* Chapter index cards and the chapter page header. */
-.chapter-card { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-lg); color: inherit; text-decoration: none; }
-/* The focus track: tinted with its colour and lifted, so the heavy track stands out. */
-.chapter-card.is-focus { border-color: color-mix(in srgb, var(--c) 55%, var(--border)); background: linear-gradient(135deg, color-mix(in srgb, var(--c) 16%, var(--card)), var(--card) 70%); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent), var(--shadow-card); }
-.chapter-card.is-focus .chapter-card-progress .meter i { background: var(--c); }
+/* Topic index cards and the topic page header. */
+.topic-card { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-lg); color: inherit; text-decoration: none; }
+/* The focus topic: tinted with its colour and lifted, so the heavy topic stands out. */
+.topic-card.is-focus { border-color: color-mix(in srgb, var(--c) 55%, var(--border)); background: linear-gradient(135deg, color-mix(in srgb, var(--c) 16%, var(--card)), var(--card) 70%); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent), var(--shadow-card); }
+.topic-card.is-focus .topic-card-progress .meter i { background: var(--c); }
 /* Becoming the focus: the card ducks, then punches up with a shockwave ring; the crosshair spins in. */
-.chapter-card { position: relative; }
-.track-head { position: relative; border-radius: var(--radius-lg); }
-.track-head.focus-pop { animation: focus-pop 900ms var(--ease-out); z-index: var(--z-overlay); }
-.track-head.focus-pop .focus-badge svg { animation: focus-spin 700ms var(--ease-out); }
+.topic-card { position: relative; }
+.topic-head { position: relative; border-radius: var(--radius-lg); }
+.topic-head.focus-pop { animation: focus-pop 900ms var(--ease-out); z-index: var(--z-overlay); }
+.topic-head.focus-pop .focus-badge svg { animation: focus-spin 700ms var(--ease-out); }
 @keyframes focus-pop {
   0% { transform: scale(1); }
   12% { transform: scale(.96); }
@@ -518,14 +523,14 @@ a.qbtn { color: inherit; text-decoration: none; }
   70% { opacity: 1; transform: scale(1.04); }
   100% { opacity: 0; transform: scale(1.1); }
 }
-@media (prefers-reduced-motion: reduce) { .track-head.focus-pop, .track-head.focus-pop .focus-badge svg { animation: none; } }
-.chapter-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.chapter-card-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-3); font-size: var(--text-caption); color: var(--muted-foreground); }
-.chapter-card .meter i, .chapter-progress .meter i { background: var(--c); }
-.chapter-card-now { display: grid; gap: var(--space-half); font-size: var(--text-small); }
-.chapter-card-now { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-.chapter-card-now .focus-label { display: block; }
-.chapter-progress { display: grid; gap: var(--space-2); margin-bottom: var(--space-3); }
+@media (prefers-reduced-motion: reduce) { .topic-head.focus-pop, .topic-head.focus-pop .focus-badge svg { animation: none; } }
+.topic-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.topic-card-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-3); font-size: var(--text-caption); color: var(--muted-foreground); }
+.topic-card .meter i, .topic-progress .meter i { background: var(--c); }
+.topic-card-now { display: grid; gap: var(--space-half); font-size: var(--text-small); }
+.topic-card-now { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.topic-card-now .focus-label { display: block; }
+.topic-progress { display: grid; gap: var(--space-2); margin-bottom: var(--space-3); }
 .active-project { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-5); padding: 0; background: none; border: 0; text-align: left; font-size: var(--text-small); color: var(--foreground); }
 .active-project .project-code { font-size: var(--text-caption); }
 /* Top bar: back link and ⋯ are full 44px tap targets; the negative margin keeps the chevron on the content edge. */
@@ -535,9 +540,28 @@ a.qbtn { color: inherit; text-decoration: none; }
 .bar-more { display: grid; place-items: center; width: var(--control-md); height: var(--control-md); margin-right: calc(-1 * var(--space-2)); border-radius: 999px; color: var(--muted-foreground); background: none; border: 0; cursor: pointer; }
 .bar-more svg { width: var(--icon-lg); height: var(--icon-lg); }
 .bar-more:hover, .bar-more[data-state="open"] { background: var(--accent); color: var(--foreground); }
+/* Edit and Done in the top bar: plain text in the primary colour, Done in bold (as on iOS). */
+/* TimerPill: the time left in the top bar while the timer runs on another page. */
+.bar-timer { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); font-weight: var(--weight-bold); font-size: var(--text-small); font-variant-numeric: tabular-nums; text-decoration: none; }
+.bar-timer svg { width: var(--icon-sm); height: var(--icon-sm); }
+.bar-text { min-height: var(--control-md); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: none; color: var(--primary); font: inherit; font-size: var(--text-body); cursor: pointer; }
+.bar-text:hover { background: var(--accent); }
+.bar-text { margin-right: calc(-1 * var(--space-2)); }
+.bar-text.is-done { font-weight: var(--weight-bold); }
+.bar-more:not(:last-child) { margin-right: 0; }
 .bar-menu { min-width: var(--menu-w); }
 .bar-menu [data-slot="dropdown-menu-item"] { min-height: var(--control-md); padding: 0 var(--space-3); font-size: var(--text-body); color: var(--foreground); text-decoration: none; cursor: pointer; }
 .bar-menu [data-slot="dropdown-menu-item"] svg { width: var(--icon-md); height: var(--icon-md); }
+/* The ⋯ on phones: a bottom drawer as tall as its big full-width buttons (BarMenu in bar.tsx). */
+.action-list { display: grid; gap: var(--space-2); }
+/* No visible title: the header is only the drawer handle. Tap outside to close. */
+.action-sheet .sheet-head { border-bottom: 0; padding-bottom: 0; }
+.action-sheet .sheet-close { display: none; }
+.action-item { display: flex; align-items: center; justify-content: center; gap: var(--space-3); width: 100%; min-height: var(--control-lg); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-lg); background: var(--muted); color: var(--foreground); font: inherit; font-size: var(--text-title); font-weight: var(--weight-bold); cursor: pointer; }
+.action-item svg { width: var(--icon-lg); height: var(--icon-lg); color: var(--muted-foreground); }
+.action-item:hover, .action-item:focus-visible { background: var(--accent); outline: none; }
+.action-item.is-danger { background: color-mix(in srgb, var(--destructive) 12%, transparent); }
+.action-item.is-danger, .action-item.is-danger svg { color: var(--destructive); }
 .about-text { white-space: pre-line; line-height: var(--leading-body); }
 .title-dot { width: var(--space-3); height: var(--space-3); }
 /* A page title that opens details: the name plus a small info icon. */
@@ -628,7 +652,9 @@ a.qbtn { color: inherit; text-decoration: none; }
 .share-actions input { flex: 1; min-width: 0; }
 .sheet-overlay { z-index: var(--z-overlay); }
 @media (max-width: 560px) {
-  .sheet, .sheet.sheet-wide { left: 0; right: 0; top: auto; bottom: 0; transform: none; max-width: none; max-height: 92vh; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); animation: sheet-up var(--dur-base) var(--ease-out); }
+  .sheet, .sheet.sheet-wide { left: 0; right: 0; top: auto; bottom: 0; transform: none; max-width: none; max-height: 92dvh; align-content: start; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); animation: sheet-up var(--dur-base) var(--ease-out); }
+  /* Drawers are as tall as their content, up to 92% of the screen. */
+  .sheet[data-state="closed"] { animation: sheet-down var(--dur-base) var(--ease-out) forwards; }
   /* iOS/Android sheet: Cancel top-left, title centred, the action top-right; no footer. */
   .sheet-head.has-actions { display: grid; grid-template-columns: 1fr auto 1fr; padding-inline: var(--space-2); }
   .sheet-head.has-actions .sheet-start, .sheet-head.has-actions .sheet-end { display: flex; }
@@ -644,7 +670,14 @@ a.qbtn { color: inherit; text-decoration: none; }
   .sheet-head { padding-top: var(--space-6); }
   .sheet-head::before { content: ""; position: absolute; top: var(--space-2); left: 50%; transform: translateX(-50%); width: var(--space-10); height: var(--space-1); border-radius: var(--radius-xs); background: var(--border); }
 }
-@keyframes sheet-up { from { transform: translateY(40px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+/* Drawers slide up from below the screen and back down on close. The backdrop fades with them. */
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes sheet-down { from { transform: none; } to { transform: translateY(100%); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+.sheet-overlay[data-state="open"] { animation: fade-in var(--dur-base) var(--ease-out); }
+.sheet-overlay[data-state="closed"] { animation: fade-out var(--dur-base) var(--ease-out) forwards; }
+@media (prefers-reduced-motion: reduce) { .sheet, .sheet[data-state="closed"], .sheet-overlay[data-state] { animation: none; } }
 
 /* =====================================================================
    Page header, stats, banner, sections
@@ -665,6 +698,17 @@ a.qbtn { color: inherit; text-decoration: none; }
 .dial-num { font-family: var(--font-display); font-weight: var(--weight-black); font-size: var(--text-dial); line-height: 1; font-variant-numeric: tabular-nums; }
 .dial-sub { font-size: var(--text-micro); color: var(--muted-foreground); }
 .dial.pulse { animation: pulse 0.9s ease; }
+/* Dial size lg: the one big ring on a page (the timer). */
+.dial.dial-lg { width: var(--dial-lg); height: var(--dial-lg); }
+.dial-lg .fill { stroke: var(--primary); transition: stroke-dashoffset var(--dur-base) linear; }
+.dial-lg .dial-num { font-size: calc(var(--dial-lg) / 5); }
+.dial-lg .dial-sub { font-size: var(--text-small); }
+/* Timer page: phase switch, the ring and the controls, centred in one column. */
+.timer { display: grid; justify-items: center; gap: var(--space-6); max-width: calc(var(--dial-lg) * 2); margin: 0 auto; }
+.timer > .segmented { width: 100%; }
+.timer-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); width: 100%; }
+.timer-sound { display: grid; gap: var(--space-2); width: 100%; }
+.timer-sound-label { font-size: var(--text-caption); font-weight: var(--weight-bold); color: var(--muted-foreground); }
 @keyframes pulse { 0% { transform: scale(1); } 35% { transform: scale(1.09); } 100% { transform: scale(1); } }
 
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: var(--space-6); }
@@ -695,6 +739,23 @@ main > :last-child { margin-bottom: 0; }
 .row-note { margin-top: var(--space-1); font-size: var(--text-small); font-style: italic; overflow-wrap: anywhere; }
 .row.is-done .row-title { color: var(--muted-foreground); text-decoration: line-through; text-decoration-color: var(--c); text-decoration-thickness: 2px; }
 .row-tag { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-micro); color: var(--muted-foreground); white-space: nowrap; padding-top: var(--space-1); }
+/* Edit mode, as on iOS (Row onOpen, sort): the whole row opens its form, with › and a ≡ handle on the right. */
+.row.is-openable { cursor: pointer; align-items: center; }
+.row.is-openable:hover { background: var(--accent); }
+.row.is-openable:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.row.is-openable .row-tag { padding-top: 0; }
+.row-chev { width: var(--icon-md); height: var(--icon-md); color: var(--muted-foreground); }
+.row-remove { display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-1)); border: 0; background: none; cursor: pointer; }
+.row-remove svg { width: var(--icon-lg); height: var(--icon-lg); padding: var(--space-half); border-radius: 50%; background: var(--destructive); color: var(--on-destructive); stroke-width: 3; }
+.row-remove:focus-visible { outline: 2px solid var(--ring); border-radius: 50%; }
+.sort-handle { display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); margin-right: calc(-1 * var(--space-2)); border: 0; border-radius: var(--radius-sm); background: none; color: var(--muted-foreground); cursor: grab; touch-action: none; }
+.sort-handle svg { width: var(--icon-md); height: var(--icon-md); }
+.sort-handle:focus-visible { outline: 2px solid var(--ring); }
+/* SortList while dragging: the held row lifts and follows the pointer, the others slide out of its way. */
+.is-sorting > .row { transition: transform var(--dur-fast) var(--ease-out); user-select: none; }
+.is-sorting > .row.is-dragging { transition: none; z-index: 1; background: var(--card); box-shadow: var(--shadow-card); cursor: grabbing; }
+.is-sorting > .row.is-dragging .sort-handle { cursor: grabbing; }
+@media (prefers-reduced-motion: reduce) { .is-sorting > .row { transition: none; } }
 .row.pop { animation: rowpop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
 @keyframes rowpop { 0% { transform: scale(1); } 40% { transform: scale(1.015); background: color-mix(in srgb, var(--c) 10%, var(--card)); } 100% { transform: scale(1); } }
 
@@ -709,6 +770,10 @@ main > :last-child { margin-bottom: 0; }
 
 /* Notes, ideas and finds: a card per entry inside a .list. */
 .note { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--space-2); padding: var(--space-4); border-top: 1px solid var(--border); }
+/* Entry remove: edit mode's ⊖ on the left. */
+.note.has-remove { grid-template-columns: auto minmax(0, 1fr) auto; }
+/* Its ⊖ and › sit centred on the card's height, like edit rows. */
+.note > .icon-btn, .note .row-remove { align-self: center; }
 /* Entry onEdit: clickable, so it shows it on hover. */
 .note.editable { cursor: pointer; transition: background var(--dur-fast); }
 @media (hover: hover) { .note.editable:hover { background: color-mix(in srgb, var(--foreground) 4%, transparent); } }
@@ -733,7 +798,7 @@ main > :last-child { margin-bottom: 0; }
 .nb-context { white-space: pre-wrap; font-size: var(--text-small); color: var(--muted-foreground); background: var(--muted); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); }
 .nb-quote { border-left: 3px solid var(--c); padding-left: var(--space-3); }
 .nb-meta { margin: 0; }
-/* Tags as small pills, so they read apart from the date and track around them. */
+/* Tags as small pills, so they read apart from the date and topic around them. */
 .nb-tag { display: inline-flex; align-items: center; padding: var(--space-half) var(--space-2); border: 0; border-radius: 999px; background: var(--muted); color: var(--foreground); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
 button.nb-tag:hover { background: var(--accent); }
 .nb-idea { display: flex; align-items: flex-start; gap: var(--space-2); }
@@ -759,7 +824,7 @@ button.nb-tag:hover { background: var(--accent); }
 .qbtn.now::after { content: "Now"; position: absolute; top: var(--space-2); right: var(--space-2); font-size: var(--text-micro); font-weight: var(--weight-bold); color: var(--primary-foreground); background: var(--primary); border-radius: 999px; padding: 0 var(--space-2); }
 
 
-/* Cards that link somewhere: chapter cards, skill cards. */
+/* Cards that link somewhere: topic cards, skill cards. */
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-2); }
 .link-card { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-md); color: inherit; text-decoration: none; transition: transform var(--dur-fast), box-shadow var(--dur-fast); }
 .link-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-card); }
@@ -767,7 +832,7 @@ button.nb-tag:hover { background: var(--accent); }
 .link-card-sub { font-size: var(--text-small); color: var(--muted-foreground); }
 
 /* =====================================================================
-   Chapter content: cross links, folds, projects
+   Topic content: cross links, folds, projects
    ===================================================================== */
 
 /* InnerLink: a link to another page of the app inside text. */
@@ -823,7 +888,7 @@ a.res-title:hover .res-ext { color: var(--c); }
 .hcard-text { display: grid; min-width: 0; }
 .hcard-name { font-weight: var(--weight-bold); overflow-wrap: anywhere; }
 .hcard-name svg { display: inline-block; width: var(--icon-sm); height: var(--icon-sm); margin-left: var(--space-1); vertical-align: -0.15em; color: var(--muted-foreground); transition: transform var(--dur-base); }
-.hcard-value { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); line-height: var(--leading-tight); color: var(--c); font-variant-numeric: tabular-nums; }
+.hcard-value { max-width: 50%; text-align: right; font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); line-height: var(--leading-tight); color: var(--c); font-variant-numeric: tabular-nums; }
 .hcard-value small { font-family: var(--font-body); font-size: var(--text-small); font-weight: normal; color: var(--muted-foreground); }
 /* Lines up under the name: the icon badge's width plus the gap. */
 .hcard-line { padding-left: calc(var(--icon-sm) + 2 * var(--space-1) + 2px + var(--space-3)); font-size: var(--text-small); color: var(--muted-foreground); }
@@ -856,7 +921,22 @@ a.res-title:hover .res-ext { color: var(--c); }
   .hcard > .hcard-head, .hcard > .hcard-line { grid-column: 1; }
   .hcard > .done-btn { grid-column: 2; grid-row: 1 / span 2; align-self: center; width: auto; min-width: calc(6 * var(--control-md)); padding-inline: var(--space-5); }
   .hcard > .hcard-body { grid-column: 1 / -1; }
+  /* The count goes under the name, so it isn't stranded between the name and the button. */
+  .hcard:has(> .done-btn) > .hcard-head { flex-wrap: wrap; row-gap: 0; }
+  .hcard:has(> .done-btn) .hcard-value { flex-basis: 100%; max-width: none; text-align: left; padding-left: calc(var(--icon-sm) + 2 * var(--space-1) + 2px + var(--space-3)); }
 }
+/* CountRow: one icon per unit toward the goal (water's glasses). Filled ones take the card's colour, extra ones past the goal are dashed. */
+.count-row { display: flex; gap: var(--space-1); }
+.count-unit { display: grid; place-items: center; flex: 1 1 0; min-width: 0; max-width: var(--control-sm); height: var(--control-sm); border: 1px solid transparent; border-radius: var(--radius-sm); background: none; color: var(--muted-foreground); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
+.count-unit svg { width: var(--icon-lg); height: var(--icon-lg); }
+.count-unit:hover { background: var(--accent); }
+.count-unit.on { background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
+.count-unit.extra:not(.on) { border-style: dashed; border-color: var(--border); }
+.count-unit:focus-visible { outline: 2px solid var(--ring); }
+/* Stepper: − value + (water above 10 glasses, the timer's custom minutes). */
+.count-step { display: flex; align-items: center; gap: var(--space-3); }
+.count-step .icon-btn { border: 1px solid var(--border); border-radius: 50%; }
+.count-step-value { min-width: var(--control-md); text-align: center; font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); color: var(--c); font-variant-numeric: tabular-nums; }
 .hcard-body { display: grid; gap: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
 .hcard .stats { margin-bottom: 0; }
 .hcard .meter i { background: var(--c); }
@@ -929,6 +1009,10 @@ a.res-title:hover .res-ext { color: var(--c); }
   /* Row tagInline: the tag stays on the title line. */
   .row.tag-inline { grid-template-columns: auto 1fr auto; }
   .row.tag-inline .row-tag { grid-column: auto; padding-top: 0; }
+  /* Edit rows (Row onOpen): ⊖, the title, then › and ≡ on the same line. */
+  .row.is-openable { grid-template-columns: auto 1fr auto; }
+  .row.is-openable.no-check { grid-template-columns: 1fr auto; }
+  .row.is-openable .row-tag { grid-column: auto; }
   .project-head { grid-template-columns: auto 1fr; }
   .project-head .status { grid-column: 2; justify-self: start; }
 }

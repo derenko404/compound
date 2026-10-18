@@ -1,20 +1,21 @@
 // The app's shared building blocks. Pages compose these instead of repeating markup;
 // their look comes from the tokens and patterns in src/index.css.
-import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ComponentType, type CSSProperties, type KeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { Link, type LinkProps } from '@tanstack/react-router'
-import { Check as CheckIcon, ChevronDown, Pencil, Search, X } from 'lucide-react'
-import type { Chapter, ChapterId } from '@/lib/types'
-import { burst } from '@/fx/fx'
+import { Check as CheckIcon, ChevronDown, ChevronRight, Copy, Menu, Minus, Plus, Search, X } from 'lucide-react'
+import type { Topic, TopicId } from '@/lib/types'
+import { burst, toast } from '@/fx/fx'
 import { playTick, playUntick } from '@/fx/sound'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-// Rows read their colour from --c; each chapter's --c-<id> is set by <ChapterColors>.
-export const cvar = (ch: ChapterId | null | undefined): CSSProperties =>
+// Rows read their colour from --c; each topic's --c-<id> is set by <TopicColors>.
+export const cvar = (ch: TopicId | null | undefined): CSSProperties =>
   ({ '--c': ch ? `var(--c-${ch}, var(--p-gray))` : 'var(--p-gray)' }) as CSSProperties
 
-// Maps every chapter id to its palette colour, for light and dark themes alike.
-export function ChapterColors({ chapters }: { chapters: Chapter[] }) {
-  const css = chapters.filter((c) => /^[a-z0-9-]+$/.test(c.id)).map((c) => `--c-${c.id}: var(--p-${c.color});`).join(' ')
+// Maps every topic id to its palette colour, for light and dark themes alike.
+export function TopicColors({ topics }: { topics: Topic[] }) {
+  const css = topics.filter((c) => /^[a-z0-9-]+$/.test(c.id)).map((c) => `--c-${c.id}: var(--p-${c.color});`).join(' ')
   return <style>{`:root { ${css} }`}</style>
 }
 
@@ -60,8 +61,10 @@ export function Check({ on, label, onToggle }: { on: boolean; label: string; onT
 
 // note: the user's own text under the sub line (a list item's note). tagInline: on phones the tag stays on the
 // title line instead of moving under it, for a small single control like a note button in a long list.
-export function Row({ ch, done, check, title, sub, note, tag, tagInline, children, style }: {
-  ch?: ChapterId | null
+// Edit mode, as on iOS: onOpen makes the whole row open its form (with › on the right), and sort adds a ≡ handle
+// to drag it to a new place inside a SortList. Leave out check while editing: ticks are off.
+export function Row({ ch, done, check, title, sub, note, tag, tagInline, onOpen, chevron = true, sort, children, style }: {
+  ch?: TopicId | null
   done?: boolean
   check?: ReactNode
   title: ReactNode
@@ -69,9 +72,13 @@ export function Row({ ch, done, check, title, sub, note, tag, tagInline, childre
   note?: ReactNode
   tag?: ReactNode
   tagInline?: boolean
+  onOpen?: () => void
+  chevron?: boolean // false: the row still opens on a tap but shows no ›
+  sort?: boolean
   children?: ReactNode
   style?: CSSProperties
 }) {
+  const reorder = useContext(SortCtx)
   const ref = useRef<HTMLDivElement>(null)
   const was = useRef(done)
   useEffect(() => {
@@ -84,7 +91,9 @@ export function Row({ ch, done, check, title, sub, note, tag, tagInline, childre
     was.current = done
   }, [done])
   return (
-    <div ref={ref} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}`} style={{ ...(ch ? cvar(ch) : {}), ...style }}>
+    <div ref={ref} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}${onOpen ? ' is-openable' : ''}`}
+      style={{ ...(ch ? cvar(ch) : {}), ...style }}
+      {...(onOpen && { role: 'button', tabIndex: 0, onClick: (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('button, a')) onOpen() }, onKeyDown: (e: KeyboardEvent) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen() } } })}>
       {check}
       <div className="row-body">
         <div className="row-title">{title}</div>
@@ -92,12 +101,93 @@ export function Row({ ch, done, check, title, sub, note, tag, tagInline, childre
         {note ? <div className="row-note">{note}</div> : null}
         {children}
       </div>
-      <div className="row-tag">{tag}</div>
+      <div className="row-tag">
+        {tag}
+        {onOpen && chevron && <ChevronRight className="row-chev" aria-hidden="true" />}
+        {sort && reorder && (
+          <button type="button" className="sort-handle" aria-label="Reorder: drag, or use the up and down arrow keys"
+            onClick={(e) => e.stopPropagation()} onPointerDown={(e) => dragRow(e, reorder)}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+              e.preventDefault()
+              const { rows, from } = siblings(e.currentTarget)
+              const to = from + (e.key === 'ArrowUp' ? -1 : 1)
+              if (to >= 0 && to < rows.length) reorder(from, to)
+            }}>
+            <Menu aria-hidden="true" />
+          </button>
+        )}
+      </div>
     </div>
   )
 }
 
-export function Dial({ n, total, sub, pulse }: { n: number; total: number; sub: string; pulse?: number }) {
+/* ---------- Reordering by drag ---------- */
+
+const SortCtx = createContext<((from: number, to: number) => void) | null>(null)
+
+// A List whose rows (Row sort) can be dragged to a new place by their ≡ handle. onMove gets the old and new index.
+export function SortList({ onMove, ...list }: { onMove: (from: number, to: number) => void; children?: ReactNode; empty?: string; ch?: TopicId | null }) {
+  return <SortCtx.Provider value={onMove}><List {...list} /></SortCtx.Provider>
+}
+
+// The rows of the list a handle sits in, and which one is its own.
+function siblings(handle: HTMLElement) {
+  const item = handle.closest<HTMLElement>('.row')!
+  const rows = [...item.parentElement!.children].filter((el): el is HTMLElement => el.classList.contains('row'))
+  return { item, rows, from: rows.indexOf(item) }
+}
+
+// The row follows the pointer (kept inside its list), the rows it passes slide out of its way, and on release
+// the list is reordered. Moves are only visual until then, so a cancelled drag changes nothing.
+function dragRow(e: ReactPointerEvent<HTMLElement>, onMove: (from: number, to: number) => void) {
+  if (e.button !== 0) return
+  e.preventDefault()
+  const handle = e.currentTarget
+  const { item, rows, from } = siblings(handle)
+  const box = item.parentElement!
+  const rects = rows.map((r) => r.getBoundingClientRect())
+  const size = rects[from].height
+  const min = rects[0].top - rects[from].top
+  const max = rects[rects.length - 1].bottom - rects[from].bottom
+  const startY = e.clientY
+  let to = from
+  handle.setPointerCapture(e.pointerId)
+  item.classList.add('is-dragging')
+  box.classList.add('is-sorting')
+  const follow = (ev: PointerEvent) => {
+    const dy = Math.min(max, Math.max(min, ev.clientY - startY))
+    item.style.transform = `translateY(${dy}px)`
+    const mid = rects[from].top + size / 2 + dy
+    to = from
+    rects.forEach((r, i) => {
+      const half = r.top + r.height / 2
+      if (i > from && mid > half) to = i
+      if (i < from && mid < half && to === from) to = i
+    })
+    rows.forEach((r, i) => {
+      if (i === from) return
+      const shift = from < to && i > from && i <= to ? -size : to < from && i >= to && i < from ? size : 0
+      r.style.transform = shift ? `translateY(${shift}px)` : ''
+    })
+  }
+  const end = () => {
+    handle.removeEventListener('pointermove', follow)
+    handle.removeEventListener('pointerup', end)
+    handle.removeEventListener('pointercancel', cancel)
+    rows.forEach((r) => { r.style.transform = '' })
+    item.classList.remove('is-dragging')
+    box.classList.remove('is-sorting')
+    if (to !== from) onMove(from, to)
+  }
+  const cancel = () => { to = from; end() }
+  handle.addEventListener('pointermove', follow)
+  handle.addEventListener('pointerup', end)
+  handle.addEventListener('pointercancel', cancel)
+}
+
+// value: shown in the middle instead of the count (the timer's mm:ss). size lg: the one big dial on a page.
+export function Dial({ n, total, sub, pulse, value, size }: { n: number; total: number; sub: string; pulse?: number; value?: ReactNode; size?: 'lg' }) {
   const C = 2 * Math.PI * 52
   const pct = total ? n / total : 0
   const ref = useRef<HTMLDivElement>(null)
@@ -109,14 +199,14 @@ export function Dial({ n, total, sub, pulse }: { n: number; total: number; sub: 
     el.classList.add('pulse')
   }, [pulse])
   return (
-    <div ref={ref} className={`dial${n === total && total ? ' done' : ''}`}>
+    <div ref={ref} className={`dial${size === 'lg' ? ' dial-lg' : ''}${n === total && total ? ' done' : ''}`}>
       <svg viewBox="0 0 120 120" aria-hidden="true">
         <circle className="track" cx="60" cy="60" r="52" fill="none" strokeWidth="10" />
         <circle className="fill" cx="60" cy="60" r="52" fill="none" strokeWidth="10" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
       </svg>
       <div className="dial-label">
         <div>
-          <div className="dial-num">{sub === 'done today' ? `${n}/${total}` : n}</div>
+          <div className="dial-num">{value ?? (sub === 'done today' ? `${n}/${total}` : n)}</div>
           <div className="dial-sub">{sub}</div>
         </div>
       </div>
@@ -213,18 +303,18 @@ export const LinkButton = ({ children, onClick, ...rest }: { children: ReactNode
 /* ---------- Surfaces ---------- */
 
 // A card of rows (Row, Entry, ProjectCard…), with a message when there's nothing in it.
-export function List({ children, empty: emptyText, ch }: { children?: ReactNode; empty?: string; ch?: ChapterId | null }) {
+export function List({ children, empty: emptyText, ch }: { children?: ReactNode; empty?: string; ch?: TopicId | null }) {
   const has = Array.isArray(children) ? children.some(Boolean) : !!children
   return <div className="list" style={ch ? cvar(ch) : undefined}>{has ? children : emptyText ? empty(emptyText) : null}</div>
 }
 
-export const Panel = ({ children, ch, className }: { children: ReactNode; ch?: ChapterId | null; className?: string }) => (
+export const Panel = ({ children, ch, className }: { children: ReactNode; ch?: TopicId | null; className?: string }) => (
   <div className={`panel${className ? ` ${className}` : ''}`} style={ch ? cvar(ch) : undefined}>{children}</div>
 )
 
 // A collapsible card: title, an optional counter or controls on the right, and its body.
 export function Fold({ title, meta, icon, ch, open, children }: {
-  title: ReactNode; meta?: ReactNode; icon?: ReactNode; ch?: ChapterId | null; open?: boolean; children: ReactNode
+  title: ReactNode; meta?: ReactNode; icon?: ReactNode; ch?: TopicId | null; open?: boolean; children: ReactNode
 }) {
   return (
     <details className="fold" open={open} style={ch ? cvar(ch) : undefined}>
@@ -240,22 +330,23 @@ export function Fold({ title, meta, icon, ch, open, children }: {
 }
 
 // One entry in a list of notes, ideas or finds: a meta line, then the content.
-// onEdit: a click anywhere on the entry opens it (links and buttons inside keep their own action). A pencil on the
-// right shows it and is the keyboard way in; the entry lights up on hover.
-export const Entry = ({ ch, meta, onEdit, editLabel = 'Edit', children }: {
-  ch?: ChapterId | null; meta?: ReactNode; onEdit?: () => void; editLabel?: string; children: ReactNode
+// onEdit: a click anywhere on the entry opens it (links and buttons inside keep their own action). A › on the
+// right shows it and is the keyboard way in; the entry lights up on hover. remove: edit mode's ⊖ (RemoveButton), on the left.
+export const Entry = ({ ch, meta, onEdit, editLabel = 'Edit', remove, children }: {
+  ch?: TopicId | null; meta?: ReactNode; onEdit?: () => void; editLabel?: string; remove?: ReactNode; children: ReactNode
 }) => (
-  <div className={`note${onEdit ? ' editable' : ''}`} style={ch ? cvar(ch) : { '--c': 'var(--primary)' } as CSSProperties}
+  <div className={`note${onEdit ? ' editable' : ''}${remove ? ' has-remove' : ''}`} style={ch ? cvar(ch) : { '--c': 'var(--primary)' } as CSSProperties}
     onClick={onEdit ? (e) => { if (!(e.target as HTMLElement).closest('a, button')) onEdit() } : undefined}>
+    {remove}
     <div className="min-w-0">
       {meta && <div className="note-meta">{meta}</div>}
       {children}
     </div>
-    {onEdit && <button type="button" className="icon-btn" aria-label={editLabel} onClick={onEdit}><Pencil aria-hidden="true" /></button>}
+    {onEdit && <button type="button" className="icon-btn" aria-label={editLabel} onClick={onEdit}><ChevronRight aria-hidden="true" /></button>}
   </div>
 )
 
-export function Banner({ children, actions, ch }: { children: ReactNode; actions?: ReactNode; ch?: ChapterId | null }) {
+export function Banner({ children, actions, ch }: { children: ReactNode; actions?: ReactNode; ch?: TopicId | null }) {
   return (
     <div className="banner" style={ch ? cvar(ch) : undefined}>
       <p>{children}</p>
@@ -264,20 +355,20 @@ export function Banner({ children, actions, ch }: { children: ReactNode; actions
   )
 }
 
-export const Stats = ({ items, ch }: { items: { value: ReactNode; label: ReactNode }[]; ch?: ChapterId | null }) => (
+export const Stats = ({ items, ch }: { items: { value: ReactNode; label: ReactNode }[]; ch?: TopicId | null }) => (
   <div className="stats" style={ch ? cvar(ch) : undefined}>
     {items.map((it, i) => <div key={i} className="stat"><b>{it.value}</b><span>{it.label}</span></div>)}
   </div>
 )
 
-// A link to another page of the app inside text: project codes, track names. Coloured by `ch`, dashed underline.
+// A link to another page of the app inside text: project codes, topic names. Coloured by `ch`, dashed underline.
 // Links that leave the app use an external-link icon instead.
-export const InnerLink = ({ ch, ...link }: { ch?: ChapterId | null } & LinkProps) => (
+export const InnerLink = ({ ch, ...link }: { ch?: TopicId | null } & LinkProps) => (
   <Link {...link} className="inner-link" style={ch ? cvar(ch) : undefined} />
 )
 
-// A card that links to a page: chapters, skills.
-export const LinkCard = ({ ch, title, sub, ...link }: { ch?: ChapterId | null; title: ReactNode; sub?: ReactNode } & LinkProps) => (
+// A card that links to a page: topics, skills.
+export const LinkCard = ({ ch, title, sub, ...link }: { ch?: TopicId | null; title: ReactNode; sub?: ReactNode } & LinkProps) => (
   <Link {...link} className="link-card" style={ch ? cvar(ch) : undefined}>
     <span className="link-card-title">{ch && <Dot />}{title}</span>
     {sub && <span className="link-card-sub">{sub}</span>}
@@ -299,8 +390,8 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
 
 /* ---------- Chips ---------- */
 
-// A chapter's colour dot. Without ch it uses the surrounding --c.
-export const Dot = ({ ch }: { ch?: ChapterId | null }) => <span className="dot" style={ch ? cvar(ch) : undefined} aria-hidden="true" />
+// A topic's colour dot. Without ch it uses the surrounding --c.
+export const Dot = ({ ch }: { ch?: TopicId | null }) => <span className="dot" style={ch ? cvar(ch) : undefined} aria-hidden="true" />
 
 // A row of chips. `scroll` keeps them on one line that scrolls sideways (filters); otherwise they wrap.
 // Chips that wrap onto more lines: tags, quick values, pickers inside cards and forms.
@@ -313,11 +404,11 @@ export const ChipsList = ({ children, label }: { children: ReactNode; label?: st
   <div className="chips chips-list" role="group" aria-label={label}>{children}</div>
 )
 
-// A toggle pill for filters and pickers, with an optional count and chapter dot.
+// A toggle pill for filters and pickers, with an optional count and topic dot.
 // icon + tone: an icon in its own colour (a colour token like "--habit-gym") before the label. Use it wherever a
 // choice has its own icon and colour (tracker types, habit filters…), so they look the same everywhere.
 export function Chip({ pressed, onClick, count, ch, icon: Icon, tone, children }: {
-  pressed?: boolean; onClick: () => void; count?: number | string; ch?: ChapterId | null
+  pressed?: boolean; onClick: () => void; count?: number | string; ch?: TopicId | null
   icon?: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>; tone?: string; children: ReactNode
 }) {
   const style = tone ? ({ '--c': `var(${tone})` } as CSSProperties) : ch ? cvar(ch) : undefined
@@ -329,16 +420,16 @@ export function Chip({ pressed, onClick, count, ch, icon: Icon, tone, children }
 }
 
 // Same look as Chip, but navigates.
-export const ChipLink = ({ ch, pressed, children, ...link }: { ch?: ChapterId | null; pressed?: boolean; children: ReactNode } & LinkProps) => (
+export const ChipLink = ({ ch, pressed, children, ...link }: { ch?: TopicId | null; pressed?: boolean; children: ReactNode } & LinkProps) => (
   <Link {...link} className="chbtn text-foreground no-underline" aria-pressed={pressed} style={ch ? cvar(ch) : undefined}>
     {ch && <Dot />}{children}
   </Link>
 )
 
-// A static pill for facts: "Day 1 of 548", "Q1", a chapter. With `to` it links somewhere.
-// tint: tinted with the chapter colour (`ch`, or the surrounding --c) instead of a dot.
-// color: a colour token to tint with instead of a chapter's, e.g. "--slot-focus".
-export function Badge({ ch, tint, color, children, ...link }: { ch?: ChapterId | null; tint?: boolean; color?: string; children: ReactNode } & Partial<LinkProps>) {
+// A static pill for facts: "Day 1 of 548", "Q1", a topic. With `to` it links somewhere.
+// tint: tinted with the topic colour (`ch`, or the surrounding --c) instead of a dot.
+// color: a colour token to tint with instead of a topic's, e.g. "--slot-focus".
+export function Badge({ ch, tint, color, children, ...link }: { ch?: TopicId | null; tint?: boolean; color?: string; children: ReactNode } & Partial<LinkProps>) {
   const inner = <>{ch && !tint && !color && <Dot />}{children}</>
   const cls = `chip${color || tint ? ' tint' : ''}`
   const style = color ? ({ '--c': `var(${color})` } as CSSProperties) : ch ? cvar(ch) : undefined
@@ -377,6 +468,69 @@ export function DoneButton({ on, label, done = 'Done today', onToggle, repeat, i
   )
 }
 
+// − value +: round buttons either side of a big value (water above 10 glasses, the timer's custom minutes).
+// Leave out onLess or onMore to disable that side. less and more label the buttons.
+export function Stepper({ label, value, less, more, onLess, onMore }: {
+  label: string; value: ReactNode; less: string; more: string; onLess?: (el: HTMLElement) => void; onMore?: (el: HTMLElement) => void
+}) {
+  return (
+    <div className="count-step" role="group" aria-label={label}>
+      <button type="button" className="icon-btn" aria-label={less} disabled={!onLess} onClick={(e) => onLess?.(e.currentTarget)}><Minus aria-hidden="true" /></button>
+      <span className="count-step-value">{value}</span>
+      <button type="button" className="icon-btn" aria-label={more} disabled={!onMore} onClick={(e) => onMore?.(e.currentTarget)}><Plus aria-hidden="true" /></button>
+    </div>
+  )
+}
+
+// A count toward a daily goal (glasses of water): one icon per unit, filled up to n. Tap one to set the count to it,
+// tap the last filled one to take it back. Past the goal a dashed one more is offered. Goals above 10 get a stepper.
+// unit: singular and plural, for labels ("glass", "glasses").
+export function CountRow({ n, target, onSet, icon: Icon, unit }: {
+  n: number; target: number; onSet: (n: number) => void; icon: ComponentType<{ 'aria-hidden'?: boolean }>; unit: [string, string]
+}) {
+  const set = (v: number, el: HTMLElement) => {
+    if (v > n) {
+      playTick(Math.min(1, v / target))
+      burst(el, 20)
+    } else playUntick()
+    onSet(v)
+  }
+  if (target > 10) return (
+    <Stepper label={`${n} of ${target} ${unit[1]}`} value={`${n}/${target}`} less={`Remove a ${unit[0]}`} more={`Add a ${unit[0]}`}
+      onLess={n ? (el) => set(n - 1, el) : undefined} onMore={(el) => set(n + 1, el)} />
+  )
+  const shown = Math.max(target, n) + (n >= target ? 1 : 0)
+  return (
+    <div className="count-row" role="group" aria-label={`${n} of ${target} ${unit[1]}`}>
+      {Array.from({ length: shown }, (_, i) => (
+        <button key={i} type="button" className={`count-unit${i < n ? ' on' : ''}${i >= target ? ' extra' : ''}`}
+          aria-label={`${i + 1} ${i ? unit[1] : unit[0]}`} aria-pressed={i < n} onClick={(e) => set(i + 1 === n ? i : i + 1, e.currentTarget)}>
+          <Icon aria-hidden />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// Copies text. The button itself says "Copied" for a moment instead of a toast. Failing to copy is an error toast.
+export function CopyButton({ text, label = 'Copy', className }: { text: string; label?: string; className?: string }) {
+  const [done, setDone] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setDone(true)
+      setTimeout(() => setDone(false), 2000)
+    } catch {
+      toast.error("Couldn't copy. Select it and copy by hand.")
+    }
+  }
+  return (
+    <Button type="button" variant="outline" className={className} onClick={() => void copy()} aria-live="polite">
+      {done ? <CheckIcon aria-hidden="true" /> : <Copy aria-hidden="true" />}{done ? 'Copied' : label}
+    </Button>
+  )
+}
+
 // One setting in a Panel: title and explanation on the left, its control on the right. Rows are divided by lines.
 export const SettingRow = ({ title, sub, children }: { title: ReactNode; sub?: ReactNode; children?: ReactNode }) => (
   <div className="setting-row">
@@ -398,9 +552,9 @@ export function Segmented<T extends string>({ value, onChange, options, label }:
   )
 }
 
-// A slim progress bar.
-export const Meter = ({ value, label }: { value: number; label: string }) => (
-  <div className="meter" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)}>
+// A slim progress bar. size lg: the taller one at the top of a page. Nothing done yet shows a striped track.
+export const Meter = ({ value, label, size }: { value: number; label: string; size?: 'lg' }) => (
+  <div className={`meter${size === 'lg' ? ' meter-lg' : ''}${value > 0 ? '' : ' is-empty'}`} role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(value * 100)}>
     <i style={{ width: `${Math.min(1, Math.max(0, value)) * 100}%` }} />
   </div>
 )

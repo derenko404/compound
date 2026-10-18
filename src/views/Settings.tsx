@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CloudUpload, Copy, Download, KeyRound, LogIn, LogOut, RefreshCw, Send, Trash2, Unlink, Upload } from 'lucide-react'
+import { CloudUpload, Download, KeyRound, LogIn, LogOut, RefreshCw, Send, Trash2, Unlink, Upload } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -17,21 +17,12 @@ import {
 import { useStore } from '@/store/StoreProvider'
 import type { State } from '@/lib/types'
 import { keyOf } from '@/lib/dates'
-import { Header, Panel, Section, Segmented, SettingRow } from '@/components/kit'
+import { CopyButton, Header, Panel, Section, Segmented, SettingRow } from '@/components/kit'
 import { ConfirmSheet, FormSheet, TextField, fail } from '@/components/edit'
 
 const BOT = import.meta.env.VITE_TELEGRAM_BOT as string | undefined
 
 const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-
-async function copy(text: string, what: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-    toast(`${what} copied.`)
-  } catch {
-    toast.error("Couldn't copy. Select it and copy by hand.")
-  }
-}
 
 // What to paste into an AI: where to connect, the token, and where the guide is.
 const aiPrompt = (token: string) => {
@@ -40,7 +31,7 @@ const aiPrompt = (token: string) => {
     'Connect to my Compound account, a self-development app.',
     `MCP server: ${o}/mcp with the header "Authorization: Bearer ${token}" (or the URL ${o}/mcp/${token} if you can't set headers).`,
     `Or the REST API: ${o}/api/v1 with the same header. Docs: ${o}/api/v1/openapi.json.`,
-    `Read ${o}/llms.txt first, then build me a track for <topic>.`,
+    `Read ${o}/llms.txt first, then build me a topic for <subject>.`,
   ].join('\n')
 }
 
@@ -50,18 +41,18 @@ const expiresIn = (created: string) => {
   return days <= 1 ? 'works until tomorrow' : `works ${days} more days`
 }
 
-// Links you've shared (tracks and lists): copy one again, or delete it so the link stops working.
+// Links you've shared (topics and lists): copy one again, or delete it so the link stops working.
 function SharedLinksRows() {
   const qc = useQueryClient()
   const shares = useQuery({ queryKey: ['shares'], queryFn: () => myShares(supabase!) })
   const [removing, setRemoving] = useState<Share | null>(null)
-  if (!shares.data?.length) return <SettingRow title="No shared links yet" sub="Share a track or a list from its ⋯ menu." />
+  if (!shares.data?.length) return <SettingRow title="No shared links yet" sub="Share a topic or a list from its ⋯ menu." />
   return (
     <>
       {shares.data.map((s) => (
-        <SettingRow key={s.id} title={s.name} sub={`${s.kind === 'track' ? 'Track' : 'List'} · ${expiresIn(s.created_at)}`}>
+        <SettingRow key={s.id} title={s.name} sub={`${s.kind === 'topic' ? 'Topic' : 'List'} · ${expiresIn(s.created_at)}`}>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => void copy(`${location.origin}/share/${s.id}`, 'Link')}><Copy aria-hidden="true" />Copy</Button>
+            <CopyButton text={`${location.origin}/share/${s.id}`} />
             <Button variant="outline" size="icon" aria-label={`Delete the link to ${s.name}`} onClick={() => setRemoving(s)}><Trash2 aria-hidden="true" /></Button>
           </div>
         </SettingRow>
@@ -72,7 +63,6 @@ function SharedLinksRows() {
           if (!removing) return
           await deleteShare(supabase!, removing.id)
           await qc.invalidateQueries({ queryKey: ['shares'] })
-          toast('Link deleted.')
         }} />
     </>
   )
@@ -88,7 +78,7 @@ function AiAccessRows() {
   const [revoking, setRevoking] = useState<ApiToken | null>(null)
   return (
     <>
-      <SettingRow title="AI access" sub="Let an AI (Claude, ChatGPT…) build tracks and lists for you. Each token has full access to your data.">
+      <SettingRow title="AI access" sub="Let an AI (Claude, ChatGPT…) build topics and lists for you. Each token has full access to your data.">
         <Button onClick={() => { setName(''); setNaming(true) }}><KeyRound aria-hidden="true" />New token</Button>
       </SettingRow>
       {(tokens.data ?? []).map((t) => (
@@ -113,13 +103,13 @@ function AiAccessRows() {
             <Label htmlFor="new-token">Token</Label>
             <div className="flex gap-2">
               <Input id="new-token" readOnly value={made} className="font-mono" onFocus={(e) => e.target.select()} />
-              <Button type="button" variant="outline" onClick={() => void copy(made, 'Token')}><Copy aria-hidden="true" />Copy</Button>
+              <CopyButton text={made} />
             </div>
           </div>
           <div className="field span-all">
             <Label htmlFor="ai-prompt">Prompt for your AI</Label>
             <Textarea id="ai-prompt" readOnly rows={6} value={aiPrompt(made)} onFocus={(e) => e.target.select()} />
-            <Button type="button" variant="outline" className="justify-self-start" onClick={() => void copy(aiPrompt(made), 'Prompt')}><Copy aria-hidden="true" />Copy prompt</Button>
+            <CopyButton text={aiPrompt(made)} label="Copy prompt" className="justify-self-start" />
           </div>
         </>}
       </FormSheet>
@@ -129,7 +119,6 @@ function AiAccessRows() {
           if (!revoking) return
           await revokeApiToken(supabase!, revoking.id)
           await qc.invalidateQueries({ queryKey: ['api-tokens'] })
-          toast('Token revoked.')
         }} />
     </>
   )
@@ -155,7 +144,6 @@ function TelegramRows() {
       <Button variant="outline" onClick={async () => {
         await disconnectTelegram(supabase!)
         await qc.invalidateQueries({ queryKey: ['telegram'] })
-        toast('Telegram disconnected.')
       }}><Unlink aria-hidden="true" />Disconnect</Button>
     </SettingRow>
   )
@@ -176,12 +164,12 @@ const fmtBuild = () => {
   return `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}, ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
 }
 
+// What a check found, shown under the version. A new version shows the "Updating" overlay and reloads by itself.
 async function checkForUpdates() {
   const reg = await navigator.serviceWorker?.getRegistration()
-  if (!reg) return toast('Updates come with the installed app.')
+  if (!reg) return 'Updates come with the installed app.'
   await reg.update()
-  // A new version shows the "Updating" overlay and reloads by itself.
-  if (!reg.installing && !reg.waiting) toast("You're on the latest version.")
+  return reg.installing || reg.waiting ? 'Updating…' : "You're on the latest version."
 }
 
 export function Settings() {
@@ -192,12 +180,13 @@ export function Settings() {
   const [theme, setThemeState] = useState<Theme>(getTheme)
   const [importing, setImporting] = useState(false)
   const [checking, setChecking] = useState(false)
+  const [checked, setChecked] = useState<string | null>(null)
   const [incoming, setIncoming] = useState<State | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const updateRem = async (r: typeof rem) => {
     if (r.enabled && (await requestPermission()) !== 'granted') {
-      toast('Notifications are blocked. Allow them in your browser settings.')
+      toast.error('Notifications are blocked. Allow them in your browser settings.')
       return
     }
     setRem(r)
@@ -210,7 +199,6 @@ export function Settings() {
     const a = Object.assign(document.createElement('a'), { href: url, download: `compound-${keyOf(new Date())}.json` })
     a.click()
     URL.revokeObjectURL(url)
-    toast('Exported.')
   }
 
   const readFile = async (f: File | undefined) => {
@@ -223,7 +211,7 @@ export function Settings() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  const count = (s: State) => s.chapters.length + s.routines.length + s.lists.length + s.habits.length + s.notes.length
+  const count = (s: State) => s.topics.length + s.routines.length + s.lists.length + s.habits.length + s.notes.length
 
   return (
     <>
@@ -243,7 +231,6 @@ export function Settings() {
                     await importLocal(supabase!, local)
                     clearLocalSnapshot()
                     await qc.invalidateQueries({ queryKey: ['state'] })
-                    toast('Imported.')
                   } catch (e) {
                     console.error(e)
                     toast.error("Couldn't import. Try again.")
@@ -265,7 +252,7 @@ export function Settings() {
         <Panel>
           {mode === 'cloud' && supabase
             ? <AiAccessRows />
-            : <SettingRow title="AI access" sub="Sign in first, then make a token so an AI can build tracks and lists for you." />}
+            : <SettingRow title="AI access" sub="Sign in first, then make a token so an AI can build topics and lists for you." />}
         </Panel>
       </Section>
 
@@ -323,9 +310,9 @@ export function Settings() {
 
       <Section title="About">
         <Panel>
-          <SettingRow title="Version" sub={`${fmtBuild()} · ${BUILD.commit}`}>
+          <SettingRow title="Version" sub={`${fmtBuild()} · ${BUILD.commit}${checked ? `. ${checked}` : ''}`}>
             <Button variant="outline" size="icon" aria-label="Check for updates" title="Check for updates" disabled={checking}
-              onClick={() => { setChecking(true); void checkForUpdates().finally(() => setChecking(false)) }}>
+              onClick={() => { setChecking(true); void checkForUpdates().then(setChecked).finally(() => setChecking(false)) }}>
               <RefreshCw className={checking ? 'motion-safe:animate-spin' : undefined} aria-hidden="true" />
             </Button>
           </SettingRow>
@@ -340,7 +327,6 @@ export function Settings() {
             await importFile(backend, state, incoming)
             await qc.invalidateQueries({ queryKey: ['state'] })
             await qc.invalidateQueries({ queryKey: ['notes'] })
-            toast('Imported.')
           } catch (e) {
             console.error(e)
             toast.error("Couldn't import. Try again.")
