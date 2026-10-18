@@ -108,8 +108,10 @@ export function gymStats(s: State, h: Habit, today: Date) {
   }
 }
 
-// The goal is per week: a gym day missed this week can be made up on any later day.
-// Returns the missed day ("Friday", in the form the catch-up phrases need) while the week is behind, else null.
+/**
+ * The goal is per week: a gym day missed this week can be made up on any later day.
+ * Returns the missed day ("Friday", in the form the catch-up phrases need) while the week is behind, else null.
+ */
 export function gymMakeUp(s: State, h: Habit, today: Date) {
   if (!started(h, today) || !h.days.length) return null
   const log = logOf(s, h)

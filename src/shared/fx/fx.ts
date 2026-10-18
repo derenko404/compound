@@ -72,8 +72,10 @@ export function burst(el: Element, count = 18) {
   if (!raf) raf = requestAnimationFrame(tick)
 }
 
-// "I'm the focus now!": the screen dims around the element, a targeting reticle snaps onto it,
-// and particles fly out in waves. Everything removes itself.
+/**
+ * "I'm the focus now!": the screen dims around the element, a targeting reticle snaps onto it,
+ * and particles fly out in waves. Everything removes itself.
+ */
 export function lockOn(el: Element) {
   if (reduced()) return
   const r = el.getBoundingClientRect()

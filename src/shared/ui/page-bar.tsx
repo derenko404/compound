@@ -8,8 +8,10 @@ import { t } from '@/shared/i18n'
 
 export interface BarAction { label: string; icon?: LucideIcon; onSelect: () => void; danger?: boolean }
 
-// What a page puts in the top bar: a back link (inner pages), `add` for a + (the page's create action), `edit` for an
-// Edit button, its other actions in the ⋯ menu, and `done` while it is in edit mode, which swaps them all for Done (as on iOS).
+/**
+ * What a page puts in the top bar: a back link (inner pages), `add` for a + (the page's create action), `edit` for an
+ * Edit button, its other actions in the ⋯ menu, and `done` while it is in edit mode, which swaps them all for Done (as on iOS).
+ */
 export interface PageBar { back?: { to: string; label: string }; add?: { label: string; onClick: () => void }; edit?: () => void; actions?: BarAction[]; done?: () => void }
 
 const BarCtx = createContext<{ bar: PageBar | null; set: (b: PageBar | null) => void } | null>(null)
@@ -21,8 +23,10 @@ export function BarProvider({ children }: { children: ReactNode }) {
 
 export const useBar = () => useContext(BarCtx)!.bar
 
-// Registers the page's bar while it is mounted. Callbacks always reach the latest render;
-// the bar itself only updates when what it shows changes.
+/**
+ * Registers the page's bar while it is mounted. Callbacks always reach the latest render;
+ * the bar itself only updates when what it shows changes.
+ */
 export function usePageBar(bar: PageBar) {
   const { set } = useContext(BarCtx)!
   const latest = useRef(bar)
@@ -52,8 +56,10 @@ const usePhone = () => useSyncExternalStore(
   () => matchMedia(PHONE).matches,
 )
 
-// Right side of the top bar, as on iOS: ⋯ with the page's other actions, the page's +, then Edit as plain text at the
-// far right, which turns into a bold Done in the same place while editing.
+/**
+ * Right side of the top bar, as on iOS: ⋯ with the page's other actions, the page's +, then Edit as plain text at the
+ * far right, which turns into a bold Done in the same place while editing.
+ */
 export function BarMenu({ bar }: { bar: PageBar | null }) {
   if (bar?.done) return <button type="button" className="bar-text is-done" onClick={bar.done}>{t.nav.bar.done}</button>
   return (

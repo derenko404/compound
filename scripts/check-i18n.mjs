@@ -1,7 +1,9 @@
-// Fails when user-facing text is written straight into a component instead of coming from the dictionaries
-// (src/shared/i18n). oxlint's react/jsx-no-literals catches text between tags; this catches what it can't target alone:
-// string literals in user-facing props (aria-label, title, placeholder, label…) and in toast()/fail() calls.
-// Run by `npm run lint`. A line that must keep its literal can end with `// i18n-ok`.
+/**
+ * Fails when user-facing text is written straight into a component instead of coming from the dictionaries
+ * (src/shared/i18n). oxlint's react/jsx-no-literals catches text between tags; this catches what it can't target alone:
+ * string literals in user-facing props (aria-label, title, placeholder, label…) and in toast()/fail() calls.
+ * Run by `npm run lint`. A line that must keep its literal can end with `// i18n-ok`.
+ */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 

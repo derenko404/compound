@@ -74,8 +74,10 @@ export function describeWhen(w: When) {
   }
 }
 
-// Project codes: the topic's first two letters plus a number (TE1, TE2…). A topic whose first two letters
-// an earlier topic already uses takes three, so codes stay unique across topics.
+/**
+ * Project codes: the topic's first two letters plus a number (TE1, TE2…). A topic whose first two letters
+ * an earlier topic already uses takes three, so codes stay unique across topics.
+ */
 const letters = (name: string) => name.toUpperCase().normalize('NFKD').replace(/[^A-Z]/g, '')
 
 export function codePrefix(c: Topic, all: Topic[]) {
@@ -118,8 +120,10 @@ export const listFromShare = (shared: ListDef, mine: ListDef[]): ListDef => ({
   ...shared, id: freshId(shared.name, mine.map((x) => x.id)), position: nextPosition(mine),
 })
 
-// Topics are stored as JSON, so one saved in an older shape could break a page. Every loaded topic is brought to the
-// current shape: missing lists become empty, entries in an old format (skills as plain names, checklists) are dropped.
+/**
+ * Topics are stored as JSON, so one saved in an older shape could break a page. Every loaded topic is brought to the
+ * current shape: missing lists become empty, entries in an old format (skills as plain names, checklists) are dropped.
+ */
 export const PROJECT_SIZES: { value: ProjectSize; label: string; means: string }[] = [
   { value: 'small', label: 'Small', means: 'a few hours to a few days' },
   { value: 'medium', label: 'Medium', means: 'one to a few weeks' },
@@ -151,8 +155,10 @@ const normalizeNote = (n: Note): Note => ({
   tags: Array.isArray(n.tags) ? n.tags : [],
 })
 
-// Routines that used to fill from the topics (old shape) are dropped: Today's topic rows replace them.
-// So are habit topics (old kind 'health'): habits have their own table now.
+/**
+ * Routines that used to fill from the topics (old shape) are dropped: Today's topic rows replace them.
+ * So are habit topics (old kind 'health'): habits have their own table now.
+ */
 export const normalizeState = (s: State): State => ({
   ...s, topics: (s.topics ?? []).filter((c) => c.kind === 'learn' || c.kind === 'general').map(normalizeTopic), notes: (s.notes ?? []).map(normalizeNote),
   routines: (s.routines ?? []).filter((r) => !('fill' in r)),

@@ -16,8 +16,10 @@ if (updating) updating.textContent = t.nav.updating
 
 registerSW({
   immediate: true,
-  // iOS often resumes an installed PWA without reloading it, so also check for a new
-  // version whenever the app comes back to the foreground, and hourly while it's open.
+  /**
+   * iOS often resumes an installed PWA without reloading it, so also check for a new
+   * version whenever the app comes back to the foreground, and hourly while it's open.
+   */
   onRegisteredSW(_url, reg) {
     if (!reg) return
     // A new version is downloading (and an old one is running): show the overlay until the reload.

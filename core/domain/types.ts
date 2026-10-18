@@ -45,8 +45,10 @@ export interface Topic {
   outcomes: string[] // "where you'll be": plain text goals
   created_at?: string // ISO; the duration counts from here
   months?: number // optional duration from created_at; the target finish is worked out from it, and pace warns when it would land later
-  // The topic is its skills in order: "next" is always the first unticked step. No dates inside a topic;
-  // the focus (heavy) topic is Program.focus.
+  /**
+   * The topic is its skills in order: "next" is always the first unticked step. No dates inside a topic;
+   * the focus (heavy) topic is Program.focus.
+   */
   projects: Project[] // in order: the weekend slot takes the first unfinished one
   resources: Resource[]
   skills: Skill[]
@@ -176,8 +178,10 @@ export const emptyState = (): State => ({
   habitLogs: {},
 })
 
-// Every change to the data goes through one of these, so the reducer and the
-// storage backends stay in step.
+/**
+ * Every change to the data goes through one of these, so the reducer and the
+ * storage backends stay in step.
+ */
 export type Op =
   | { type: 'settings'; patch: Settings }
   | { type: 'day'; day: string; log: DayLog }

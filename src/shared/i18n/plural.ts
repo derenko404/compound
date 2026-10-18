@@ -1,5 +1,7 @@
-// Picks the plural form of n for the current language: English one/other, Ukrainian one/few/many
-// (1 день, 2 дні, 5 днів). "#" in a form becomes n. A missing form falls back to other.
+/**
+ * Picks the plural form of n for the current language: English one/other, Ukrainian one/few/many
+ * (1 день, 2 дні, 5 днів). "#" in a form becomes n. A missing form falls back to other.
+ */
 import { currentLocale } from '@/shared/i18n/lang'
 
 let rules: Intl.PluralRules | null = null

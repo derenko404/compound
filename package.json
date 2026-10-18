@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint && node scripts/check-i18n.mjs && node scripts/check-layers.mjs",
+    "lint": "oxlint && node scripts/check-i18n.mjs && node scripts/check-layers.mjs && node scripts/check-comments.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

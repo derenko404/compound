@@ -1,6 +1,8 @@
-// The focus timer: one countdown of a chosen length (short, long or custom) that ends with a fanfare.
-// It keeps running across pages and reloads: the state lives here and in localStorage (this device only), and
-// components read it with useTimer(). Nothing is saved to the account.
+/**
+ * The focus timer: one countdown of a chosen length (short, long or custom) that ends with a fanfare.
+ * It keeps running across pages and reloads: the state lives here and in localStorage (this device only), and
+ * components read it with useTimer(). Nothing is saved to the account.
+ */
 import { useSyncExternalStore } from 'react'
 import { celebrate } from '@/shared/fx/fx'
 import { playAmbient, playFanfare, type Ambient } from '@/shared/fx/sound'
@@ -85,8 +87,10 @@ function tick() {
   else emit()
 }
 
-// Time's up: back to the full length, paused. Loud: a fanfare, confetti and a notification for when the app is
-// in the background.
+/**
+ * Time's up: back to the full length, paused. Loud: a fanfare, confetti and a notification for when the app is
+ * in the background.
+ */
 function finish(loud: boolean) {
   set({ ...state, endsAt: null, left: lengthOf(state.length) })
   if (!loud) return

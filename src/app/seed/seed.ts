@@ -1,10 +1,14 @@
-// First-run content for a new account: Personal (built in), one example topic and one example list,
-// so the app isn't empty on day one. Everything here is the user's to edit or delete.
+/**
+ * First-run content for a new account: Personal (built in), one example topic and one example list,
+ * so the app isn't empty on day one. Everything here is the user's to edit or delete.
+ */
 import type { ListDef, Op, State, Topic } from "@core/domain/types";
 import { FILMS } from "@/app/seed/films";
 
-// Bump when the starting content changes shape. An account on an older version gets these items written again
-// (by id; other content stays).
+/**
+ * Bump when the starting content changes shape. An account on an older version gets these items written again
+ * (by id; other content stays).
+ */
 export const SEED_VERSION = 1;
 
 const now = () => new Date().toISOString();

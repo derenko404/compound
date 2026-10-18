@@ -1,5 +1,7 @@
-// Which language is on: the choice in Settings → Language (per device), or under Auto the device's language,
-// Ukrainian when the device is set to it and English otherwise.
+/**
+ * Which language is on: the choice in Settings → Language (per device), or under Auto the device's language,
+ * Ukrainian when the device is set to it and English otherwise.
+ */
 export type Lang = 'en' | 'uk'
 export type LangPref = Lang | 'auto'
 

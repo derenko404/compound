@@ -19,8 +19,10 @@ const explain = (msg: string) =>
           ? t.settings.signIn.notConfirmed
           : msg
 
-// Password sign-in works inside the installed app on a phone; an emailed link would
-// open in the browser instead, which keeps a separate session on iOS.
+/**
+ * Password sign-in works inside the installed app on a phone; an emailed link would
+ * open in the browser instead, which keeps a separate session on iOS.
+ */
 export function SignIn() {
   const { useLocal } = useStore()
   const [mode, setMode] = useState<Mode>('signin')

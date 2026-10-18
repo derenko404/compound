@@ -16,8 +16,10 @@ function DialogClose(props: React.ComponentProps<typeof DialogPrimitive.Close>) 
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
-// Centered on wide screens, a bottom sheet on phones. overlayClassName: for a dialog opened over another one,
-// so its backdrop covers the first.
+/**
+ * Centered on wide screens, a bottom sheet on phones. overlayClassName: for a dialog opened over another one,
+ * so its backdrop covers the first.
+ */
 function DialogContent({ className, overlayClassName, children, ...props }: React.ComponentProps<typeof DialogPrimitive.Content> & { overlayClassName?: string }) {
   return (
     <DialogPrimitive.Portal>
@@ -36,9 +38,11 @@ function DialogContent({ className, overlayClassName, children, ...props }: Reac
   )
 }
 
-// The title and the close button share one row, so they stay aligned whatever sits above them.
-// Forms pass `start` (Cancel) and `end` (the main action): on phones they replace the close button,
-// iOS-style, with the title centred between them.
+/**
+ * The title and the close button share one row, so they stay aligned whatever sits above them.
+ * Forms pass `start` (Cancel) and `end` (the main action): on phones they replace the close button,
+ * iOS-style, with the title centred between them.
+ */
 function DialogTitle({ className, start, end, ...props }: React.ComponentProps<typeof DialogPrimitive.Title> & { start?: React.ReactNode; end?: React.ReactNode }) {
   return (
     <div className={cn("sheet-head", (start || end) && "has-actions")}>

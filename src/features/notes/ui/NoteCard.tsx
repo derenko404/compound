@@ -8,8 +8,10 @@ import { Linkify } from '@/features/topics'
 import { RemoveButton, Dot, Entry } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
-// One entry: a link shows its page, an idea its title and details, a note its text. Tapping the card (not a link) edits it.
-// removable: edit mode, with the ⊖ to delete it.
+/**
+ * One entry: a link shows its page, an idea its title and details, a note its text. Tapping the card (not a link) edits it.
+ * removable: edit mode, with the ⊖ to delete it.
+ */
 export function NoteCard({ n, onOpen, onTag, showTopic = true, removable }: { n: Note; onOpen: () => void; onTag?: (t: string) => void; showTopic?: boolean; removable?: boolean }) {
   const { state, dispatch } = useStore()
   const yt = n.url ? links.youtubeId(n.url) : null

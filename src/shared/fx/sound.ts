@@ -85,8 +85,10 @@ export function playFocus() {
 export type Ambient = 'off' | 'tick' | 'rain' | 'brown'
 let ambient: { kind: Ambient; src: AudioBufferSourceNode; gain: GainNode } | null = null
 
-// A looping buffer for each sound, made once. Rain: white noise softened by a filter. Brown: a deep, steady rumble.
-// Tick: a short click once a second, like a kitchen timer.
+/**
+ * A looping buffer for each sound, made once. Rain: white noise softened by a filter. Brown: a deep, steady rumble.
+ * Tick: a short click once a second, like a kitchen timer.
+ */
 function ambientBuffer(a: AudioContext, kind: Exclude<Ambient, 'off'>) {
   const rate = a.sampleRate
   const secs = kind === 'tick' ? 1 : 4
@@ -107,8 +109,10 @@ function ambientBuffer(a: AudioContext, kind: Exclude<Ambient, 'off'>) {
   return buf
 }
 
-// Plays (or switches) the timer's background sound. It's chosen on the timer page, so it plays even with the
-// app's tick sounds turned off in Settings.
+/**
+ * Plays (or switches) the timer's background sound. It's chosen on the timer page, so it plays even with the
+ * app's tick sounds turned off in Settings.
+ */
 export function playAmbient(kind: Ambient) {
   if (ambient?.kind === kind) return
   stopAmbient()

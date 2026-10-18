@@ -14,9 +14,11 @@ const blank = (topic: TopicId | null): Note => ({
   topic, source: 'app', created_at: new Date().toISOString(),
 })
 
-// New or existing entry: one text box. If it holds a link the entry is a link: on save the link is
-// taken out and kept as the entry's link, and the rest is the note about it. Ideas are marked by the bot's AI.
-// From a topic page a new entry belongs to that topic, so there's no topic picker.
+/**
+ * New or existing entry: one text box. If it holds a link the entry is a link: on save the link is
+ * taken out and kept as the entry's link, and the rest is the note about it. Ideas are marked by the bot's AI.
+ * From a topic page a new entry belongs to that topic, so there's no topic picker.
+ */
 export function NoteSheet({ open, onOpenChange, note, topic }: { open: boolean; onOpenChange: (o: boolean) => void; note?: Note; topic?: TopicId }) {
   const { state, dispatch } = useStore()
   const [n, setN] = useState<Note>(() => {

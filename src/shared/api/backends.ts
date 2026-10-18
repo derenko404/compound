@@ -11,8 +11,10 @@ import { LocalRepositories, LocalStore } from '@adapters/local'
 
 export type { NotesFilter }
 
-// Where the app keeps the user's data: the cloud (Supabase, when signed in) or this device. Both are the same
-// storage ports underneath (core/ports), read and written through the state service.
+/**
+ * Where the app keeps the user's data: the cloud (Supabase, when signed in) or this device. Both are the same
+ * storage ports underneath (core/ports), read and written through the state service.
+ */
 export interface Backend {
   kind: 'local' | 'cloud'
   load(): Promise<State>

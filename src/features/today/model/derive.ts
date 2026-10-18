@@ -85,8 +85,10 @@ function reviewStep(s: State, today: Date) {
   return null
 }
 
-// When a topic with a target would finish late at its pace: one more step today, the one after the next.
-// Pace looks back 4 weeks, so a younger topic isn't judged yet.
+/**
+ * When a topic with a target would finish late at its pace: one more step today, the one after the next.
+ * Pace looks back 4 weeks, so a younger topic isn't judged yet.
+ */
 function catchUp(s: State, c: Topic, today: Date) {
   const target = targetFinish(c)
   if (!target || !c.created_at || dates.dayDiff(new Date(c.created_at), today) < 28) return null

@@ -1,5 +1,7 @@
-// Daily reminder. Without a push server, the reminder fires from the open app (or the
-// installed PWA while it is alive): at 20:00, if today's tasks aren't done. Settings only switches it on or off.
+/**
+ * Daily reminder. Without a push server, the reminder fires from the open app (or the
+ * installed PWA while it is alive): at 20:00, if today's tasks aren't done. Settings only switches it on or off.
+ */
 import { t } from '@/shared/i18n'
 
 const KEY = 'roadmap-reminder'

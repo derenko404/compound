@@ -19,8 +19,10 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
       },
-      // One button size across the app (the design system's control height). The other names stay so
-      // shadcn components that pass them keep working, but they all give the same button.
+      /**
+       * One button size across the app (the design system's control height). The other names stay so
+       * shadcn components that pass them keep working, but they all give the same button.
+       */
       size: {
         default: "h-(--control-md) px-4 has-[>svg]:px-3",
         xs: "h-(--control-md) px-4 has-[>svg]:px-3",
