@@ -12,6 +12,7 @@ import { PENDING_SHARE, SignIn } from '@/features/auth'
 import { t } from '@/shared/i18n'
 import { useSeed } from '@/app/seed/use-seed'
 import { SearchSheet } from '@/features/search'
+import { useFirstRunTour } from '@/features/tour'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
 import { TABS } from './tabs'
@@ -30,6 +31,7 @@ export function Shell() {
     if (pathname !== `/share/${id}`) void nav({ to: '/share/$id', params: { id } })
   }, [mode, ready, pathname, nav])
   const seeding = useSeed()
+  useFirstRunTour(mode !== 'signin' && ready && !seeding, pathname)
   const fx = useRef<HTMLCanvasElement>(null)
   const stateRef = useRef(state)
   stateRef.current = state

@@ -206,6 +206,7 @@
   --control-md: 44px; /* buttons, icon buttons: comfortable tap target */
   --control-field: 52px; /* form fields: inputs, selects, list lines */
   --control-lg: 56px; /* big buttons: the ⋯ drawer's actions */
+  --tour-width: 340px; /* the first-run tour's popover */
   --menu-w: 200px; /* dropdown menus */
   --dial-lg: 248px; /* the timer's ring */
   --setting-text: 192px; /* SettingRow: the narrowest its text gets before the controls wrap below */
@@ -721,6 +722,34 @@ a.qbtn { color: inherit; text-decoration: none; }
 
 .banner { background: var(--card); border: 1px solid var(--border); border-left: var(--space-1) solid var(--c, var(--primary)); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); align-items: center; justify-content: space-between; }
 .banner p { margin: 0; min-width: 0; flex: 1 1 260px; }
+.banner-title { display: block; }
+
+/* Numbered how-to steps, each with the icon to look for. */
+.howto { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; counter-reset: howto; }
+.howto li { display: grid; grid-template-columns: var(--control-md) 1fr; gap: var(--space-3); align-items: center; counter-increment: howto; }
+.howto-icon { display: grid; place-items: center; width: var(--control-md); height: var(--control-md); border-radius: var(--radius-md); background: var(--muted); color: var(--primary); }
+.howto-icon svg { width: var(--icon-lg); height: var(--icon-lg); }
+.howto li p { margin: 0; }
+.howto li p::before { content: counter(howto) ". "; font-weight: var(--weight-bold); }
+
+/* The first-run tour's popover (driver.js). Its CSS loads later, so these selectors are more specific. */
+.driver-popover.tour { background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-4) var(--space-5); font-family: var(--font-body); max-width: min(var(--tour-width), calc(100vw - var(--space-8))); }
+.driver-popover.tour .driver-popover-title { font: var(--weight-bold) var(--text-title) var(--font-body); padding-right: var(--space-6); }
+.driver-popover.tour .driver-popover-description { font-size: var(--text-body); color: var(--muted-foreground); line-height: var(--leading-body); }
+.driver-popover.tour .driver-popover-close-btn { width: var(--control-md); height: var(--control-md); font-size: var(--text-title); color: var(--muted-foreground); }
+.driver-popover.tour .driver-popover-close-btn:hover, .driver-popover.tour .driver-popover-close-btn:focus-visible { color: var(--foreground); }
+.driver-popover.tour .driver-popover-footer { margin-top: var(--space-4); gap: var(--space-3); }
+.driver-popover.tour .driver-popover-progress-text { font-size: var(--text-caption); color: var(--muted-foreground); }
+.driver-popover.tour .driver-popover-navigation-btns { gap: var(--space-2); }
+.driver-popover.tour .driver-popover-navigation-btns button + button { margin-left: 0; }
+.driver-popover.tour .driver-popover-footer-btn { height: var(--control-md); padding: 0 var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--card); color: var(--foreground); font: var(--weight-bold) var(--text-small) var(--font-body); text-shadow: none; display: inline-flex; align-items: center; }
+.driver-popover.tour .driver-popover-footer-btn:hover { background: var(--muted); }
+.driver-popover.tour .driver-popover-next-btn { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.driver-popover.tour .driver-popover-next-btn:hover { background: color-mix(in srgb, var(--primary) 88%, var(--foreground)); }
+.driver-popover.tour .driver-popover-arrow-side-left { border-left-color: var(--card); }
+.driver-popover.tour .driver-popover-arrow-side-right { border-right-color: var(--card); }
+.driver-popover.tour .driver-popover-arrow-side-top { border-top-color: var(--card); }
+.driver-popover.tour .driver-popover-arrow-side-bottom { border-bottom-color: var(--card); }
 
 main section { margin-bottom: var(--space-8); }
 main > :last-child { margin-bottom: 0; }

@@ -10,5 +10,6 @@ import { wellbeing } from '@/shared/i18n/uk/wellbeing'
 import { settings } from '@/shared/i18n/uk/settings'
 import { timer } from '@/shared/i18n/uk/timer'
 import { search } from '@/shared/i18n/uk/search'
+import { onboarding } from '@/shared/i18n/uk/onboarding'
 
-export const uk: Dict = { common, nav, today, topics, lists, notebook, wellbeing, settings, timer, search }
+export const uk: Dict = { common, nav, today, topics, lists, notebook, wellbeing, settings, timer, search, onboarding }

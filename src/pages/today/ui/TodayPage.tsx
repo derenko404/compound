@@ -3,6 +3,7 @@ import {
 } from '@/shared/ui'
 import { TopicTag, Linkify } from '@/features/topics'
 import { DONE, HABIT_UI, waterStats } from '@/features/habits'
+import { InstallBanner } from '@/features/install-app'
 import { FocusCard, WeekStrip } from './focus'
 import { RoutineSheet } from './RoutineSheet'
 import { celebrate } from '@/shared/lib/celebrate'
@@ -95,6 +96,7 @@ export function Today() {
 
   return (
     <>
+      <InstallBanner />
       <header className="today-head">
         <div className="today-title">
           <h1 className="day-date">{dates.fmtLong(today)}</h1>
@@ -103,7 +105,7 @@ export function Today() {
         {items.length > 0 && <Meter size="lg" value={n / items.length} label={t.today.doneToday(n, items.length)} />}
       </header>
 
-      <Section title={edit ? t.today.routines : t.today.goals} >
+      <Section id="today-tasks" title={edit ? t.today.routines : t.today.goals}>
         {edit ? (
           <SortList empty={t.today.noRoutines} onMove={reorder}>
             {routines.map((r) => (
@@ -124,12 +126,12 @@ export function Today() {
       )}
 
       {!edit && shown.some((it) => it.slot) && (
-        <Section title={t.today.fromTopics} aside={t.today.updatesDaily}>
+        <Section id="today-topics" title={t.today.fromTopics} aside={t.today.updatesDaily}>
           <List>{shown.filter((it) => it.slot).map(row)}</List>
         </Section>
       )}
 
-      <Section title={t.today.thisWeek} aside={<span className={`today-streak${run ? ' on' : ''}`}><Flame aria-hidden="true" />{t.today.streakLine(run, fullDays, week.length)}</span>}>
+      <Section id="today-week" title={t.today.thisWeek} aside={<span className={`today-streak${run ? ' on' : ''}`}><Flame aria-hidden="true" />{t.today.streakLine(run, fullDays, week.length)}</span>}>
         <WeekStrip />
       </Section>
 

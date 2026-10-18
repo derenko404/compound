@@ -6,6 +6,7 @@ import { AiAccessRows } from '@/features/ai-access'
 import { SharedLinksRows } from '@/features/share-link'
 import { BOT, TelegramRows } from '@/features/telegram-connect'
 import { BackupRows } from '@/features/backup'
+import { TourRow } from '@/features/tour'
 import { AccountRows } from './AccountRows'
 import { NotifyRows } from './NotifyRows'
 import { AppearanceRows } from './AppearanceRows'
@@ -58,7 +59,7 @@ export function Settings() {
       </Section>
 
       <Section title={t.settings.about.section}>
-        <Panel><AboutRows /></Panel>
+        <Panel><TourRow /><AboutRows /></Panel>
       </Section>
     </>
   )

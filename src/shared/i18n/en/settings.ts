@@ -16,7 +16,7 @@ export const settings = {
   ai: {
     section: 'AI access',
     title: 'AI access',
-    sub: 'Let an AI (Claude, ChatGPT…) build topics and lists for you. A token can read, add and change your data, but never delete it.',
+    sub: 'Let an AI build topics and lists for you. For now it works with Claude Code only. A token can read, add and change your data, but never delete it.',
     signInFirst: 'Sign in first, then make a token so an AI can build topics and lists for you.',
     newToken: 'New token',
     tokenMeta: (prefix: string, made: string, used: string | null) =>

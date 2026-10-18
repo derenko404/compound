@@ -20,12 +20,12 @@ async function checkForUpdates() {
   return reg.installing || reg.waiting ? t.settings.about.updating : t.settings.about.latest
 }
 
-// The build this app runs, and a button to check for a newer one.
+// The build this app runs, and a button to check for a newer one. What the check found goes on its own line.
 export function AboutRows() {
   const [checking, setChecking] = useState(false)
   const [checked, setChecked] = useState<string | null>(null)
   return (
-    <SettingRow title={t.settings.about.version} sub={`${fmtBuild()} · ${BUILD.commit}${checked ? `. ${checked}` : ''}`}>
+    <SettingRow title={t.settings.about.version} sub={<>{`${fmtBuild()} · ${BUILD.commit}`}{checked && <span className="block">{checked}</span>}</>}>
       <Button variant="outline" size="icon" aria-label={t.settings.about.checkUpdates} title={t.settings.about.checkUpdates} disabled={checking}
         onClick={() => { setChecking(true); void checkForUpdates().then(setChecked).finally(() => setChecking(false)) }}>
         <RefreshCw className={checking ? 'motion-safe:animate-spin' : undefined} aria-hidden="true" />
