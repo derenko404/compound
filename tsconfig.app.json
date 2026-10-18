@@ -26,10 +26,14 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@core/*": [
+        "./core/*"
       ]
     }
   },
   "include": [
-    "src"
+    "src",
+    "core"
   ]
 }

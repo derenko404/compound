@@ -2,10 +2,10 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useInfiniteQuery, useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Session } from '@supabase/supabase-js'
 import { toast } from 'sonner'
-import { emptyState, type Op, type State } from '@/lib/types'
+import { emptyState, type Op, type State } from '@core/domain/types'
 import { cloudBackend, localBackend, supabase, type Backend, type NotesFilter } from './backends'
 import { reduce } from './reduce'
-import { normalizeState } from '@/lib/content'
+import { normalizeState } from '@core/domain/content'
 import { t } from '@/i18n'
 
 export type SyncState = 'loading' | 'loadError' | 'saving' | 'saveError' | 'synced' | 'local'

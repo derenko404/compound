@@ -1,7 +1,7 @@
 // Sheets that create and edit a topic and the things inside it.
 import { useState } from 'react'
-import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS, freshId, nextPosition, nextProjectCode, uid } from '@/lib/content'
-import type { Topic, TopicKind, Project, Resource, Skill } from '@/lib/types'
+import { PALETTE, PROJECT_SIZES, RESOURCE_KINDS, freshId, nextPosition, nextProjectCode, uid } from '@core/domain/content'
+import type { Topic, TopicKind, Project, Resource, Skill } from '@core/domain/types'
 import { monthName, targetFinish } from '@/lib/derive'
 import { useStore } from '@/store/StoreProvider'
 import { t } from '@/i18n'

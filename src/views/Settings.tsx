@@ -15,7 +15,7 @@ import {
   telegramCode, telegramLink, apiTokens, createApiToken, revokeApiToken, myShares, deleteShare, SHARE_DAYS, type ApiToken, type Share,
 } from '@/store/backends'
 import { useStore } from '@/store/StoreProvider'
-import type { State } from '@/lib/types'
+import type { State } from '@core/domain/types'
 import { keyOf } from '@/lib/dates'
 import { CopyButton, Header, Panel, Section, SettingRow, SettingSelect } from '@/components/kit'
 import { ConfirmSheet, FormSheet, TextField, fail } from '@/components/edit'

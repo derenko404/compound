@@ -1,4 +1,4 @@
-import type { Op, State } from '@/lib/types'
+import type { Op, State } from '@core/domain/types'
 
 const put = <T extends { id: string }>(xs: T[], x: T) => (xs.some((y) => y.id === x.id) ? xs.map((y) => (y.id === x.id ? x : y)) : [...xs, x])
 

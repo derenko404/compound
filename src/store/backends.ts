@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { emptyState, type Topic, type TopicId, type ListDef, type Note, type Op, type ProjectStatus, type State } from '@/lib/types'
-import { normalizeState } from '@/lib/content'
+import { emptyState, type Topic, type TopicId, type ListDef, type Note, type Op, type ProjectStatus, type State } from '@core/domain/types'
+import { normalizeState } from '@core/domain/content'
 
 // What the Notebook asks for. q may hold #tags (matched exactly) and words (matched in the text, AI context and link).
 export interface NotesFilter { topic?: TopicId | null; q?: string }

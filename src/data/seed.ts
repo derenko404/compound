@@ -1,6 +1,6 @@
 // First-run content for a new account: Personal (built in), one example topic and one example list,
 // so the app isn't empty on day one. Everything here is the user's to edit or delete.
-import type { ListDef, Op, State, Topic } from "@/lib/types";
+import type { ListDef, Op, State, Topic } from "@core/domain/types";
 import { FILMS } from "./films";
 
 // Bump when the starting content changes shape. An account on an older version gets these items written again
