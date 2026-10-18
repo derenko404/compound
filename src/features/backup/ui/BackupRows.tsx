@@ -56,7 +56,7 @@ export function BackupRows() {
             await qc.invalidateQueries({ queryKey: ['notes'] })
           } catch (e) {
             console.error(e)
-            toast.error(t.settings.account.importFailed)
+            toast.error(t.settings.backup.importFailed)
           }
         }} />
     </>

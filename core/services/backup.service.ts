@@ -4,8 +4,9 @@ import type { Repositories } from '../ports/repositories'
 import { StateService } from './state.service'
 
 /**
- * Settings → Backup: everything as one JSON file (the state plus every note), and importing a file or the
- * device's data into the repositories, item by item (merged by id with what's there).
+ * Settings → Backup: everything as one JSON file (the state plus every note), and importing such a file into the
+ * repositories, item by item (merged by id with what's there). It's also how device-only data moves to an account:
+ * export before signing in, import after.
  */
 export class BackupService {
   private readonly repos: Repositories
@@ -35,7 +36,7 @@ export class BackupService {
     return normalizeState({ ...emptyState(), ...s })
   }
 
-  // Writes every item of `s` (an imported file, or the device's data when signing in).
+  // Writes every item of `s` (an imported file).
   async import(s: State) {
     for (const op of this.ops(s)) await this.state.apply(op, s)
   }

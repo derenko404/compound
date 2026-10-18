@@ -12,12 +12,12 @@ import { useNoteCount, useStore } from '@/shared/store/StoreProvider'
 import { lockOn } from '@/shared/lib/celebrate'
 import { playFocus } from '@/shared/lib/sound'
 import { t } from '@/shared/i18n'
-import { ProjectCard, ResourceGroups, SkillFolds } from '@/features/topics'
-import { NoteSheet } from '@/features/notes'
 import {
-  TopicSheet, SkillSheet, ProjectSheet, ResourceSheet,
+  ProjectCard, ResourceGroups, SkillFolds, TopicSheet, SkillSheet, ProjectSheet, ResourceSheet,
   blankSkill, blankProject, blankResource, useTopicSave,
 } from '@/features/topics'
+import { NoteSheet } from '@/features/notes'
+
 import { AboutSheet } from './AboutSheet'
 import { TopicNotes } from './TopicNotes'
 import { DELETE_TOPIC } from './delete-topic'

@@ -46,8 +46,6 @@ const device = new LocalStore()
 export const localBackend: Backend = backendOver('local', LocalRepositories.create(device))
 export const cloudBackend = (db: SupabaseClient): Backend => backendOver('cloud', SupabaseRepositories.create(db))
 
-export const loadLocalSnapshot = async () => device.read()
-export const clearLocalSnapshot = () => device.clear()
 
 /* ---------- Services the pages call (kept as plain functions until the pages move to features) ---------- */
 
@@ -56,8 +54,6 @@ const repoOf = (backend: Backend) => (backend.kind === 'cloud' ? SupabaseReposit
 export const exportAll = (backend: Backend, s: State) => new BackupService(repoOf(backend)).export(s)
 export const parseExport = (text: string) => BackupService.parse(text)
 export const importFile = (backend: Backend, _current: State, file: State) => new BackupService(repoOf(backend)).import(file)
-// Copies everything saved on this device into the signed-in account.
-export const importLocal = (db: SupabaseClient, s: State) => new BackupService(SupabaseRepositories.create(db)).import(s)
 
 export type TelegramLink = { chat_id: number; username: string | null }
 const telegram = (db: SupabaseClient) => new TelegramConnectService(new SupabaseTelegramAccountRepository(db))
