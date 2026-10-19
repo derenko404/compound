@@ -331,7 +331,6 @@
 .segmented { display: grid; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--card); }
 .segment { height: var(--control-field); padding: 0 var(--space-2); border: 0; border-left: 1px solid var(--border); background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
 .segment:first-child { border-left: 0; }
-.segment:hover { color: var(--foreground); background: var(--accent); }
 .segment[aria-pressed="true"], .segment[aria-checked="true"] { background: var(--primary); color: var(--primary-foreground); }
 .segment:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 /* A setting in a Panel (SettingRow). */
@@ -393,7 +392,6 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* Buttons that are only an icon. */
 .icon-btn { display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); border-radius: var(--radius-sm); color: var(--muted-foreground); background: none; border: 0; cursor: pointer; }
-.icon-btn:hover { background: var(--accent); color: var(--foreground); }
 /* An icon button showing that something is set (a note exists). */
 .icon-btn.on { color: var(--primary); }
 .icon-btn svg { width: var(--icon-md); height: var(--icon-md); }
@@ -402,7 +400,6 @@ details > summary::-webkit-details-marker { display: none; }
 /* PlusButton: a plain + in the primary colour, as iOS does, with a soft tint on hover. */
 .plus-btn { display: inline-grid; place-items: center; width: var(--control-md); height: var(--control-md); margin-right: calc(-1 * var(--space-2)); border-radius: 50%; background: none; color: var(--primary); border: 0; cursor: pointer; flex: none; transition: background var(--dur-fast); }
 .plus-btn svg { width: var(--icon-lg); height: var(--icon-lg); stroke-width: 2.5; }
-.plus-btn:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
 .plus-btn:focus-visible { outline: 2px solid var(--ring); }
 /* In the top bar the + sits left of Edit, so only the last control pulls into the edge. */
 .plus-btn:not(:last-child) { margin-right: 0; }
@@ -414,7 +411,7 @@ details > summary::-webkit-details-marker { display: none; }
   white-space: nowrap; font: var(--weight-bold) var(--text-micro) var(--font-body); color: var(--background); background: var(--foreground);
   padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); opacity: 0; pointer-events: none; transition: opacity var(--dur-fast), transform var(--dur-fast);
 }
-[data-tip]:hover::after, [data-tip]:focus-visible::after, [data-tip].tip-open::after { opacity: 1; transform: translate(-50%, 0); }
+[data-tip]:focus-visible::after, [data-tip].tip-open::after { opacity: 1; transform: translate(-50%, 0); }
 
 /* Long text folded to a few lines. */
 .clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
@@ -422,7 +419,6 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* Quiet text button for secondary actions. */
 .link-btn { padding: 0; background: none; border: 0; cursor: pointer; color: var(--muted-foreground); font-size: var(--text-caption); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
-.link-btn:hover { color: var(--foreground); text-decoration-color: currentColor; }
 
 
 
@@ -458,7 +454,6 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* The quarter's focus topic (FocusCard). */
 .focus-card { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); color: inherit; text-decoration: none; background-image: linear-gradient(160deg, color-mix(in srgb, var(--c) 10%, transparent), transparent 55%); transition: box-shadow var(--dur-fast); }
-.focus-card:hover { box-shadow: var(--shadow-card); }
 .focus-head { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--space-2); }
 .focus-label { font-size: var(--text-caption); color: var(--muted-foreground); }
 .focus-name { display: flex; align-items: center; gap: var(--space-2); font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); line-height: var(--leading-tight); }
@@ -542,10 +537,9 @@ a.qbtn { color: inherit; text-decoration: none; }
 /* Top bar: back link and ⋯ are full 44px tap targets; the negative margin keeps the chevron on the content edge. */
 .bar-back { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-md); margin-left: calc(-1 * var(--space-2)); padding: 0 var(--space-3) 0 var(--space-1); border-radius: 999px; font-size: var(--text-body); font-weight: var(--weight-bold); color: var(--primary); text-decoration: none; }
 .bar-back svg { width: var(--icon-lg); height: var(--icon-lg); }
-.bar-back:hover { background: var(--accent); }
 .bar-more { display: grid; place-items: center; width: var(--control-md); height: var(--control-md); margin-right: calc(-1 * var(--space-2)); border-radius: 999px; color: var(--muted-foreground); background: none; border: 0; cursor: pointer; }
 .bar-more svg { width: var(--icon-lg); height: var(--icon-lg); }
-.bar-more:hover, .bar-more[data-state="open"] { background: var(--accent); color: var(--foreground); }
+.bar-more[data-state="open"] { background: var(--accent); color: var(--foreground); }
 /* Edit and Done in the top bar: plain text in the primary colour, Done in bold (as on iOS). */
 /* TimerPill: the time left in the top bar while the timer runs on another page. */
 .bar-timer { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); font-weight: var(--weight-bold); font-size: var(--text-small); font-variant-numeric: tabular-nums; text-decoration: none; }
@@ -556,7 +550,6 @@ a.qbtn { color: inherit; text-decoration: none; }
 .search-sheet { display: grid; grid-template-rows: auto auto minmax(0, 1fr); align-content: start; }
 .search-results { display: grid; gap: var(--space-4); align-content: start; overflow-y: auto; min-height: 0; }
 .bar-text { min-height: var(--control-md); padding: 0 var(--space-2); border: 0; border-radius: var(--radius-sm); background: none; color: var(--primary); font: inherit; font-size: var(--text-body); cursor: pointer; }
-.bar-text:hover { background: var(--accent); }
 .bar-text { margin-right: calc(-1 * var(--space-2)); }
 .bar-text.is-done { font-weight: var(--weight-bold); }
 .bar-more:not(:last-child) { margin-right: 0; }
@@ -575,7 +568,7 @@ a.qbtn { color: inherit; text-decoration: none; }
 .action-sheet .sheet-close { display: none; }
 .action-item { display: flex; align-items: center; justify-content: center; gap: var(--space-3); width: 100%; min-height: var(--control-lg); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-lg); background: var(--muted); color: var(--foreground); font: inherit; font-size: var(--text-title); font-weight: var(--weight-bold); cursor: pointer; }
 .action-item svg { width: var(--icon-lg); height: var(--icon-lg); color: var(--muted-foreground); }
-.action-item:hover, .action-item:focus-visible { background: var(--accent); outline: none; }
+.action-item:focus-visible { background: var(--accent); outline: none; }
 .action-item.is-danger { background: color-mix(in srgb, var(--destructive) 12%, transparent); }
 .action-item.is-danger, .action-item.is-danger svg { color: var(--destructive); }
 .about-text { white-space: pre-line; line-height: var(--leading-body); }
@@ -614,7 +607,6 @@ a.qbtn { color: inherit; text-decoration: none; }
 .brand { font-family: var(--font-display); font-weight: var(--weight-black); font-size: var(--text-title); display: flex; align-items: center; gap: var(--space-2); }
 /* Continue with Google, white as on other sites so it stands out from the app's own buttons. */
 .google-btn { background: var(--google-bg); color: var(--google-fg); border: 1px solid var(--google-border); }
-.google-btn:hover { background: color-mix(in srgb, var(--google-fg) 6%, var(--google-bg)); color: var(--google-fg); }
 .google-btn svg { width: var(--icon-md); height: var(--icon-md); }
 .brand-mark { width: var(--icon-lg); height: var(--icon-lg); border-radius: var(--radius-sm); background: url('/favicon.svg') center / cover; flex: none; }
 .sync { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); color: var(--muted-foreground); background: none; border: 0; padding: 0; cursor: default; }
@@ -627,7 +619,6 @@ a.qbtn { color: inherit; text-decoration: none; }
 .tabs { display: flex; flex-wrap: wrap; gap: var(--space-1); padding-block: var(--space-3); }
 .tab { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border-radius: 999px; color: var(--muted-foreground); font-weight: var(--weight-bold); white-space: nowrap; text-decoration: none; }
 .tab svg { width: var(--icon-md); height: var(--icon-md); }
-.tab:hover { color: var(--foreground); }
 .tab[data-status="active"] { background: var(--foreground); color: var(--background); }
 
 /* Bottom navigation (phones). */
@@ -779,15 +770,13 @@ a.qbtn { color: inherit; text-decoration: none; }
 .driver-popover.tour .driver-popover-title { font: var(--weight-bold) var(--text-title) var(--font-body); padding-right: var(--space-6); }
 .driver-popover.tour .driver-popover-description { font-size: var(--text-body); color: var(--muted-foreground); line-height: var(--leading-body); }
 .driver-popover.tour .driver-popover-close-btn { width: var(--control-md); height: var(--control-md); font-size: var(--text-title); color: var(--muted-foreground); }
-.driver-popover.tour .driver-popover-close-btn:hover, .driver-popover.tour .driver-popover-close-btn:focus-visible { color: var(--foreground); }
+.driver-popover.tour .driver-popover-close-btn:focus-visible { color: var(--foreground); }
 .driver-popover.tour .driver-popover-footer { margin-top: var(--space-4); gap: var(--space-3); }
 .driver-popover.tour .driver-popover-progress-text { font-size: var(--text-caption); color: var(--muted-foreground); }
 .driver-popover.tour .driver-popover-navigation-btns { gap: var(--space-2); }
 .driver-popover.tour .driver-popover-navigation-btns button + button { margin-left: 0; }
 .driver-popover.tour .driver-popover-footer-btn { height: var(--control-md); padding: 0 var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--card); color: var(--foreground); font: var(--weight-bold) var(--text-small) var(--font-body); text-shadow: none; display: inline-flex; align-items: center; }
-.driver-popover.tour .driver-popover-footer-btn:hover { background: var(--muted); }
 .driver-popover.tour .driver-popover-next-btn { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
-.driver-popover.tour .driver-popover-next-btn:hover { background: color-mix(in srgb, var(--primary) 88%, var(--foreground)); }
 .driver-popover.tour .driver-popover-arrow-side-left { border-left-color: var(--card); }
 .driver-popover.tour .driver-popover-arrow-side-right { border-right-color: var(--card); }
 .driver-popover.tour .driver-popover-arrow-side-top { border-top-color: var(--card); }
@@ -815,7 +804,6 @@ main > :last-child { margin-bottom: 0; }
 .row-tag { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-micro); color: var(--muted-foreground); white-space: nowrap; padding-top: var(--space-1); }
 /* Edit mode, as on iOS (Row onOpen, sort): the whole row opens its form, with › and a ≡ handle on the right. */
 .row.is-openable { cursor: pointer; align-items: center; }
-.row.is-openable:hover { background: var(--accent); }
 .row.is-openable:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 .row.is-openable .row-tag { padding-top: 0; }
 .row-chev { width: var(--icon-md); height: var(--icon-md); color: var(--muted-foreground); }
@@ -834,7 +822,6 @@ main > :last-child { margin-bottom: 0; }
 @keyframes rowpop { 0% { transform: scale(1); } 40% { transform: scale(1.015); background: color-mix(in srgb, var(--c) 10%, var(--card)); } 100% { transform: scale(1); } }
 
 .check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--c); background: transparent; display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; transition: background var(--dur-base), transform var(--dur-fast); }
-.check:hover { transform: scale(1.08); }
 .check svg { width: var(--icon-sm); height: var(--icon-sm); }
 .check path { stroke: var(--card); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 22; stroke-dashoffset: 22; transition: stroke-dashoffset 0.35s 0.08s ease; }
 .check.on { background: var(--c); }
@@ -874,7 +861,6 @@ main > :last-child { margin-bottom: 0; }
 .nb-meta { margin: 0; }
 /* Tags as small pills, so they read apart from the date and topic around them. */
 .nb-tag { display: inline-flex; align-items: center; padding: var(--space-half) var(--space-2); border: 0; border-radius: 999px; background: var(--muted); color: var(--foreground); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
-button.nb-tag:hover { background: var(--accent); }
 .nb-idea { display: flex; align-items: flex-start; gap: var(--space-2); }
 .nb-idea svg { width: var(--icon-md); height: var(--icon-md); color: var(--c); flex: none; }
 .followups .icon-btn { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
@@ -898,7 +884,6 @@ button.nb-tag:hover { background: var(--accent); }
 /* Cards that link somewhere: topic cards, skill cards. */
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-2); }
 .link-card { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-md); color: inherit; text-decoration: none; transition: transform var(--dur-fast), box-shadow var(--dur-fast); }
-.link-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-card); }
 .link-card-title { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--weight-bold); }
 .link-card-sub { font-size: var(--text-small); color: var(--muted-foreground); }
 
@@ -908,16 +893,12 @@ button.nb-tag:hover { background: var(--accent); }
 
 /* InnerLink: a link to another page of the app inside text. */
 .inner-link { color: var(--c, var(--primary)); font-weight: var(--weight-bold); text-decoration: underline dashed; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-.inner-link:hover { text-decoration-style: solid; }
 .xref-res { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--c) 60%, transparent); text-decoration-thickness: 2px; text-underline-offset: 3px; }
-.xref-res:hover { color: var(--c); }
 .res-title { color: inherit; text-decoration: none; }
-a.res-title:hover { color: var(--c); text-decoration: underline; text-underline-offset: 3px; }
 /* The quiet line under a resource: note · site ↗ · Free. */
 .res-meta { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .res-host { color: var(--muted-foreground); text-decoration: none; white-space: nowrap; }
 .res-ext { display: inline; width: var(--icon-sm); height: var(--icon-sm); margin-left: var(--space-1); vertical-align: -2px; color: var(--muted-foreground); }
-a.res-title:hover .res-ext { color: var(--c); }
 .res-free { color: var(--good); font-weight: var(--weight-bold); }
 .res-icon { width: var(--icon-sm); height: var(--icon-sm); color: var(--c); flex: none; }
 
@@ -984,7 +965,6 @@ a.res-title:hover .res-ext { color: var(--c); }
 /* DoneButton: today's tick as a full-width button in the card's colour; filled once done. */
 .done-btn { display: flex; align-items: center; justify-content: center; gap: var(--space-2); width: 100%; height: var(--control-md); border: 1px solid var(--c); border-radius: var(--radius-md); background: none; color: var(--c); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
 .done-btn svg { width: var(--icon-sm); height: var(--icon-sm); opacity: 0.5; }
-.done-btn:hover { background: color-mix(in srgb, var(--c) 12%, transparent); }
 .done-btn.on { background: var(--c); color: var(--card); }
 .done-btn.on svg { opacity: 1; }
 /* Wide screens: the done button sits on the right of the card's header instead of spanning the card. */
@@ -1001,7 +981,6 @@ a.res-title:hover .res-ext { color: var(--c); }
 .count-row { display: flex; gap: var(--space-1); }
 .count-unit { display: grid; place-items: center; flex: 1 1 0; min-width: 0; max-width: var(--control-sm); height: var(--control-sm); border: 1px solid transparent; border-radius: var(--radius-sm); background: none; color: var(--muted-foreground); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
 .count-unit svg { width: var(--icon-lg); height: var(--icon-lg); }
-.count-unit:hover { background: var(--accent); }
 .count-unit.on { background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
 .count-unit.extra:not(.on) { border-style: dashed; border-color: var(--border); }
 .count-unit:focus-visible { outline: 2px solid var(--ring); }
@@ -1048,7 +1027,6 @@ a.res-title:hover .res-ext { color: var(--c); }
   .mood-ask { justify-items: center; text-align: center; }
 }
 .mood-btn { display: grid; place-items: center; width: var(--control-md); height: var(--control-md); padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; transform: scale(0.82); transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-fast); }
-.mood-btn:hover { transform: scale(0.92); }
 .mood-btn[aria-pressed="true"] { transform: scale(1.08); box-shadow: 0 0 0 var(--space-1) color-mix(in srgb, var(--c) 40%, transparent); }
 .mood-face { display: block; width: 100%; height: 100%; }
 @media (prefers-reduced-motion: reduce) { .mood-btn { transition: none; } .mood-btn[aria-pressed="true"] { transform: none; } }
@@ -1091,6 +1069,31 @@ a.res-title:hover .res-ext { color: var(--c); }
 
 /* Hover states, only where a real pointer hovers (touch screens would keep them stuck on). */
 @media (hover: hover) {
+  .segment:hover { color: var(--foreground); background: var(--accent); }
+  .icon-btn:hover { background: var(--accent); color: var(--foreground); }
+  .plus-btn:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+  .link-btn:hover { color: var(--foreground); text-decoration-color: currentColor; }
+  .focus-card:hover { box-shadow: var(--shadow-card); }
+  .bar-back:hover { background: var(--accent); }
+  .bar-text:hover { background: var(--accent); }
+  .google-btn:hover { background: color-mix(in srgb, var(--google-fg) 6%, var(--google-bg)); color: var(--google-fg); }
+  .driver-popover.tour .driver-popover-footer-btn:hover { background: var(--muted); }
+  .driver-popover.tour .driver-popover-next-btn:hover { background: color-mix(in srgb, var(--primary) 88%, var(--foreground)); }
+  .row.is-openable:hover { background: var(--accent); }
+  .check:hover { transform: scale(1.08); }
+  button.nb-tag:hover { background: var(--accent); }
+  .link-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-card); }
+  .inner-link:hover { text-decoration-style: solid; }
+  .xref-res:hover { color: var(--c); }
+  a.res-title:hover { color: var(--c); text-decoration: underline; text-underline-offset: 3px; }
+  a.res-title:hover .res-ext { color: var(--c); }
+  .done-btn:hover { background: color-mix(in srgb, var(--c) 12%, transparent); }
+  .count-unit:hover { background: var(--accent); }
+  .mood-btn:hover { transform: scale(0.92); }
+  .bar-more:hover { background: var(--accent); color: var(--foreground); }
+  .action-item:hover { background: var(--accent); outline: none; }
+  [data-tip]:hover::after { opacity: 1; transform: translate(-50%, 0); }
+  .driver-popover.tour .driver-popover-close-btn:hover { color: var(--foreground); }
   .chbtn:not([aria-pressed="true"]):hover, .qbtn:not([aria-pressed="true"]):hover { border-color: color-mix(in srgb, var(--foreground) 35%, var(--border)); }
   .chbtn[aria-pressed="true"]:hover { opacity: 0.9; }
   a.chip:hover { border-color: color-mix(in srgb, var(--c, var(--foreground)) 50%, var(--border)); }
