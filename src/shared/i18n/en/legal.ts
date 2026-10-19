@@ -8,7 +8,7 @@ export const legal = {
     {
       title: 'What we keep',
       items: [
-        'Your account: your email and, when you sign in with Google, the name and picture Google shares. Passwords are stored hashed by our sign-in provider.',
+        'Your account: the email, name and picture Google shares when you sign in.',
         'What you add: topics, steps, tasks, habits, mood, lists, notes and links, and when you ticked them.',
         'If you turn on reminders: the browser’s push address and keys for that device, its time zone, language and the hours you chose.',
         'If you connect Telegram: your chat id and username, so the bot knows whose Notebook to save to.',
@@ -29,7 +29,7 @@ export const legal = {
       items: [
         'Supabase stores the data and handles sign-in.',
         'Cloudflare hosts the app and the server, runs the AI model (Workers AI) and keeps short technical logs.',
-        'Google, if you sign in with Google.',
+        'Google, for signing in.',
         'Apple, Google or Mozilla deliver reminders to your browser. The message is encrypted on the way.',
         'Telegram, for messages to and from the bot.',
         'An AI you connect with a token (like Claude) gets what you let it read. You choose that, and you can revoke the token any time.',

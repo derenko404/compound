@@ -26,6 +26,10 @@
   --accent-foreground: #17212b;
   --destructive: #c8322b;
   --on-destructive: #ffffff; /* the minus in the red ⊖, in both themes */
+  /* The Google sign-in button, in Google's own colours in both themes. */
+  --google-bg: #ffffff;
+  --google-fg: #1f1f1f;
+  --google-border: #747775;
   --border: #d5dcd5;
   --input: #d5dcd5;
   --ring: #2b55e0;
@@ -602,6 +606,10 @@ a.qbtn { color: inherit; text-decoration: none; }
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); border-bottom: 1px solid var(--border);
 }
 .brand { font-family: var(--font-display); font-weight: var(--weight-black); font-size: var(--text-title); display: flex; align-items: center; gap: var(--space-2); }
+/* Continue with Google, white as on other sites so it stands out from the app's own buttons. */
+.google-btn { background: var(--google-bg); color: var(--google-fg); border: 1px solid var(--google-border); }
+.google-btn:hover { background: color-mix(in srgb, var(--google-fg) 6%, var(--google-bg)); color: var(--google-fg); }
+.google-btn svg { width: var(--icon-md); height: var(--icon-md); }
 .brand-mark { width: var(--icon-lg); height: var(--icon-lg); border-radius: var(--radius-sm); background: url('/favicon.svg') center / cover; flex: none; }
 .sync { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); color: var(--muted-foreground); background: none; border: 0; padding: 0; cursor: default; }
 .sync svg { width: var(--icon-md); height: var(--icon-md); }
