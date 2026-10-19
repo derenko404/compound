@@ -4,6 +4,7 @@ import { plural } from '@/shared/i18n/plural'
 export const wellbeing = {
   title: 'Wellbeing',
   lead: 'Your mood, and habits to build or break.',
+  quoteOfDay: 'Quote of the day',
   habits: 'Habits',
   add: 'Add a tracker',
   empty: 'No habits yet. Tap + to add a tracker: gym, water, quitting smoking, or a habit of your own.',

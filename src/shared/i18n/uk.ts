@@ -14,5 +14,6 @@ import { onboarding } from '@/shared/i18n/uk/onboarding'
 import { push } from '@/shared/i18n/uk/push'
 import { landing } from '@/shared/i18n/uk/landing'
 import { legal } from '@/shared/i18n/uk/legal'
+import { quotes } from '@/shared/i18n/uk/quotes'
 
-export const uk: Dict = { common, nav, today, topics, lists, notebook, wellbeing, settings, timer, search, onboarding, push, landing, legal }
+export const uk: Dict = { common, nav, today, topics, lists, notebook, wellbeing, settings, timer, search, onboarding, push, landing, legal, quotes }

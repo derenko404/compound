@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { habitsOf, HABIT_UI, HabitCard } from '@/features/habits'
 import type { Habit } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
-import { Header, List, Row, SortList, Section, RemoveButton, moveTo, useSheet, usePageBar, tone } from '@/shared/ui'
+import { Header, List, Quote, Row, SortList, Section, RemoveButton, moveTo, useSheet, usePageBar, tone } from '@/shared/ui'
+import { dates } from '@/shared/lib/dates'
 import { t } from '@/shared/i18n'
 import { MoodWidget } from './MoodWidget'
 import { HabitSheet, newHabit } from './HabitSheet'
@@ -28,6 +29,8 @@ export function Wellbeing() {
     <>
       <Header title={W.title} lead={W.lead} />
       <MoodWidget />
+      {/* One quote a day, once today's mood is logged, the same all day: the day's number picks it. */}
+      {state.days[dates.keyOf(new Date())]?.mood && <Quote label={W.quoteOfDay} {...t.quotes[dates.dayDiff(new Date(2024, 0, 1), new Date()) % t.quotes.length]} />}
       <Section title={W.habits}>
         {edit ? (
           <SortList onMove={reorder}>
