@@ -120,7 +120,7 @@ export const wellbeing: typeof en['wellbeing'] = {
     breakPlaceholder: 'Без цукру',
     buildPlaceholder: 'Медитувати 10 хвилин',
     why: 'Навіщо',
-    whyPlaceholder: 'Ваша причина одним рядком (необовʼязково)',
+    whyPlaceholder: 'Що стане краще, коли ви її втримаєте (необовʼязково)',
     glassesADay: 'Склянок на день',
     perDay: 'Цигарок на день до відмови',
     price: 'Ціна пачки з 20 штук',

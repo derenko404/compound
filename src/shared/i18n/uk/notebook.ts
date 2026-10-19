@@ -14,7 +14,7 @@ export const notebook: typeof en['notebook'] = {
   sheet: {
     writeFirst: 'Спершу напишіть щось.',
     note: 'Нотатка',
-    notePlaceholder: 'Думка, ідея або посилання з поясненням, чим воно цікаве',
+    notePlaceholder: 'Думка, яку варто зберегти, ідея або посилання і чому воно важливе',
     aiContext: 'Контекст від ШІ',
     aiContextHint: 'Його написав ШІ, коли бот зберіг цей запис. Змінити його не можна.',
     tags: 'Теги',

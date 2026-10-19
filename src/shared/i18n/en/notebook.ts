@@ -13,7 +13,7 @@ export const notebook = {
   sheet: {
     writeFirst: 'Write something first.',
     note: 'Note',
-    notePlaceholder: "An insight, an idea, or paste a link with why it's interesting",
+    notePlaceholder: 'A thought worth keeping, an idea, or a link and why it matters',
     aiContext: 'AI context',
     aiContextHint: "Written by the AI when the bot saved this. You can't edit it.",
     tags: 'Tags',

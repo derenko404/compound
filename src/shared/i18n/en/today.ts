@@ -34,7 +34,7 @@ export const today = {
     nameFirst: 'Give the task a name first.',
     pickDay: 'Pick at least one day.',
     task: 'Task',
-    taskPlaceholder: 'Watch one Hussein Nasser video',
+    taskPlaceholder: 'Read 10 pages before bed',
     details: 'Details',
     optional: 'Optional',
     when: 'When',

@@ -124,7 +124,7 @@ export const wellbeing = {
     breakPlaceholder: 'No sugar',
     buildPlaceholder: 'Meditate 10 minutes',
     why: 'Why',
-    whyPlaceholder: 'Your reason, in one line (optional)',
+    whyPlaceholder: 'What gets better when you keep it (optional)',
     glassesADay: 'Glasses a day',
     perDay: 'Cigarettes a day, before',
     price: 'Price of a pack of 20',

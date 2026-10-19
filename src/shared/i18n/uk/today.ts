@@ -31,7 +31,7 @@ export const today: typeof en['today'] = {
     nameFirst: 'Спершу назвіть завдання.',
     pickDay: 'Виберіть хоча б один день.',
     task: 'Завдання',
-    taskPlaceholder: 'Подивитися одне відео Hussein Nasser',
+    taskPlaceholder: 'Прочитати 10 сторінок перед сном',
     details: 'Деталі',
     optional: 'Необовʼязково',
     when: 'Коли',
