@@ -21,7 +21,7 @@ Small steps, done daily, add up.
 
 ## ✨ Highlights
 
-- 🎯 **One list a day.** Routines, habits and the next step of what you're learning, all on Today.
+- 🎯 **One list a day.** Routines, habits and the next step of what you're learning, all on My day.
 - ⚡ **Quick add.** Type a task, press Return, type the next. When and topic are one tap away.
 - 🔥 **Streaks that are fair.** Days with nothing due don't break them, and a missed gym day can be made up later in the week.
 - 🧠 **Learning that builds itself.** Each topic suggests your next step, a project, a resource and a step to review from 7 or 30 days ago.
@@ -41,7 +41,7 @@ Small steps, done daily, add up.
 
 | | |
 |---|---|
-| ☀️ **Today** | One short list: your routines, your habits and the next step from what you're learning. A streak counts the days you finish. |
+| ☀️ **My day** | One short list: your routines, your habits and the next step from what you're learning. A streak counts the days you finish. |
 | 📚 **Topics** | Break a skill into steps. Keep resources and projects next to it, pick one topic as your focus and watch your pace. |
 | 📝 **Notebook** | Notes, ideas and links. Send them to the Telegram bot and an AI files them under the right topic with tags. |
 | 💚 **Wellbeing** | Gym, water, quitting smoking, any habit you build or break, and a daily mood. |
@@ -58,7 +58,7 @@ Small steps, done daily, add up.
     <td><img src="docs/screenshots/today-dark.png" alt="Today in dark mode" /></td>
   </tr>
   <tr>
-    <td align="center"><sub>Today</sub></td>
+    <td align="center"><sub>My day</sub></td>
     <td align="center"><sub>…and in dark mode</sub></td>
   </tr>
   <tr>

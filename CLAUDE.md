@@ -1,6 +1,6 @@
 # Compound
 
-Personal self-development PWA (formerly Roadmap Log): Today (routines, one-off tasks and rows generated from topics and habits), Topics (skills with steps to tick, resources, projects), Notebook (notes, ideas and links), Lists, Wellbeing (mood and habit trackers), Timer, Settings. All content is editable and stored per user. A Telegram bot feeds the Notebook, and any AI can read and build topics and lists through the API or MCP server. Live at https://roadmap.vasya-derenko.workers.dev (the worker is still called `roadmap`).
+Personal self-development PWA (formerly Roadmap Log): Today (shown as My day: routines, one-off tasks and rows generated from topics and habits), Topics (skills with steps to tick, resources, projects), Notebook (notes, ideas and links), Lists, Wellbeing (mood and habit trackers), Timer, Settings. All content is editable and stored per user. A Telegram bot feeds the Notebook, and any AI can read and build topics and lists through the API or MCP server. Live at https://roadmap.vasya-derenko.workers.dev (the worker is still called `roadmap`).
 
 ## Commands
 
@@ -122,7 +122,7 @@ The UI is a design system: every page is built from the same tokens and componen
 
 - `src/shared/ui/primitives/*` is shadcn-generated (`components.json` points there). When adding components with `npx shadcn@latest add …`, the CLI writes `import { cn } from "cn"`: change it to `@/shared/lib/utils`. Sonner must not use `next-themes` (not installed). tailwind-merge treats unknown `text-*` classes as colours, so `button.tsx` sets its size with `text-(length:--text-small)`.
 - Feedback is part of the product: `Check` and `DoneButton` play a sound and particle burst, `celebrate()` throws confetti and plays a fanfare, and choosing the focus plays `lockOn()` + `playFocus()` (`src/shared/lib/celebrate.ts`, `sound.ts`). Keep these on new tick-style interactions. Respect `prefers-reduced-motion`.
-- Navigation: phones have a bottom bar (Today, Topics, Notebook, Wellbeing, More → Lists, Timer, Settings); wider screens show the same views as tabs (`src/app/ui/tabs.ts`).
+- Navigation: phones have a bottom bar (My day, Topics, Notebook, Wellbeing, More → Lists, Timer, Settings); wider screens show the same views as tabs (`src/app/ui/tabs.ts`).
 - Icons: `public/favicon.svg` is the source (dark tile with four growing dots). iOS and maskable icons must be full-bleed squares with no transparency (iOS fills transparency with white); render them with `rsvg-convert`.
 
 ## Supabase

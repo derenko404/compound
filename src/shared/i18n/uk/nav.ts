@@ -2,7 +2,7 @@ import type { en } from '@/shared/i18n/en'
 
 export const nav: typeof en['nav'] = {
   tabs: {
-    today: 'Сьогодні',
+    today: 'Мій день',
     topics: 'Теми',
     notebook: 'Нотатник',
     lists: 'Списки',

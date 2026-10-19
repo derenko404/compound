@@ -1,7 +1,7 @@
 // The app shell (tabs, top bar, sync state) and the shared components in src/shared/ui.
 export const nav = {
   tabs: {
-    today: 'Today',
+    today: 'My day',
     topics: 'Topics',
     notebook: 'Notebook',
     lists: 'Lists',

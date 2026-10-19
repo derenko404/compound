@@ -2,6 +2,7 @@ import type { en } from '@/shared/i18n/en'
 import { plural } from '@/shared/i18n/plural'
 
 export const today: typeof en['today'] = {
+  title: 'Мій день',
   doneOf: (total) => ` з ${total} виконано`,
   doneToday: (n, total) => `Сьогодні виконано ${n} з ${total}`,
   goals: 'Цілі на сьогодні',

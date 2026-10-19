@@ -27,6 +27,9 @@ const SLOT: Record<Slot, [LucideIcon, string, string]> = {
   catchup: [Gauge, t.today.slot.catchup, '--slot-catchup'],
 }
 
+// One emoji per weekday, Sunday first as Date.getDay() counts.
+const DAY_EMOJI = ['🌞', '🌱', '🔥', '⛰️', '⚡', '🎉', '🌴']
+
 export function Today() {
   const { state, dispatch } = useStore()
   const [edit, setEdit] = useState(false)
@@ -99,7 +102,10 @@ export function Today() {
       <InstallBanner />
       <header className="today-head">
         <div className="today-title">
-          <h1 className="day-date">{dates.fmtLong(today)}</h1>
+          <div>
+            <h1 className="day-date">{t.today.title}</h1>
+            <p className="today-context">{DAY_EMOJI[today.getDay()]} {dates.fmtLong(today)}</p>
+          </div>
           {items.length > 0 && <span className="muted"><b className="text-foreground">{n}</b>{t.today.doneOf(items.length)}</span>}
         </div>
         {items.length > 0 && <Meter size="lg" value={n / items.length} label={t.today.doneToday(n, items.length)} />}

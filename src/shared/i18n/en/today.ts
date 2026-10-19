@@ -2,6 +2,7 @@
 import { plural } from '@/shared/i18n/plural'
 
 export const today = {
+  title: 'My day',
   doneOf: (total: number) => ` of ${total} done`,
   doneToday: (n: number, total: number) => `${n} of ${total} done today`,
   goals: "Today's goals",
