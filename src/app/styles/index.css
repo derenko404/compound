@@ -1077,7 +1077,7 @@ main > :last-child { margin-bottom: 0; }
 @media (max-width: 560px) {
   /* Forms: one field per line on phones. */
   .grid2 { grid-template-columns: minmax(0, 1fr); }
-  .card-grid { grid-template-columns: minmax(0, 1fr); }
+  .card-grid { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-3); }
   .day { grid-template-columns: 1fr; }
   .day:has(> .day-aside) { grid-template-columns: 1fr auto; align-items: start; }
   .day:has(.day-sub) { align-items: center; }
