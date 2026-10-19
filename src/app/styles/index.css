@@ -631,10 +631,14 @@ a.qbtn { color: inherit; text-decoration: none; }
 .bnav { display: grid; justify-items: center; gap: var(--space-half); padding: var(--space-2) var(--space-half); border-radius: var(--radius-md); color: var(--muted-foreground); font-size: var(--text-micro); font-weight: var(--weight-bold); text-decoration: none; background: none; border: 0; cursor: pointer; }
 .bnav svg { width: var(--icon-lg); height: var(--icon-lg); }
 .bnav[data-status="active"], .bnav[aria-expanded="true"], .bnav.active { color: var(--primary); }
-.more-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
-.more-item { display: grid; justify-items: center; gap: var(--space-2); padding: var(--space-4) var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--background); color: var(--foreground); font-weight: var(--weight-bold); font-size: var(--text-small); text-decoration: none; }
-.more-item svg { width: var(--icon-lg); height: var(--icon-lg); color: var(--primary); }
-.more-item[data-status="active"] { border-color: var(--primary); }
+.more-menu { display: grid; gap: var(--space-4); }
+/* MenuRow: a line of a menu inside a List, as in iOS Settings. The current page's row is tinted. */
+.menu-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--control-lg); padding: 0 var(--space-4); border: 0; border-top: 1px solid var(--border); background: none; color: var(--foreground); font: inherit; font-weight: var(--weight-bold); text-align: left; text-decoration: none; cursor: pointer; }
+.menu-row:first-child { border-top: 0; }
+.menu-row:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.menu-row[data-status="active"] { color: var(--primary); }
+.menu-row-icon { width: var(--icon-lg); height: var(--icon-lg); flex: none; color: var(--primary); }
+.menu-row-label { flex: 1; min-width: 0; }
 
 #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: var(--z-fx); }
 
@@ -1077,7 +1081,7 @@ a.res-title:hover .res-ext { color: var(--c); }
   a.chip:hover { border-color: color-mix(in srgb, var(--c, var(--foreground)) 50%, var(--border)); }
   .check:not(.on):hover { background: color-mix(in srgb, var(--c) 14%, transparent); }
   .bnav:hover, .tab:not([data-status="active"]):hover { color: var(--foreground); }
-  .more-item:hover { border-color: color-mix(in srgb, var(--primary) 50%, var(--border)); }
+  .menu-row:hover { background: var(--accent); }
   details > summary:hover .fold-title, .project-name:hover { color: var(--c, var(--foreground)); }
   .fold > summary:hover { background: color-mix(in srgb, var(--foreground) 3%, transparent); }
   .project-code:hover { background: color-mix(in srgb, var(--c) 24%, transparent); }

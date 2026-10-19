@@ -26,6 +26,7 @@ export { BarBack, BarMenu, BarProvider, useBar, usePageBar, type BarAction, type
 /* ---------- Surfaces ---------- */
 export { List } from './list'
 export { Row, SortList } from './row'
+export { MenuRow } from './menu-row'
 export { Panel } from './panel'
 export { Fold } from './fold'
 export { Entry } from './entry'
