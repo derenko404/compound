@@ -1,14 +1,14 @@
 // /share/<id>: someone's shared topic or list. Readable without an account; adding a copy needs one (or this device).
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getRouteApi, useNavigate } from '@tanstack/react-router'
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
 import { getShare, supabase } from '@/shared/api/backends'
 import { useStore } from '@/shared/store/StoreProvider'
 import { listFromShare, topicFromShare } from '@core/domain/content'
 import type { Topic, ListDef } from '@core/domain/types'
-import { Header, List } from '@/shared/ui'
+import { Brand, Header, List } from '@/shared/ui'
 import { PENDING_SHARE, SignIn } from '@/features/auth'
 import { t } from '@/shared/i18n'
 import { TopicPreview } from './TopicPreview'
@@ -52,6 +52,8 @@ export function SharePage() {
   const original = s.mine ? (isTopic ? state.topics.some((c) => c.id === s.data.id) : state.lists.some((l) => l.id === s.data.id)) : false
   return (
     <>
+      {/* Visitors see no top bar, so the page says whose app this is. */}
+      {mode === 'signin' && <Link to="/" className="page-brand"><Brand /></Link>}
       <Header title={s.name} lead={s.mine ? t.topics.shared.yours : isTopic ? t.topics.shared.aTopic : (s.data as ListDef).title}>
         {s.mine
           ? original && <Button variant="outline" onClick={() => void (isTopic ? nav({ to: '/topics/$ch', params: { ch: s.data.id } }) : nav({ to: '/lists/$id', params: { id: s.data.id } }))}>

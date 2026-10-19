@@ -609,6 +609,8 @@ a.qbtn { color: inherit; text-decoration: none; }
 .google-btn { background: var(--google-bg); color: var(--google-fg); border: 1px solid var(--google-border); }
 .google-btn svg { width: var(--icon-md); height: var(--icon-md); }
 .brand-mark { width: var(--icon-lg); height: var(--icon-lg); border-radius: var(--radius-sm); background: url('/favicon.svg') center / cover; flex: none; }
+/* Logo and name centred over a page shown without the top bar (a shared link to a visitor). */
+.page-brand { display: flex; justify-content: center; color: var(--foreground); text-decoration: none; padding-top: calc(var(--space-6) + env(safe-area-inset-top, 0px)); margin-bottom: var(--space-6); }
 .sync { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); color: var(--muted-foreground); background: none; border: 0; padding: 0; cursor: default; }
 .sync svg { width: var(--icon-md); height: var(--icon-md); }
 .sync[data-state="saving"] svg, .sync[data-state="loading"] svg { animation: blink 1s ease-in-out infinite; }

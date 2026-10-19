@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, Search, Timer as TimerIcon } from 'lucide-react'
-import { BarBack, BarMenu, useBar } from '@/shared/ui'
+import { BarBack, BarMenu, Brand, useBar } from '@/shared/ui'
 import { type SyncState } from '@/shared/store/StoreProvider'
 import { clock, remaining, useTimer } from '@/features/timer'
 import { t } from '@/shared/i18n'
@@ -43,7 +43,7 @@ export function TopBar({ sync }: { sync: SyncState }) {
   return (
     <header className="top">
       <div className="flex min-w-0 items-center gap-2">
-        {bar?.back ? <BarBack {...bar.back} /> : <Link to="/today" className="brand text-foreground no-underline"><span className="brand-mark" aria-hidden="true" />Compound</Link>}
+        {bar?.back ? <BarBack {...bar.back} /> : <Link to="/today" className="text-foreground no-underline"><Brand /></Link>}
         {!bar?.back && <SyncIcon sync={sync} />}
       </div>
       {/* Keeps the bar the same height on pages without a ⋯. */}

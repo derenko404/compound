@@ -16,6 +16,7 @@ export { useSheet } from './lib/use-sheet'
 
 /* ---------- Page ---------- */
 export { TopicColors } from './topic-colors'
+export { Brand } from './brand'
 export { Header } from './header'
 export { Section } from './section'
 export { Tabs } from './tabs'

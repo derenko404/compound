@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@/shared/ui/primitives/button'
+import { Brand } from '@/shared/ui'
 import { supabase } from '@/shared/api/backends'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
@@ -22,7 +23,7 @@ export function SignIn() {
 
   return (
     <div className="mx-auto max-w-md py-16">
-      <div className="brand mb-6"><span className="brand-mark" aria-hidden="true" />Compound</div>
+      <div className="mb-6"><Brand /></div>
       <h1 className="day-date mb-3">{t.settings.signIn.title}</h1>
       <p className="lead">{t.settings.signIn.lead}</p>
       <div className="mt-6 grid gap-4">
