@@ -5,22 +5,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../primitives/switch'
 import { Textarea } from '../primitives/textarea'
 
-export function Field({ label, hint, children, full }: { label: string; hint?: string; children: (id: string) => ReactNode; full?: boolean }) {
+// hideLabel: the label is only for screen readers, when the placeholder already says what goes in.
+export function Field({ label, hint, children, full, hideLabel }: { label: string; hint?: string; children: (id: string) => ReactNode; full?: boolean; hideLabel?: boolean }) {
   const id = useId()
   return (
     <div className={full ? 'field span-all' : 'field'}>
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className={hideLabel ? 'sr-only' : undefined}>{label}</Label>
       {children(id)}
       {hint && <span className="text-caption text-muted-foreground">{hint}</span>}
     </div>
   )
 }
 
-export const TextField = ({ label, value, onChange, placeholder, hint, type, required, full }: {
+/**
+ * autoFocus: FormSheet focuses this field when it opens. onEnter: Return runs it instead of submitting the form
+ * (quick add, where Return adds one more and keeps the sheet open).
+ */
+export const TextField = ({ label, value, onChange, placeholder, hint, type, required, full, hideLabel, autoFocus, onEnter }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string; type?: string; required?: boolean; full?: boolean
+  hideLabel?: boolean; autoFocus?: boolean; onEnter?: () => void
 }) => (
-  <Field label={label} hint={hint} full={full}>
-    {(id) => <Input id={id} type={type} value={value} required={required} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />}
+  <Field label={label} hint={hint} full={full} hideLabel={hideLabel}>
+    {(id) => (
+      <Input id={id} type={type} value={value} required={required} placeholder={placeholder} onChange={(e) => onChange(e.target.value)}
+        data-autofocus={autoFocus || undefined} enterKeyHint={onEnter ? 'enter' : undefined}
+        onKeyDown={onEnter && ((e) => {
+          if (e.key !== 'Enter' || e.nativeEvent.isComposing) return
+          e.preventDefault()
+          onEnter()
+        })} />
+    )}
   </Field>
 )
 

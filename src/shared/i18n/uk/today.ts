@@ -28,7 +28,8 @@ export const today: typeof en['today'] = {
   form: {
     newTitle: 'Нове завдання',
     editTitle: 'Змінити завдання',
-    submitNew: 'Додати завдання',
+    submitNew: 'Додати',
+    added: (n) => plural(n, { one: 'Додано # завдання', few: 'Додано # завдання', many: 'Додано # завдань', other: 'Додано # завдання' }),
     nameFirst: 'Спершу назвіть завдання.',
     pickDay: 'Виберіть хоча б один день.',
     task: 'Завдання',
@@ -36,7 +37,7 @@ export const today: typeof en['today'] = {
     details: 'Деталі',
     optional: 'Необовʼязково',
     when: 'Коли',
-    todayOnly: 'Лише сьогодні',
+    todayOnly: 'Сьогодні',
     once: 'Один раз, у певний день',
     daily: 'Щодня',
     weekly: 'У дні тижня',

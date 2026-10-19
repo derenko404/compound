@@ -40,6 +40,7 @@ export { SettingRow } from './setting-row'
 /* ---------- Chips and badges ---------- */
 export { Dot } from './dot'
 export { Chip, ChipLink, Chips, ChipsList } from './chip'
+export { ChipMenu, type ChipMenuGroup, type ChipMenuOption } from './chip-menu'
 export { Badge, IconBadge } from './badge'
 
 /* ---------- Progress and ticks ---------- */

@@ -30,7 +30,9 @@ export const today = {
   form: {
     newTitle: 'New task',
     editTitle: 'Edit task',
-    submitNew: 'Add task',
+    submitNew: 'Add',
+    // Under the quick-add field, after Return added tasks and cleared it for the next one.
+    added: (n: number) => plural(n, { one: '# task added', other: '# tasks added' }),
     nameFirst: 'Give the task a name first.',
     pickDay: 'Pick at least one day.',
     task: 'Task',
@@ -38,7 +40,7 @@ export const today = {
     details: 'Details',
     optional: 'Optional',
     when: 'When',
-    todayOnly: 'Today only',
+    todayOnly: 'Today',
     once: 'Once, on a date',
     daily: 'Every day',
     weekly: 'On days of the week',

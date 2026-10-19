@@ -214,6 +214,7 @@
   --feature-min: 240px; /* the narrowest card in a feature grid */
   --reading: 68ch; /* long text: legal pages */
   --menu-w: 200px; /* dropdown menus */
+  --sheet-form-min: 50dvh; /* form drawers on phones: iOS's half-height sheet, so a short form stays above the keyboard */
   --dial-lg: 248px; /* the timer's ring */
   --setting-text: 192px; /* SettingRow: the narrowest its text gets before the controls wrap below */
   --confirm-w: 400px; /* confirm dialogs */
@@ -559,9 +560,14 @@ a.qbtn { color: inherit; text-decoration: none; }
 .bar-text { margin-right: calc(-1 * var(--space-2)); }
 .bar-text.is-done { font-weight: var(--weight-bold); }
 .bar-more:not(:last-child) { margin-right: 0; }
-.bar-menu { min-width: var(--menu-w); }
-.bar-menu [data-slot="dropdown-menu-item"] { min-height: var(--control-md); padding: 0 var(--space-3); font-size: var(--text-body); color: var(--foreground); text-decoration: none; cursor: pointer; }
-.bar-menu [data-slot="dropdown-menu-item"] svg { width: var(--icon-md); height: var(--icon-md); }
+.bar-menu, .chip-menu { min-width: var(--menu-w); }
+.bar-menu [data-slot="dropdown-menu-item"], .chip-menu [data-slot="dropdown-menu-item"] { min-height: var(--control-md); padding: 0 var(--space-3); font-size: var(--text-body); color: var(--foreground); text-decoration: none; cursor: pointer; }
+.bar-menu [data-slot="dropdown-menu-item"] svg, .chip-menu [data-slot="dropdown-menu-item"] svg { width: var(--icon-md); height: var(--icon-md); }
+/* ChipMenu: a chip that opens a menu of choices. The current one is ticked in the primary colour. */
+.chip-menu [data-slot="dropdown-menu-label"] { font-size: var(--text-caption); color: var(--muted-foreground); }
+.chip-menu .chip-menu-check { color: var(--primary); }
+.chip-menu-trigger { color: var(--foreground); }
+.chip-menu-chevron { color: var(--muted-foreground); margin-left: calc(-1 * var(--space-1)); }
 /* The ⋯ on phones: a bottom drawer as tall as its big full-width buttons (BarMenu in src/shared/ui/page-bar.tsx). */
 .action-list { display: grid; gap: var(--space-2); }
 /* No visible title: the header is only the drawer handle. Tap outside to close. */
@@ -671,7 +677,8 @@ a.qbtn { color: inherit; text-decoration: none; }
 .sheet-overlay { z-index: var(--z-overlay); }
 @media (max-width: 560px) {
   .sheet, .sheet.sheet-wide { left: 0; right: 0; top: auto; bottom: 0; transform: none; max-width: none; max-height: 92dvh; align-content: start; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); animation: sheet-up var(--dur-base) var(--ease-out); }
-  /* Drawers are as tall as their content, up to 92% of the screen. */
+  /* Drawers are as tall as their content, up to 92% of the screen. Form drawers are at least half the screen. */
+  .sheet.form-sheet { min-height: var(--sheet-form-min); }
   .sheet[data-state="closed"] { animation: sheet-down var(--dur-base) var(--ease-out) forwards; }
   /* iOS/Android sheet: Cancel top-left, title centred, the action top-right; no footer. */
   .sheet-head.has-actions { display: grid; grid-template-columns: 1fr auto 1fr; padding-inline: var(--space-2); }

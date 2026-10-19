@@ -27,7 +27,11 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
   const cancel = <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>{t.common.cancel}</Button>
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={wide ? 'sheet-wide' : undefined}>
+      <DialogContent className={wide ? 'form-sheet sheet-wide' : 'form-sheet'} onOpenAutoFocus={(e) => {
+        // A field marked autoFocus gets the focus (and the keyboard on phones) instead of the first button.
+        const field = (e.currentTarget as HTMLElement).querySelector<HTMLElement>('[data-autofocus]')
+        if (field) { e.preventDefault(); field.focus() }
+      }}>
         {/* Phones: Cancel and the action sit in the header, as iOS and Android sheets do. Desktop: in the footer. */}
         <DialogTitle start={cancel} end={<Button type="submit" form={formId} variant="ghost" className="sheet-action">{submit}</Button>}>{title}</DialogTitle>
         {description ? <DialogDescription>{description}</DialogDescription> : <DialogDescription className="sr-only">{title}</DialogDescription>}
