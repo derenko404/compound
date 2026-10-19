@@ -22,6 +22,7 @@ Small steps, done daily, add up.
 ## ✨ Highlights
 
 - 🎯 **One list a day.** Routines, habits and the next step of what you're learning, all on Today.
+- ⚡ **Quick add.** Type a task, press Return, type the next. When and topic are one tap away.
 - 🔥 **Streaks that are fair.** Days with nothing due don't break them, and a missed gym day can be made up later in the week.
 - 🧠 **Learning that builds itself.** Each topic suggests your next step, a project, a resource and a step to review from 7 or 30 days ago.
 - 📈 **Pace you can see.** Set a goal in months and Compound tells you when you're falling behind, then adds a catch-up step.
