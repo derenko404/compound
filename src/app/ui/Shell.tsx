@@ -5,6 +5,8 @@ import { Toaster } from '@/shared/ui/primitives/sonner'
 import { TopicColors } from '@/shared/ui'
 import { mountFx } from '@/shared/lib/celebrate'
 import { startReminderLoop } from '@/shared/lib/reminders'
+import { appBadge } from '@/shared/lib/app-badge'
+import { reminders } from '@core/domain/reminders'
 import { dates } from '@/shared/lib/dates'
 import { todayItems } from '@/features/today'
 import { useStore } from '@/shared/store/StoreProvider'
@@ -59,6 +61,17 @@ export function Shell() {
   useEffect(() => {
     if (pushOn && ready) void pushReminders.sync(supabase!)
   }, [pushOn, ready])
+  // The icon's badge: own tasks and habits left today, the same count as the reminders. Rechecked on return, as the day may have changed.
+  const signedOut = mode === 'signin'
+  useEffect(() => {
+    if (signedOut) { appBadge.set(0); return }
+    if (!ready) return
+    const update = () => appBadge.set(reminders.ownToday(stateRef.current, new Date()).left.length)
+    update()
+    const onShow = () => { if (document.visibilityState === 'visible') update() }
+    document.addEventListener('visibilitychange', onShow)
+    return () => document.removeEventListener('visibilitychange', onShow)
+  }, [signedOut, ready, state])
   // Otherwise the open app reminds by itself.
   useEffect(
     () => pushOn ? undefined :

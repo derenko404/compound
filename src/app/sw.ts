@@ -39,8 +39,11 @@ self.addEventListener('push', (e) => {
     : data.kind === 'morning' ? [tx.morningTitle, tx.morning(list)]
     : data.kind === 'last' ? [tx.lastTitle, tx.last(list)]
     : [tx.eveningTitle(data.done ?? 0, data.total ?? items.length), tx.evening(list)]
-  e.waitUntil(self.registration.showNotification(title, {
+  // A reminder also refreshes the icon's badge (what's left), so it's right while the app is closed.
+  const badge = data.kind && data.kind !== 'hello' && 'setAppBadge' in self.navigator
+    ? self.navigator.setAppBadge(items.length).catch(() => {}) : Promise.resolve()
+  e.waitUntil(Promise.all([badge, self.registration.showNotification(title, {
     body: items.length || data.kind === 'hello' ? body : '',
     icon: '/pwa-192x192.png', badge: '/pwa-64x64.png', tag: 'roadmap-daily',
-}))
+  })]))
 })
