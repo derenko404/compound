@@ -31,9 +31,6 @@ export const topics = {
   },
 
   card: {
-    stepsOf: (done: number, total: number) => `${done} of ${total} steps`,
-    doneOf: (done: number, total: number) => `${done} of ${total}`,
-    nextIn: (skill: string) => `Next step in ${skill}`,
     // perWeek is already formatted, finish is a short month and year.
     pace: (perWeek: string, finish: string) => `${perWeek} steps a week, done around ${finish}`,
     late: (month: string) => `, after your ${month} target`,
@@ -45,11 +42,11 @@ export const topics = {
     back: 'Topics',
     editDetails: (name: string) => `Edit ${name}'s details`,
     about: (name: string) => `About ${name}`,
-    aboutEmpty: 'Nothing here yet. Tap Edit, then the pencil by the name.',
-    stepsDone: (done: number, total: number) => `${done} of ${total} steps done`,
-    stepsOf: (done: number, total: number) => `${done} of ${total} steps`,
-    skillOf: (n: number, total: number) => `, skill ${n} of ${total}`,
-    allDone: ', all done',
+    // Under the topic's name: its next step.
+    allDone: 'Every step is done.',
+    stepsDone: 'Steps done',
+    allLearned: 'All learned',
+    aboutEmpty: 'Nothing here yet. Tap Edit, then the name.',
     inProgress: 'In progress:',
     andMore: (n: number) => ` and ${n} more`,
     deleteTopic: 'Delete topic',
@@ -130,8 +127,8 @@ export const topics = {
     editSkill: 'Edit skill',
     skillNameFirst: 'Give the skill a name first.',
     skillNamePlaceholder: 'Startups',
-    intro: 'Intro',
-    introPlaceholder: 'What this skill is and why it matters (optional)',
+    intro: 'Description (optional)',
+    introPlaceholder: 'What this skill is and why it matters',
     stepsInOrder: 'Steps, in order',
     stepsPlaceholder: 'Finding ideas',
     stepsHint: "Ticks stay on items you don't change.",

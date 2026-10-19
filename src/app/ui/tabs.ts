@@ -1,17 +1,17 @@
-import { CalendarCheck, HeartPulse, ListChecks, NotebookPen, Route as RouteIcon, Settings as SettingsIcon, Timer as TimerIcon, type LucideIcon } from 'lucide-react'
+import { Heart, List as ListIcon, Pencil, Layers, Settings as SettingsIcon, Sun, Timer as TimerIcon, type LucideIcon } from 'lucide-react'
 import { t } from '@/shared/i18n'
 
 type Tab = { to: '/today' | '/topics' | '/notebook' | '/lists' | '/wellbeing' | '/timer' | '/settings'; label: string; icon: LucideIcon }
 
 // Phones: MAIN in the bottom bar, MORE in its sheet.
 export const MAIN: Tab[] = [
-  { to: '/today', label: t.nav.tabs.today, icon: CalendarCheck },
-  { to: '/topics', label: t.nav.tabs.topics, icon: RouteIcon },
-  { to: '/notebook', label: t.nav.tabs.notebook, icon: NotebookPen },
-  { to: '/wellbeing', label: t.nav.tabs.wellbeing, icon: HeartPulse },
+  { to: '/today', label: t.nav.tabs.today, icon: Sun },
+  { to: '/topics', label: t.nav.tabs.topics, icon: Layers },
+  { to: '/notebook', label: t.nav.tabs.notebook, icon: Pencil },
+  { to: '/wellbeing', label: t.nav.tabs.wellbeing, icon: Heart },
 ]
 export const MORE: Tab[] = [
-  { to: '/lists', label: t.nav.tabs.lists, icon: ListChecks },
+  { to: '/lists', label: t.nav.tabs.lists, icon: ListIcon },
   { to: '/timer', label: t.nav.tabs.timer, icon: TimerIcon },
   { to: '/settings', label: t.nav.tabs.settings, icon: SettingsIcon },
 ]

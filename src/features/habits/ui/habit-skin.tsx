@@ -1,10 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { Fold, Meter, Stats } from '@/shared/ui'
+import { Dial, Fold, Stats } from '@/shared/ui'
 import { dates } from '@/shared/lib/dates'
 import type { Habit, State } from '@core/domain/types'
 import { t } from '@/shared/i18n'
-import { DONE, chain, cleanStats, dueOn, gymMakeUp, gymStats, smokingStats, valueOn, waterStats, weekOf } from '../model/habits'
-import { HabitDone, SlipButton, WaterCount } from './habit-log'
+import { chain, cleanStats, dueOn, gymMakeUp, gymStats, smokingStats, waterStats } from '../model/habits'
+import { GymWeek, HabitDone, SlipButton, WaterCount } from './habit-log'
 
 const W = t.wellbeing
 const WEEKDAYS_SHORT = t.nav.weekdaysShort
@@ -30,10 +30,9 @@ export function skinOf(s: State, h: Habit, today: Date): Skin {
             { value: st.slips, label: W.slip.word(st.slips) },
           ]} />
           {st.next && (
-            <div className="grid gap-2">
-              <div><b>{W.next(st.next.label)}</b> <span className="text-muted-foreground">{st.next.text}</span></div>
-              <Meter value={st.toNext} label={W.smoking.progressTo(st.next.label)} />
-            </div>
+            <Dial size="sm" n={Math.round(st.toNext * 100)} total={100} value="">
+              <b>{W.next(st.next.label)}</b> {st.next.text}
+            </Dial>
           )}
           <Fold title={W.smoking.milestones} meta={`${st.milestones.filter((m) => m.hit).length}/${st.milestones.length}`}>
             <div>{st.milestones.map((m) => <div key={m.label} className={`mile${m.hit ? ' hit' : ''}`}><i /><div><b>{m.label}</b> <span className="text-muted-foreground">{m.text}</span></div></div>)}</div>
@@ -78,18 +77,10 @@ export function skinOf(s: State, h: Habit, today: Date): Skin {
         value: <>{st.week}/{st.perWeek}<small> {W.gym.thisWeek}</small></>,
         line: (
           <span className="gym-line">
-            <span className="gym-days">
-              {weekOf(today).map((d) => {
-                const gym = h.days.includes(d.getDay())
-                const done = valueOn(s, h, dates.keyOf(d)) === DONE
-                return <i key={dates.keyOf(d)} className={done ? 'on' : gym ? 'due' : undefined} title={WEEKDAYS_SHORT[d.getDay()]}>{WEEKDAYS_SHORT[d.getDay()][0]}</i>
-              })}
-            </span>
+            <GymWeek h={h} />
             {!dueOn(h, today) && !makeUp && <span>{W.next(nextGymDay(h, today))}</span>}
           </span>
         ),
-        // Any day can be logged: the goal is per week, so a missed day can be made up later.
-        done: <HabitDone h={h} label={makeUp ? W.gym.catchUp(makeUp) : W.gym.mark} done={W.gym.done} />,
         details: <Stats items={[
           { value: st.month, label: W.gym.month },
           { value: st.total, label: W.gym.total },

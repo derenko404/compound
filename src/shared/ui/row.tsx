@@ -10,6 +10,7 @@ import { List } from './list'
  * title line instead of moving under it, for a small single control like a note button in a long list.
  * Edit mode, as on iOS: onOpen makes the whole row open its form (with › on the right), and sort adds a ≡ handle
  * to drag it to a new place inside a SortList. Leave out check while editing: ticks are off.
+ * With a check, a tap anywhere on the row (outside its links and buttons) presses it, sound and burst included.
  */
 export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onOpen, chevron = true, sort, children, style }: {
   // An anchor for links to this row (a search result scrolls to it).
@@ -41,8 +42,9 @@ export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onO
     was.current = done
   }, [done])
   return (
-    <div ref={ref} id={id} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}${onOpen ? ' is-openable' : ''}`}
+    <div ref={ref} id={id} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}${onOpen ? ' is-openable' : ''}${check && !onOpen ? ' is-tappable' : ''}`}
       style={{ ...(ch ? cvar(ch) : {}), ...style }}
+      {...(check && !onOpen && { onClick: (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('button, a, input')) ref.current?.querySelector<HTMLElement>(':scope > .check')?.click() } })}
       {...(onOpen && { role: 'button', tabIndex: 0, onClick: (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('button, a')) onOpen() }, onKeyDown: (e: KeyboardEvent) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen() } } })}>
       {check}
       <div className="row-body">

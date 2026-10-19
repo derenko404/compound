@@ -50,7 +50,7 @@ export function ResourceGroups({ ch, resources, onEdit, onRemove, readOnly }: { 
         const done = g.items.filter((r) => tick.on(r.id)).length
         const Icon = KIND_ICON[g.id]
         return (
-          <Fold key={g.id} ch={ch} open={gi === 0 || !!onEdit} icon={<Icon className="res-icon" aria-hidden="true" />} title={t.topics.resourceKinds[g.id]} meta={readOnly ? g.items.length : `${done}/${g.items.length}`}>
+          <Fold key={g.id} ch={ch} done={!readOnly && done === g.items.length} open={gi === 0 || !!onEdit} icon={<Icon className="res-icon" aria-hidden="true" />} title={t.topics.resourceKinds[g.id]} meta={readOnly ? g.items.length : `${done}/${g.items.length}`}>
             {g.items.map((r) => <ResourceRow key={r.id} ch={ch} r={r} onEdit={onEdit} onRemove={onRemove} readOnly={readOnly} />)}
           </Fold>
         )

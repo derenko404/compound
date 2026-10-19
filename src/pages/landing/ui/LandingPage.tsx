@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { Link, Navigate } from '@tanstack/react-router'
-import { BellRing, CalendarCheck, Check as CheckIcon, Crosshair, HeartPulse, Layers, NotebookPen, Sparkles, TrendingUp, type LucideIcon } from 'lucide-react'
+import { BellRing, Check as CheckIcon, Crosshair, Heart, Layers, Pencil, Sparkles, Sun, TrendingUp, type LucideIcon } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
 import { Banner, Check, IconBadge, List, Row, Section } from '@/shared/ui'
 import { useStore } from '@/shared/store/StoreProvider'
@@ -10,10 +10,10 @@ const tx = t.landing
 
 // Each feature's icon and colour token.
 const FEATURES: [keyof typeof tx.features, LucideIcon, string][] = [
-  ['today', CalendarCheck, '--slot-focus'],
+  ['today', Sun, '--slot-focus'],
   ['topics', Layers, '--slot-light'],
-  ['notebook', NotebookPen, '--slot-resource'],
-  ['wellbeing', HeartPulse, '--slot-review'],
+  ['notebook', Pencil, '--slot-resource'],
+  ['wellbeing', Heart, '--slot-review'],
   ['reminders', BellRing, '--slot-project'],
   ['ai', Sparkles, '--slot-catchup'],
 ]

@@ -1,34 +1,22 @@
 import {
-  usePageBar, RemoveButton, moveTo, useSheet, Check, IconBadge, InnerLink, List, Meter, Row, SortList, Section, useDoneLastOnOpen,
+  usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, FocusMark, Header, InnerLink, Kind, LinkCard, List, Row, SortList, Section, cvar, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
 import { TopicTag, Linkify } from '@/features/topics'
-import { DONE, HABIT_UI, waterStats } from '@/features/habits'
+import { DONE, HABIT_UI, WaterCount, waterStats } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
-import { FocusCard, WeekStrip } from './focus'
+import { WeekStrip } from './focus'
 import { RoutineSheet } from './RoutineSheet'
 import { celebrate } from '@/shared/lib/celebrate'
-import { nextPosition, uid } from '@core/domain/content'
+import { FALLBACK_TOPIC, nextPosition, topicOf, uid } from '@core/domain/content'
 import { dates } from '@/shared/lib/dates'
-import { dayProgress, describeWhen, streak, todayItems, type DayItem, type Slot } from '@/features/today'
+import { SLOT_UI, dayProgress, describeWhen, focusOf, streak, todayItems, type DayItem, type Slot } from '@/features/today'
 import { t } from '@/shared/i18n'
 import type { Habit, Routine } from '@core/domain/types'
 import { reduce } from '@core/domain/reduce'
 import { useStore } from '@/shared/store/StoreProvider'
-import { BookOpen, Crosshair, Feather, Flame, Gauge, Hammer, Plus, RotateCcw, type LucideIcon } from 'lucide-react'
-import { useState, type CSSProperties } from 'react'
+import { Flame } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 
-// Rows from the topics: the badge's icon, label (its tooltip) and colour token.
-const SLOT: Record<Slot, [LucideIcon, string, string]> = {
-  focus: [Crosshair, t.today.slot.focus, '--slot-focus'],
-  light: [Feather, t.today.slot.light, '--slot-light'],
-  project: [Hammer, t.today.slot.project, '--slot-project'],
-  resource: [BookOpen, t.today.slot.resource, '--slot-resource'],
-  review: [RotateCcw, t.today.slot.review, '--slot-review'],
-  catchup: [Gauge, t.today.slot.catchup, '--slot-catchup'],
-}
-
-// One emoji per weekday, Sunday first as Date.getDay() counts.
-const DAY_EMOJI = ['🌞', '🌱', '🔥', '⛰️', '⚡', '🎉', '🌴']
 
 export function Today() {
   const { state, dispatch } = useStore()
@@ -57,10 +45,6 @@ export function Today() {
     dispatch({ type: 'habitLog', habit: h.id, day: k, value })
     if (on) cheer(reduce(state, { type: 'habitLog', habit: h.id, day: k, value }))
   }
-  const addGlass = (h: Habit) => {
-    const value = waterStats(state, h, today).today + 1
-    dispatch({ type: 'habitLog', habit: h.id, day: k, value })
-  }
 
   // confetti and the streak when the whole day is done
   const cheer = (next: typeof state) => {
@@ -79,37 +63,41 @@ export function Today() {
   const shown = useDoneLastOnOpen(items, isDone, (it) => it.id)
   const run = streak(state, today)
 
-  const week = Array.from({ length: 7 }, (_, i) => dates.addDays(today, i - ((today.getDay() + 6) % 7))).filter((d) => d <= today)
-  const fullDays = week.filter((d) => { const p = dayProgress(state, d); return p.total > 0 && p.done === p.total }).length
+  // Rows from the focus topic get their own section under its name. The rest say which topic they come from.
+  const focus = topicOf(state, focusOf(state))
+  const fromFocus = (it: DayItem) => !!it.slot && it.ch === focus?.id
+  // The sub line of a row from a topic: what it is (Next step, Project…), then its own text.
+  const slotSub = (it: DayItem, slot: Slot) => {
+    const { label, color } = SLOT_UI[slot]
+    const rest = it.sub ? <Linkify text={it.sub} /> : null
+    return fromFocus(it)
+      ? <Kind label={label} color={color}>{rest}</Kind>
+      : <Kind label={topicOf(state, it.ch)?.name}>{label}{rest && <> · {rest}</>}</Kind>
+  }
   const row = (it: DayItem) => {
     const h = it.habit
     const ui = h && HABIT_UI[h.type]
+    const tag: ReactNode = !it.slot && !h && it.ch !== FALLBACK_TOPIC ? <TopicTag ch={it.ch} /> : null
     return (
-      <Row key={it.id} ch={it.ch} done={isDone(it)} style={ui ? ({ '--c': `var(${ui.color})` } as CSSProperties) : undefined}
-        title={it.slot ? <Linkify text={it.title} /> : it.title} sub={it.sub ? <Linkify text={it.sub} /> : undefined}
-        tag={<>
-          {it.slot && <IconBadge icon={SLOT[it.slot][0]} label={SLOT[it.slot][1]} color={SLOT[it.slot][2]} />}
-          {ui && <IconBadge icon={ui.icon} label={ui.label} color={ui.color} />}
-          {h?.type === 'water' && <button type="button" className="icon-btn" aria-label={t.today.addGlass} onClick={() => addGlass(h)}><Plus aria-hidden="true" /></button>}
-          <TopicTag ch={it.ch} />
-        </>}
-        check={<Check on={isDone(it)} label={it.title} onToggle={(on) => (h ? toggleHabit(h, on) : toggleDay(it.id, on))} />} />
+      <Row key={it.id} ch={it.ch} done={isDone(it)} style={ui ? tone(ui.color) : undefined} tagInline
+        title={it.slot ? <Linkify text={it.title} /> : it.title}
+        sub={it.slot ? slotSub(it, it.slot) : it.sub ? <Linkify text={it.sub} /> : undefined}
+        tag={tag}
+        check={<Check on={isDone(it)} label={it.title} onToggle={(on) => (h ? toggleHabit(h, on) : toggleDay(it.id, on))} />}>
+        {h?.type === 'water' && <WaterCount h={h} />}
+      </Row>
     )
   }
 
   return (
     <>
       <InstallBanner />
-      <header className="today-head">
-        <div className="today-title">
-          <div>
-            <h1 className="day-date">{t.today.title}</h1>
-            <p className="today-context">{DAY_EMOJI[today.getDay()]} {dates.fmtLong(today)}</p>
-          </div>
-          {items.length > 0 && <span className="muted"><b className="text-foreground">{n}</b>{t.today.doneOf(items.length)}</span>}
-        </div>
-        {items.length > 0 && <Meter size="lg" value={n / items.length} label={t.today.doneToday(n, items.length)} />}
-      </header>
+      {/* The tour's first step points at .today-head. */}
+      <div className="today-head">
+        <Header title={t.today.title} sub={dates.fmtLong(today)}>
+          {items.length > 0 && <Dial size="md" n={n} total={items.length} />}
+        </Header>
+      </div>
 
       <Section id="today-tasks" title={edit ? t.today.routines : t.today.goals}>
         {edit ? (
@@ -131,18 +119,27 @@ export function Today() {
         </Section>
       )}
 
-      {!edit && shown.some((it) => it.slot) && (
-        <Section id="today-topics" title={t.today.fromTopics} aside={t.today.updatesDaily}>
-          <List>{shown.filter((it) => it.slot).map(row)}</List>
+      {!edit && focus && shown.some(fromFocus) && (
+        <Section id="today-topics" style={cvar(focus.id)}
+          title={<span className="title-row">{focus.name}<FocusMark /></span>}
+          aside={<InnerLink to="/topics/$ch" params={{ ch: focus.id }}>{t.today.openTopic}</InnerLink>}>
+          <List>{shown.filter(fromFocus).map(row)}</List>
         </Section>
       )}
 
-      <Section id="today-week" title={t.today.thisWeek} aside={<span className={`today-streak${run ? ' on' : ''}`}><Flame aria-hidden="true" />{t.today.streakLine(run, fullDays, week.length)}</span>}>
+      {!edit && !focus && (
+        <section id="today-topics"><LinkCard to="/topics" title={t.today.focus.label} sub={t.today.focus.none} /></section>
+      )}
+
+      {!edit && shown.some((it) => it.slot && !fromFocus(it)) && (
+        <Section title={t.today.fromTopics}>
+          <List>{shown.filter((it) => it.slot && !fromFocus(it)).map(row)}</List>
+        </Section>
+      )}
+
+      <Section id="today-week" title={t.today.thisWeek} aside={run ? <span className="today-streak on"><Flame aria-hidden="true" />{t.today.streak(run)}</span> : undefined}>
         <WeekStrip />
       </Section>
-
-      <section><FocusCard /></section>
-
 
 
       {sheet.value && <RoutineSheet key={sheet.value.id} {...sheet.props} routine={sheet.value} />}

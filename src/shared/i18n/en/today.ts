@@ -3,25 +3,22 @@ import { plural } from '@/shared/i18n/plural'
 
 export const today = {
   title: 'My day',
-  doneOf: (total: number) => ` of ${total} done`,
-  doneToday: (n: number, total: number) => `${n} of ${total} done today`,
-  goals: "Today's goals",
+  goals: 'Tasks',
   routines: 'Routines',
   noRoutines: 'No routines yet. Add one with +.',
   nothingPlanned: 'Nothing planned today. Add a task with +.',
-  fromHabits: 'From your habits',
+  fromHabits: 'Habits',
   wellbeing: 'Wellbeing',
-  fromTopics: 'From your topics',
-  updatesDaily: 'Updates daily',
+  fromTopics: 'Small steps',
+  openTopic: 'Topic',
   thisWeek: 'This week',
-  streakLine: (run: number, full: number, total: number) => `${run}-day streak, ${full} of ${total} days complete`,
+  streak: (n: number) => plural(n, { one: '# day in a row', other: '# days in a row' }),
   countsForStreak: ', counts for the streak',
   addTask: 'Add a task',
-  addGlass: 'Add a glass',
-  // Badges on the rows from topics (their tooltips).
+  // What a row from a topic is, at the start of its sub line.
   slot: {
-    focus: 'Focus topic',
-    light: 'Light topic',
+    focus: 'Next step',
+    light: 'Next step',
     project: 'Project',
     resource: 'Resource',
     review: 'Review',
@@ -70,11 +67,6 @@ export const today = {
   focus: {
     label: 'Focus',
     none: 'No focus topic yet. Pick one on Topics: it gets the study sessions and the weekend project.',
-    steps: (done: number, total: number) => `${done} of ${total} steps`,
-    skillOf: (i: number, n: number, name: string) => `Skill ${i} of ${n}: ${name}`,
-    allDone: 'Every skill on this topic is done.',
-    projectDoing: 'Project in progress',
-    projectNext: 'Next project',
   },
   week: {
     upcoming: 'Upcoming',

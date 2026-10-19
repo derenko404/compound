@@ -47,6 +47,11 @@ export function topicProgress(s: State, c: Topic) {
   return { done: ids.filter((id) => s.plan[id]).length, total: ids.length }
 }
 
+// Skills finished on a topic: a skill is done when every step in it is ticked.
+export function skillProgress(s: State, c: Topic) {
+  return { done: c.skills.filter((k) => k.steps.length && k.steps.every((x) => s.plan[x.id])).length, total: c.skills.length }
+}
+
 // What to study next on a topic: the first skill with a step left, and that step.
 export function nextUp(s: State, c: Topic) {
   for (const [index, skill] of c.skills.entries()) {

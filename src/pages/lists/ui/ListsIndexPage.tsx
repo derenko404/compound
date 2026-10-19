@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { usePageBar, Header, LinkCard, List, Progress, Row, SearchField, SortList, RemoveButton, empty, moveTo, useSheet } from '@/shared/ui'
+import { usePageBar, Header, LinkCard, List, Dial, Row, SearchField, SortList, RemoveButton, empty, moveTo, useSheet } from '@/shared/ui'
 import { search } from '@core/domain/search'
 import { SearchResults, useOpenHit } from '@/features/search'
 import { byPosition, nextPosition } from '@core/domain/content'
@@ -47,7 +47,7 @@ export function Lists() {
             const n = doneIn(state, l)
             return (
               <LinkCard key={l.id} to="/lists/$id" params={{ id: l.id }} title={l.name}
-                sub={<span className="grid gap-2"><span>{l.title}</span><Progress n={n} total={l.items.length} /></span>} />
+                sub={<span className="grid gap-2"><span>{l.title}</span><Dial size="sm" n={n} total={l.items.length} /></span>} />
             )
           })}
         </div>

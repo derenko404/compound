@@ -17,7 +17,7 @@ export function SkillFolds({ ch, skills, current, itemsLabel = t.topics.skills.s
       {skills.map((k) => {
         const done = k.steps.filter((t) => tick.on(t.id)).length
         return (
-          <Fold key={k.id} ch={ch} open={k.id === current || undefined} title={k.id === current ? t.topics.skills.now(k.name) : k.name} meta={readOnly ? t.common.steps(k.steps.length) : `${done}/${k.steps.length}`}>
+          <Fold key={k.id} ch={ch} done={!readOnly && k.steps.length > 0 && done === k.steps.length} open={k.id === current || undefined} title={k.id === current ? t.topics.skills.now(k.name) : k.name} meta={readOnly ? t.common.steps(k.steps.length) : `${done}/${k.steps.length}`}>
             {k.intro && <p className="fold-intro"><Linkify text={k.intro} /></p>}
             {k.steps.length > 0 && <div className="list-label">{itemsLabel}</div>}
             {k.steps.map((it) => (

@@ -1,12 +1,14 @@
-// Logging today's value for a habit: the tick, a slip and water's glasses.
+// Logging a habit: today's tick, a slip, water's glasses and the gym's days.
 import { GlassWater } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
 import { CountRow, DoneButton } from '@/shared/ui'
+import { burst } from '@/shared/lib/celebrate'
+import { playTick, playUntick } from '@/shared/lib/sound'
 import { dates } from '@/shared/lib/dates'
 import type { Habit } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
-import { DONE, SLIP, valueOn, waterStats } from '../model/habits'
+import { DONE, SLIP, gymStats, valueOn, waterStats, weekOf } from '../model/habits'
 
 const W = t.wellbeing
 
@@ -39,4 +41,38 @@ export function WaterCount({ h }: { h: Habit }) {
   const log = useHabitLog(h)
   const { today: n, target } = waterStats(state, h, new Date())
   return <CountRow n={n} target={target} onSet={(v) => log.set(v || null)} icon={GlassWater} unit={W.water.unit} />
+}
+
+/**
+ * This week, Monday first, one button per day: tap a day to log a workout on it or take it back. Gym days are
+ * ringed, logged ones filled. Days still ahead can't be logged.
+ */
+export function GymWeek({ h }: { h: Habit }) {
+  const { state, dispatch } = useStore()
+  const today = new Date()
+  const k = dates.keyOf(today)
+  const toggle = (day: string, on: boolean, el: HTMLElement) => {
+    if (on) {
+      const { week, perWeek } = gymStats(state, h, today)
+      playTick(Math.min(1, (week + 1) / perWeek))
+      burst(el, 20)
+    } else playUntick()
+    dispatch({ type: 'habitLog', habit: h.id, day, value: on ? DONE : null })
+  }
+  return (
+    <span className="gym-days">
+      {weekOf(today).map((d) => {
+        const dk = dates.keyOf(d)
+        const done = valueOn(state, h, dk) === DONE
+        const gym = h.days.includes(d.getDay())
+        return (
+          <button key={dk} type="button" className={done ? 'on' : gym ? 'due' : undefined} disabled={dk > k}
+            aria-pressed={done} aria-label={W.gym.day(t.nav.weekdays[d.getDay()])}
+            onClick={(e) => toggle(dk, !done, e.currentTarget)}>
+            {t.nav.weekdaysShort[d.getDay()][0]}
+          </button>
+        )
+      })}
+    </span>
+  )
 }

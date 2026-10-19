@@ -19,8 +19,8 @@ export function SkillSheet({ topic, skill, ...sheet }: SheetProps & { topic: Top
         save({ ...topic, skills: isNew ? [...topic.skills, next] : topic.skills.map((x) => (x.id === skill.id ? next : x)) })
       }}>
       <TextField label={t.topics.form.name} value={name} onChange={setName} placeholder={t.topics.form.skillNamePlaceholder} required full />
-      <AreaField label={t.topics.form.intro} value={intro} onChange={setIntro} rows={3} placeholder={t.topics.form.introPlaceholder} />
       <LinesField label={t.topics.form.stepsInOrder} value={lines} onChange={setLines} placeholder={t.topics.form.stepsPlaceholder} hint={t.topics.form.stepsHint} />
+      <AreaField label={t.topics.form.intro} value={intro} onChange={setIntro} rows={3} placeholder={t.topics.form.introPlaceholder} />
     </FormSheet>
   )
 }

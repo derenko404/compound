@@ -1,52 +1,8 @@
-// Roadmap views for Today: the focus topic, and this week as a strip.
-import { topicOf } from '@core/domain/content'
+// This week on Today, as a strip of days.
 import { dates } from '@/shared/lib/dates'
-import { Link } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
-import { currentProject, dayProgress, focusOf, nextUp, topicProgress, weekdayShort } from '@/features/today'
+import { dayProgress, weekdayShort } from '@/features/today'
 import { t } from '@/shared/i18n'
 import { useStore } from '@/shared/store/StoreProvider'
-import { cvar } from '@/shared/ui'
-
-// The focus topic: which skill you're on, the next few steps, and the project in progress.
-export function FocusCard() {
-  const { state } = useStore()
-  const focus = topicOf(state, focusOf(state))
-  if (!focus) return (
-    <Link to="/topics" className="focus-card">
-      <div className="focus-label">{t.today.focus.label}</div>
-      <div className="muted text-small">{t.today.focus.none}</div>
-    </Link>
-  )
-  const { done, total } = topicProgress(state, focus)
-  const next = nextUp(state, focus)
-  const upcoming = next ? next.skill.steps.filter((t) => !state.plan[t.id]).slice(0, 3) : []
-  const project = currentProject(state, focus)
-  return (
-    <Link to="/topics/$ch" params={{ ch: focus.id }} className="focus-card" style={cvar(focus.id)}>
-      <div className="focus-head">
-        <div>
-          <div className="focus-label">{t.today.focus.label}</div>
-          <div className="focus-name"><span className="dot" />{focus.name}</div>
-        </div>
-        <span className="focus-count">{t.today.focus.steps(done, total)}</span>
-        <ChevronRight className="chev" aria-hidden="true" />
-      </div>
-      {next ? (
-        <div className="focus-task">
-          <div className="focus-label">{t.today.focus.skillOf(next.index + 1, focus.skills.length, next.skill.name)}</div>
-          <ol className="focus-next">{upcoming.map((t) => <li key={t.id}>{t.text}</li>)}</ol>
-        </div>
-      ) : <div className="focus-task">{t.today.focus.allDone}</div>}
-      {project && (
-        <div className="focus-task">
-          <div className="focus-label">{(state.projects[project.id] ?? 'todo') === 'doing' ? t.today.focus.projectDoing : t.today.focus.projectNext}</div>
-          <div><b>{project.code}</b> {project.name}</div>
-        </div>
-      )}
-    </Link>
-  )
-}
 
 const weekDays = (today: Date) => {
   const monday = dates.addDays(today, -((today.getDay() + 6) % 7))

@@ -4,9 +4,10 @@
  * Tailwind's `hover:` classes are gated already.
  */
 import { execSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 
-const files = execSync("git ls-files 'src/**/*.css'", { encoding: 'utf8' }).trim().split('\n').filter(Boolean)
+// Tracked and new files, minus ones deleted but not yet staged.
+const files = execSync("git ls-files -co --exclude-standard 'src/**/*.css'", { encoding: 'utf8' }).trim().split('\n').filter((f) => f && existsSync(f))
 const gate = /^@media[^{]*\(\s*hover\s*:\s*hover\s*\)/
 
 const problems = []

@@ -214,8 +214,10 @@
   --feature-min: 240px; /* the narrowest card in a feature grid */
   --reading: 68ch; /* long text: legal pages */
   --menu-w: 200px; /* dropdown menus */
-  --sheet-form-min: 50dvh; /* form drawers on phones: iOS's half-height sheet, so a short form stays above the keyboard */
+  --sheet-form-min: 50dvh; /* form and search drawers on phones: iOS's half-height sheet, so they stay above the keyboard */
   --dial-lg: 248px; /* the timer's ring */
+  --dial-md: 64px; /* a ring beside a page title */
+  --dial-sm: 52px; /* a ring beside a line of text */
   --setting-text: 192px; /* SettingRow: the narrowest its text gets before the controls wrap below */
   --confirm-w: 400px; /* confirm dialogs */
   --thumb-w: 96px; /* video thumbnails in the notebook */
@@ -422,21 +424,11 @@ details > summary::-webkit-details-marker { display: none; }
 
 
 
-/* Slim progress bar (Meter in src/shared/ui/meter.tsx). */
-.meter { height: var(--space-2); border-radius: 999px; background: var(--muted); overflow: hidden; }
-.meter-lg { height: var(--space-3); }
-.meter.is-empty { background: repeating-linear-gradient(-45deg, var(--muted) 0 var(--space-1), var(--border) var(--space-1) var(--space-2)); }
-/* Progress: a Meter with its count. */
-.progress-line { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-3); font-size: var(--text-small); color: var(--muted-foreground); }
-.progress-line b { color: var(--foreground); }
-.meter i { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width var(--dur-slow) var(--ease-out); }
+/* A ring with text beside it (Dial children). */
+.dial-line { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: var(--space-3); font-size: var(--text-small); color: var(--muted-foreground); }
+.dial-line b { color: var(--foreground); }
 
 /* Today. */
-.today-head { display: grid; gap: var(--space-3); padding-block: var(--space-6) var(--space-5); }
-.today-title { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
-.today-title .day-date { margin: 0; }
-.today-title .muted { white-space: nowrap; font-size: var(--text-small); }
-.today-context { margin: 0; color: var(--muted-foreground); }
 .today-streak { display: inline-flex; align-items: center; gap: var(--space-1); }
 .today-streak svg { width: var(--icon-sm); height: var(--icon-sm); }
 .today-streak.on svg { color: var(--warn); }
@@ -447,20 +439,16 @@ details > summary::-webkit-details-marker { display: none; }
 .wday i { width: var(--space-8); height: var(--space-8); border-radius: 50%; box-sizing: border-box; border: 2px solid var(--border); }
 .wday[data-state="full"] i { background: var(--good); border-color: var(--good); }
 .wday[data-state="part"] i { border-color: var(--good); background: conic-gradient(var(--good) var(--pct), transparent 0); }
-.wday[data-state="future"] i { border-style: dashed; opacity: 0.6; }
+/* Days still ahead: a small dot, no count. */
+.wday[data-state="future"] i { border: 0; background: radial-gradient(circle, var(--border) 0 var(--space-1), transparent calc(var(--space-1) + 1px)); }
+.wday[data-state="future"] small { visibility: hidden; }
 .wday small { font-size: var(--text-micro); font-variant-numeric: tabular-nums; }
 .wday.today { background: var(--muted); color: var(--foreground); font-weight: var(--weight-bold); }
 .wday.today[data-state="part"] i, .wday.today[data-state="empty"] i { border-color: var(--primary); background: conic-gradient(var(--primary) var(--pct), transparent 0); }
 
-/* The quarter's focus topic (FocusCard). */
-.focus-card { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); color: inherit; text-decoration: none; background-image: linear-gradient(160deg, color-mix(in srgb, var(--c) 10%, transparent), transparent 55%); transition: box-shadow var(--dur-fast); }
-.focus-head { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--space-2); }
+/* A label over a value and a topic name in a heading (topic cards). */
 .focus-label { font-size: var(--text-caption); color: var(--muted-foreground); }
 .focus-name { display: flex; align-items: center; gap: var(--space-2); font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); line-height: var(--leading-tight); }
-.focus-count { font-size: var(--text-caption); color: var(--muted-foreground); white-space: nowrap; }
-.focus-task { display: grid; gap: var(--space-1); padding-top: var(--space-3); border-top: 1px solid var(--border); }
-.focus-next { margin: 0; padding-left: var(--space-5); list-style: decimal; display: grid; gap: var(--space-1); }
-.focus-next li::marker { color: var(--muted-foreground); }
 
 /* Tabs inside a page, stuck under the app header. */
 .seg-tabs { position: sticky; top: var(--header-h); z-index: calc(var(--z-header) - 1); display: flex; gap: var(--space-1); overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--gutter)) var(--space-5); padding: var(--space-2) var(--gutter); background: var(--background); border-bottom: 1px solid var(--border); }
@@ -476,29 +464,30 @@ a.seg-tab { text-decoration: none; }
 .topic-row:first-child { border-top: 0; }
 .topic-row-name { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--weight-bold); }
 .topic-row-count { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
-.topic-row .meter { grid-column: 1 / -1; }
-.topic-row .meter i { background: var(--c); }
 .topic-row-pace { grid-column: 1 / -1; font-size: var(--text-small); color: var(--muted-foreground); }
 .topic-row-pace.late { color: var(--warn); }
 .qbtn:disabled { cursor: default; opacity: 1; }
 .qbtn.past { opacity: .55; }
 a.qbtn { color: inherit; text-decoration: none; }
-.focus-badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: 999px; background: var(--c); color: var(--background); font-family: var(--font-body); font-size: var(--text-caption); font-weight: var(--weight-bold); letter-spacing: 0; flex: none; }
-.focus-badge svg { width: var(--icon-sm); height: var(--icon-sm); }
-.focus-set { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border: 1px dashed var(--muted-foreground); border-radius: 999px; background: none; color: var(--muted-foreground); font-size: var(--text-caption); font-weight: var(--weight-bold); cursor: pointer; flex: none; }
-.focus-set svg { width: var(--icon-sm); height: var(--icon-sm); }
-@media (hover: hover) { .focus-set:hover { color: var(--foreground); border-color: var(--foreground); } }
+/* A title with a small control after it (the focus topic's FocusMark on Today). */
+.title-row { display: flex; align-items: center; gap: var(--space-2); }
+/* FocusMark: a filled pill on the focus topic, an outline button on the others. */
+.focus-mark { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-sm); flex: none; padding: 0 var(--space-3); border-radius: 999px; border: 2px solid var(--c); background: none; color: var(--c); font-family: var(--font-body); font-size: var(--text-caption); font-weight: var(--weight-bold); letter-spacing: 0; cursor: pointer; }
+.focus-mark svg { width: var(--icon-sm); height: var(--icon-sm); }
+.focus-mark.on { background: var(--c); color: var(--background); cursor: default; }
+.focus-mark:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (hover: hover) { button.focus-mark:hover { background: color-mix(in srgb, var(--c) 16%, transparent); } }
 
 /* Topic index cards and the topic page header. */
 .topic-card { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-lg); color: inherit; text-decoration: none; }
 /* The focus topic: tinted with its colour and lifted, so the heavy topic stands out. */
 .topic-card.is-focus { border-color: color-mix(in srgb, var(--c) 55%, var(--border)); background: linear-gradient(135deg, color-mix(in srgb, var(--c) 16%, var(--card)), var(--card) 70%); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent), var(--shadow-card); }
-.topic-card.is-focus .topic-card-progress .meter i { background: var(--c); }
 /* Becoming the focus: the card ducks, then punches up with a shockwave ring; the crosshair spins in. */
 .topic-card { position: relative; }
-.topic-head { position: relative; border-radius: var(--radius-lg); }
+.topic-head { position: relative; border-radius: var(--radius-lg); margin-top: var(--space-4); margin-bottom: var(--space-4); padding-inline: var(--space-5); background: linear-gradient(160deg, color-mix(in srgb, var(--c) 10%, transparent), color-mix(in srgb, var(--c) 2%, transparent) 70%); }
+.topic-head > .day { padding-block: var(--space-5); }
 .topic-head.focus-pop { animation: focus-pop 900ms var(--ease-out); z-index: var(--z-overlay); }
-.topic-head.focus-pop .focus-badge svg { animation: focus-spin 700ms var(--ease-out); }
+.topic-head.focus-pop .focus-mark svg { animation: focus-spin 700ms var(--ease-out); }
 @keyframes focus-pop {
   0% { transform: scale(1); }
   12% { transform: scale(.96); }
@@ -524,14 +513,11 @@ a.qbtn { color: inherit; text-decoration: none; }
   70% { opacity: 1; transform: scale(1.04); }
   100% { opacity: 0; transform: scale(1.1); }
 }
-@media (prefers-reduced-motion: reduce) { .topic-head.focus-pop, .topic-head.focus-pop .focus-badge svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .topic-head.focus-pop, .topic-head.focus-pop .focus-mark svg { animation: none; } }
 .topic-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.topic-card-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-3); font-size: var(--text-caption); color: var(--muted-foreground); }
-.topic-card .meter i, .topic-progress .meter i { background: var(--c); }
-.topic-card-now { display: grid; gap: var(--space-half); font-size: var(--text-small); }
-.topic-card-now { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-.topic-card-now .focus-label { display: block; }
-.topic-progress { display: grid; gap: var(--space-2); margin-bottom: var(--space-3); }
+/* The next step on a topic card: the step, then what it is, as a row on Today. */
+.topic-card-now { display: grid; gap: var(--space-half); font-size: var(--text-small); color: var(--muted-foreground); }
+.topic-card-step { color: var(--foreground); font-weight: var(--weight-bold); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .active-project { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-5); padding: 0; background: none; border: 0; text-align: left; font-size: var(--text-small); color: var(--foreground); }
 .active-project .project-code { font-size: var(--text-caption); }
 /* Top bar: back link and ⋯ are full 44px tap targets; the negative margin keeps the chevron on the content edge. */
@@ -572,11 +558,10 @@ a.qbtn { color: inherit; text-decoration: none; }
 .action-item.is-danger { background: color-mix(in srgb, var(--destructive) 12%, transparent); }
 .action-item.is-danger, .action-item.is-danger svg { color: var(--destructive); }
 .about-text { white-space: pre-line; line-height: var(--leading-body); }
-.title-dot { width: var(--space-3); height: var(--space-3); }
 /* A page title that opens details: the name plus a small info icon. */
-.title-btn { display: inline-flex; align-items: center; gap: var(--space-3); padding: 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; }
-.title-info { width: var(--icon-md); height: var(--icon-md); color: var(--muted-foreground); flex: none; }
-@media (hover: hover) { .title-btn:hover .title-info { color: var(--foreground); } }
+.title-btn { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; }
+.title-chev { width: var(--icon-lg); height: var(--icon-lg); color: var(--muted-foreground); flex: none; }
+@media (hover: hover) { .title-btn:hover .title-chev { color: var(--foreground); } }
 .list-label { padding: var(--space-2) var(--space-4); font-size: var(--text-caption); font-weight: var(--weight-bold); color: var(--muted-foreground); border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--c, var(--primary)) 6%, transparent); }
 
 
@@ -672,8 +657,8 @@ a.qbtn { color: inherit; text-decoration: none; }
 .sheet-overlay { z-index: var(--z-overlay); }
 @media (max-width: 560px) {
   .sheet, .sheet.sheet-wide { left: 0; right: 0; top: auto; bottom: 0; transform: none; max-width: none; max-height: 92dvh; align-content: start; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); animation: sheet-up var(--dur-base) var(--ease-out); }
-  /* Drawers are as tall as their content, up to 92% of the screen. Form drawers are at least half the screen. */
-  .sheet.form-sheet { min-height: var(--sheet-form-min); }
+  /* Drawers are as tall as their content, up to 92% of the screen. Form and search drawers are at least half the screen. */
+  .sheet.form-sheet, .sheet.search-sheet { min-height: var(--sheet-form-min); }
   .sheet[data-state="closed"] { animation: sheet-down var(--dur-base) var(--ease-out) forwards; }
   /* iOS/Android sheet: Cancel top-left, title centred, the action top-right; no footer. */
   .sheet-head.has-actions { display: grid; grid-template-columns: 1fr auto 1fr; padding-inline: var(--space-2); }
@@ -707,6 +692,9 @@ a.qbtn { color: inherit; text-decoration: none; }
 .day-date { font-weight: var(--weight-black); font-size: var(--text-page); line-height: 1.02; }
 .day-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .day-aside { display: flex; align-items: center; gap: var(--space-2); }
+.day > div { min-width: 0; }
+.day-sub-line { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day-sub { display: grid; justify-items: start; gap: var(--space-2); margin-top: var(--space-1); color: var(--muted-foreground); }
 .lead { color: var(--muted-foreground); margin: var(--space-2) 0 0; max-width: 62ch; white-space: pre-line; }
 
 .dial { position: relative; width: 116px; height: 116px; }
@@ -723,6 +711,23 @@ a.qbtn { color: inherit; text-decoration: none; }
 .dial-lg .fill { stroke: var(--primary); transition: stroke-dashoffset var(--dur-base) linear; }
 .dial-lg .dial-num { font-size: calc(var(--dial-lg) / 5); }
 .dial-lg .dial-sub { font-size: var(--text-small); }
+.dial.dial-sm { width: var(--dial-sm); height: var(--dial-sm); }
+.dial.dial-md { width: var(--dial-md); height: var(--dial-md); }
+.dial-md .dial-num { font-family: var(--font-body); font-weight: var(--weight-bold); font-size: var(--text-body); }
+.dial-sm .fill, .dial-md .fill { stroke: var(--c, var(--primary)); }
+/* The empty part of a small ring, tinted so an empty ring still reads as a ring. */
+.dial-sm .track, .dial-md .track { stroke: color-mix(in srgb, var(--c, var(--primary)) 22%, transparent); }
+.dial-sm .dial-num, .dial-md .dial-num { color: var(--foreground); }
+/* A ring with a caption under it (Dial caption). */
+.dial-wrap { display: grid; justify-items: center; gap: var(--space-1); }
+.dial-caption { font-size: var(--text-micro); color: var(--muted-foreground); white-space: nowrap; }
+/* A full ring's tick, in the done colour. */
+.dial .dial-tick { display: block; width: var(--icon-md); height: var(--icon-md); transform: none; }
+.dial-md .dial-tick { width: var(--icon-lg); height: var(--icon-lg); }
+.dial-tick path { fill: none; stroke: var(--good); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.dial-sm.is-long .dial-num { font-size: var(--text-micro); }
+.dial-md.is-long .dial-num { font-size: var(--text-small); }
+.dial-sm .dial-num { font-family: var(--font-body); font-weight: var(--weight-bold); font-size: var(--text-small); }
 /* Timer page: phase switch, the ring and the controls, centred in one column. */
 .timer { display: grid; justify-items: center; gap: var(--space-6); max-width: calc(var(--dial-lg) * 2); margin: 0 auto; }
 .timer > .segmented { width: 100%; }
@@ -808,6 +813,9 @@ main > :last-child { margin-bottom: 0; }
 .row-tag { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-micro); color: var(--muted-foreground); white-space: nowrap; padding-top: var(--space-1); }
 /* Edit mode, as on iOS (Row onOpen, sort): the whole row opens its form, with › and a ≡ handle on the right. */
 .row.is-openable { cursor: pointer; align-items: center; }
+.row.is-tappable { cursor: pointer; }
+/* What something is, at the start of a line (Kind in src/shared/ui/kind.tsx). */
+.kind { font-weight: var(--weight-bold); color: var(--c); }
 .row.is-openable:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 .row.is-openable .row-tag { padding-top: 0; }
 .row-chev { width: var(--icon-md); height: var(--icon-md); color: var(--muted-foreground); }
@@ -910,6 +918,15 @@ main > :last-child { margin-bottom: 0; }
 .fold-title { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); flex: 1; min-width: 0; }
 .fold-meta { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .fold-body { border-top: 1px solid var(--border); }
+/* Rows inside a fold are its items: a faint tint of the colour, no strip, dividers inset to the text as on iOS. */
+.fold-body .row { background: color-mix(in srgb, var(--c) 5%, transparent); border-top: 0; }
+.fold-body .row::before { display: none; }
+.fold-body .row + .row::after { content: ""; position: absolute; top: 0; right: 0; left: calc(var(--space-4) + var(--control-sm)); border-top: 1px solid var(--border); }
+/* Fold done: every item inside is ticked. */
+.fold.is-done > summary { background: color-mix(in srgb, var(--c) 10%, transparent); }
+.fold-done { display: grid; place-items: center; width: var(--icon-lg); height: var(--icon-lg); flex: none; border-radius: 50%; background: var(--c); }
+.fold-done svg { width: var(--icon-sm); height: var(--icon-sm); }
+.fold-done path { fill: none; stroke: var(--card); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .fold-intro { margin: 0; padding: var(--space-3) var(--space-4); color: var(--muted-foreground); font-size: var(--text-small); border-bottom: 1px solid var(--border); }
 
 .project { border-top: 1px solid var(--border); position: relative; scroll-margin-top: 140px; }
@@ -949,12 +966,14 @@ main > :last-child { margin-bottom: 0; }
 .hcard-value small { font-family: var(--font-body); font-size: var(--text-small); font-weight: normal; color: var(--muted-foreground); }
 /* Lines up under the name: the icon badge's width plus the gap. */
 .hcard-line { padding-left: calc(var(--icon-sm) + 2 * var(--space-1) + 2px + var(--space-3)); font-size: var(--text-small); color: var(--muted-foreground); }
-/* Gym: this week, Monday first; gym days ringed, done ones filled. */
+/* Gym: this week, Monday first, a button per day (GymWeek); gym days ringed, done ones filled. */
 .gym-days { display: flex; gap: var(--space-1); }
 .gym-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.gym-days i { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); border-radius: 50%; border: 2px solid transparent; font-style: normal; font-size: var(--text-micro); font-weight: var(--weight-bold); }
-.gym-days i.due { border-color: var(--c); color: var(--foreground); }
-.gym-days i.on { background: var(--c); border-color: var(--c); color: var(--card); }
+.gym-days button { display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); padding: 0; border-radius: 50%; border: 2px solid transparent; background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-caption); font-weight: var(--weight-bold); cursor: pointer; transition: background var(--dur-fast), transform var(--dur-fast); }
+.gym-days button.due { border-color: var(--c); color: var(--foreground); }
+.gym-days button.on { background: var(--c); border-color: var(--c); color: var(--card); }
+.gym-days button:disabled { cursor: default; opacity: 0.5; }
+.gym-days button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .hcard-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .hcard-foot > * { flex: 1 1 0; min-height: var(--control-md); }
 /* Mood not logged yet today: the card asks for attention. */
@@ -983,6 +1002,7 @@ main > :last-child { margin-bottom: 0; }
 }
 /* CountRow: one icon per unit toward the goal (water's glasses). Filled ones take the card's colour, extra ones past the goal are dashed. */
 .count-row { display: flex; gap: var(--space-1); }
+.row-body .count-row { margin-top: var(--space-2); }
 .count-unit { display: grid; place-items: center; flex: 1 1 0; min-width: 0; max-width: var(--control-sm); height: var(--control-sm); border: 1px solid transparent; border-radius: var(--radius-sm); background: none; color: var(--muted-foreground); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
 .count-unit svg { width: var(--icon-lg); height: var(--icon-lg); }
 .count-unit.on { background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
@@ -994,7 +1014,6 @@ main > :last-child { margin-bottom: 0; }
 .count-step-value { min-width: var(--control-md); text-align: center; font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); color: var(--c); font-variant-numeric: tabular-nums; }
 .hcard-body { display: grid; gap: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
 .hcard .stats { margin-bottom: 0; }
-.hcard .meter i { background: var(--c); }
 .mile { display: grid; grid-template-columns: var(--space-6) 1fr; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); font-size: var(--text-small); }
 .mile:first-child { border-top: 0; }
 .mile i { width: var(--space-3); height: var(--space-3); border-radius: 50%; border: 2px solid var(--c); margin-top: var(--space-1); }
@@ -1053,6 +1072,7 @@ main > :last-child { margin-bottom: 0; }
   .grid2 { grid-template-columns: minmax(0, 1fr); }
   .day { grid-template-columns: 1fr; }
   .day:has(> .day-aside) { grid-template-columns: 1fr auto; align-items: start; }
+  .day:has(.day-sub) { align-items: center; }
   .dial { width: 96px; height: 96px; }
   .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .row { grid-template-columns: auto 1fr; }
@@ -1077,13 +1097,12 @@ main > :last-child { margin-bottom: 0; }
   .icon-btn:hover { background: var(--accent); color: var(--foreground); }
   .plus-btn:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
   .link-btn:hover { color: var(--foreground); text-decoration-color: currentColor; }
-  .focus-card:hover { box-shadow: var(--shadow-card); }
   .bar-back:hover { background: var(--accent); }
   .bar-text:hover { background: var(--accent); }
   .google-btn:hover { background: color-mix(in srgb, var(--google-fg) 6%, var(--google-bg)); color: var(--google-fg); }
   .driver-popover.tour .driver-popover-footer-btn:hover { background: var(--muted); }
   .driver-popover.tour .driver-popover-next-btn:hover { background: color-mix(in srgb, var(--primary) 88%, var(--foreground)); }
-  .row.is-openable:hover { background: var(--accent); }
+  .row.is-openable:hover, .row.is-tappable:hover { background: var(--accent); }
   .check:hover { transform: scale(1.08); }
   button.nb-tag:hover { background: var(--accent); }
   .link-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-card); }
@@ -1093,6 +1112,7 @@ main > :last-child { margin-bottom: 0; }
   a.res-title:hover .res-ext { color: var(--c); }
   .done-btn:hover { background: color-mix(in srgb, var(--c) 12%, transparent); }
   .count-unit:hover { background: var(--accent); }
+  .gym-days button:not(:disabled):not(.on):hover { background: var(--accent); }
   .mood-btn:hover { transform: scale(0.92); }
   .bar-more:hover { background: var(--accent); color: var(--foreground); }
   .action-item:hover { background: var(--accent); outline: none; }
@@ -1108,7 +1128,7 @@ main > :last-child { margin-bottom: 0; }
   .fold > summary:hover { background: color-mix(in srgb, var(--foreground) 3%, transparent); }
   .project-code:hover { background: color-mix(in srgb, var(--c) 24%, transparent); }
   .swatch:not([aria-checked="true"]):hover { box-shadow: 0 0 0 2px var(--muted-foreground); }
-  .focus-card:hover, .link-card:hover { border-color: color-mix(in srgb, var(--c) 45%, var(--border)); }
+  .link-card:hover { border-color: color-mix(in srgb, var(--c) 45%, var(--border)); }
   .sync:hover { color: var(--foreground); }
   .sync[data-state="synced"]:hover { color: var(--good); }
 }

@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
 import { getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
-import { Crosshair, Info, Pencil, Share2, Trash2 } from 'lucide-react'
+import { Share2, Trash2 } from 'lucide-react'
 import {
-  usePageBar, Chip, ChipsList, Header, List, Meter, Row, SearchField, Section, SortList, Tabs, cvar, empty, ConfirmSheet, RemoveButton, moveTo, useSheet,
+  usePageBar, Chip, ChipsList, Header, List, Dial, Row, SearchField, Section, SortList, Tabs, cvar, FocusMark, Kind, empty, ConfirmSheet, RemoveButton, moveTo, useSheet,
 } from '@/shared/ui'
 import { RESOURCE_KINDS, topicOf, program, topicSnapshot } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
-import { focusOf, nextUp, topicProgress } from '@/features/today'
+import { SLOT_UI, focusOf, nextUp, skillProgress, topicProgress } from '@/features/today'
 import type { Topic, Note, Project, Resource, ResourceKind, Skill } from '@core/domain/types'
 import { useNoteCount, useStore } from '@/shared/store/StoreProvider'
 import { lockOn } from '@/shared/lib/celebrate'
@@ -54,6 +54,7 @@ function TopicPage({ c }: { c: Topic }) {
   const [noting, setNoting] = useState<{ note?: Note } | null>(null)
   const [about, setAbout] = useState(false)
   const { done, total } = topicProgress(state, c)
+  const skills = skillProgress(state, c)
   const next = nextUp(state, c)
   const active = c.projects.filter((p) => state.projects[p.id] === 'doing')
   const [query, setQuery] = useState('')
@@ -76,7 +77,7 @@ function TopicPage({ c }: { c: Topic }) {
 
   const noteCount = useNoteCount({ topic: c.id })
   const tabs: { id: Tab; label: string; count?: string | number; show: boolean }[] = [
-    { id: 'learn', label: t.topics.tabs.skills, count: total ? `${done}/${total}` : c.skills.length || undefined, show: true },
+    { id: 'learn', label: t.topics.tabs.skills, count: skills.total ? `${skills.done}/${skills.total}` : undefined, show: true },
     { id: 'resources', label: t.topics.tabs.resources, count: c.resources.length || undefined, show: true },
     { id: 'projects', label: t.topics.tabs.projects, count: c.projects.length || undefined, show: true },
     { id: 'notes', label: t.topics.tabs.notebook, count: noteCount || undefined, show: true },
@@ -109,24 +110,17 @@ function TopicPage({ c }: { c: Topic }) {
     <>
       <div ref={head} className={`topic-head${pop ? ' focus-pop' : ''}`} style={cvar(c.id)} onAnimationEnd={(e) => e.target === e.currentTarget && setPop(false)}>
       {/* The name opens About; in edit mode it opens the details form. */}
-      <Header title={<><span className="dot title-dot" />{c.name}</>}
+      <Header title={c.name}
         action={edit
-          ? { label: t.topics.page.editDetails(c.name), icon: Pencil, onClick: () => sheet.open({ kind: 'topic' }) }
-          : { label: t.topics.page.about(c.name), icon: Info, onClick: () => setAbout(true) }}>
-        {/* Right of the title: the Focus badge, or a button to make this the focus topic. */}
-        {c.kind === 'learn' && (isFocus
-          ? <span className="focus-badge"><Crosshair aria-hidden="true" />{t.topics.focus}</span>
-          : <button type="button" className="focus-set" onClick={makeFocus}><Crosshair aria-hidden="true" />{t.topics.setFocus}</button>)}
+          ? { label: t.topics.page.editDetails(c.name), onClick: () => sheet.open({ kind: 'topic' }) }
+          : { label: t.topics.page.about(c.name), onClick: () => setAbout(true) }}
+        sub={<>
+          {total > 0 && <span className="day-sub-line">{next ? <Kind label={SLOT_UI.focus.label} color={SLOT_UI.focus.color}>{next.step.text}</Kind> : t.topics.page.allDone}</span>}
+          {c.kind === 'learn' && <FocusMark onSet={isFocus ? undefined : makeFocus} />}
+        </>}
+      >
+        {total > 0 && <Dial size="md" n={done} total={total} caption={done === total ? t.topics.page.allLearned : t.topics.page.stepsDone} />}
       </Header>
-
-      {total > 0 && (
-        <div className="topic-progress" style={cvar(c.id)}>
-          <Meter value={done / total} label={t.topics.page.stepsDone(done, total)} />
-          <span className="muted text-small">
-            {t.topics.page.stepsOf(done, total)}{next ? t.topics.page.skillOf(next.index + 1, c.skills.length) : t.topics.page.allDone}
-          </span>
-        </div>
-      )}
       </div>
       {active.length > 0 && (
         <button type="button" className="active-project" style={cvar(c.id)} onClick={() => setTab('projects')}>

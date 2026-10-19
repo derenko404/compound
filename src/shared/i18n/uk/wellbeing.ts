@@ -68,9 +68,7 @@ export const wellbeing: typeof en['wellbeing'] = {
   },
   gym: {
     thisWeek: 'цього тижня',
-    catchUp: (day) => `Надолужити ${day}`,
-    mark: 'Відмітити тренування',
-    done: 'Тренування виконано',
+    day: (day) => `Тренування: ${day}`,
     month: 'цього місяця',
     total: 'загалом',
     perWeek: 'днів на тиждень',

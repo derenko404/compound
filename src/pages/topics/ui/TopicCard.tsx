@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { Crosshair } from 'lucide-react'
-import { Meter, cvar } from '@/shared/ui'
-import { focusOf, monthName, targetFinish, nextUp, pace, topicProgress } from '@/features/today'
+import { Dial, FocusMark, Kind, cvar } from '@/shared/ui'
+import { SLOT_UI, focusOf, monthName, targetFinish, nextUp, pace, topicProgress } from '@/features/today'
 import type { Topic } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { currentLocale, t } from '@/shared/i18n'
@@ -24,12 +23,13 @@ export function TopicCard({ c }: { c: Topic }) {
       <div className="topic-card-head">
         <span className="focus-name"><span className="dot" />{c.name}</span>
         {/* One topic is the focus (heavy): it gets the study sessions and the weekend project. Set from the topic's ⋯ menu. */}
-        {focus && <span className="focus-badge"><Crosshair aria-hidden="true" />{t.topics.focus}</span>}
+        {focus && <FocusMark />}
       </div>
       {total > 0 ? (
         <>
-          <div className="topic-card-progress"><Meter value={done / total} label={t.topics.card.stepsOf(done, total)} /><span>{t.topics.card.doneOf(done, total)}</span></div>
-          {next?.step && <div className="topic-card-now"><span className="focus-label">{t.topics.card.nextIn(next.skill.name)}</span>{next.step.text}</div>}
+          <Dial size="sm" n={done} total={total}>
+            {next?.step && <span className="topic-card-now"><span className="topic-card-step">{next.step.text}</span><span><Kind label={SLOT_UI.focus.label} color={SLOT_UI.focus.color}>{next.skill.name}</Kind></span></span>}
+          </Dial>
           {paceLine && <div className={`topic-row-pace${late ? ' late' : ''}`}>{paceLine}</div>}
         </>
       ) : (

@@ -69,9 +69,8 @@ export const wellbeing = {
   },
   gym: {
     thisWeek: 'this week',
-    catchUp: (day: string) => `Catch up on ${day}`,
-    mark: 'Mark workout done',
-    done: 'Workout done',
+    // A day of this week on the gym card, a button that logs a workout on it.
+    day: (day: string) => `Workout on ${day}`,
     month: 'this month',
     total: 'in total',
     perWeek: 'days a week',

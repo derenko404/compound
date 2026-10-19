@@ -8,7 +8,7 @@ export const onboarding = {
     welcomeTitle: 'Welcome to Compound',
     welcome: 'A quick look around. It takes a minute.',
     dayTitle: 'Your day',
-    day: 'The bar fills as you tick things off today.',
+    day: 'The ring fills as you tick things off today.',
     tasksTitle: 'Tasks',
     tasks: 'Your tasks and routines for today. Tick one to mark it done.',
     topicsTitle: 'From your topics',

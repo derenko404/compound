@@ -35,6 +35,8 @@ export { Banner } from './banner'
 export { Stats } from './stats'
 export { Facts } from './facts'
 export { InnerLink } from './inner-link'
+export { Kind } from './kind'
+export { FocusMark } from './focus-mark'
 export { LinkCard } from './link-card'
 export { SettingRow } from './setting-row'
 
@@ -44,12 +46,10 @@ export { Chip, ChipLink, Chips, ChipsList } from './chip'
 export { ChipMenu, type ChipMenuGroup, type ChipMenuOption } from './chip-menu'
 export { Badge, IconBadge } from './badge'
 
-/* ---------- Progress and ticks ---------- */
+/* ---------- Rings and ticks ---------- */
 export { Check } from './check'
 export { DoneButton } from './done-button'
 export { Dial } from './dial'
-export { Meter } from './meter'
-export { Progress } from './progress'
 export { Stepper } from './stepper'
 export { CountRow, type CountUnit } from './count-row'
 

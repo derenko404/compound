@@ -3,10 +3,11 @@
  * single-line comment stays `//`. Tool directives (oxlint, @ts-, i18n-ok, layers-ok) are line comments and don't count.
  */
 import { execSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 
-const files = execSync("git ls-files 'src/**/*.ts' 'src/**/*.tsx' 'core/**/*.ts' 'adapters/**/*.ts' 'worker/**/*.ts' 'scripts/**/*.mjs'", { encoding: 'utf8' })
-  .trim().split('\n').filter(Boolean)
+// Tracked and new files, minus ones deleted but not yet staged.
+const files = execSync("git ls-files -co --exclude-standard 'src/**/*.ts' 'src/**/*.tsx' 'core/**/*.ts' 'adapters/**/*.ts' 'worker/**/*.ts' 'scripts/**/*.mjs'", { encoding: 'utf8' })
+  .trim().split('\n').filter((f) => f && existsSync(f))
 const directive = /^\/\/\s*(oxlint|eslint|@ts-|i18n-ok|layers-ok|\/)/
 const comment = (line) => line.match(/^(\s*)\/\/(?! ?(oxlint|eslint|@ts-|i18n-ok|layers-ok|\/))/)?.[1]
 

@@ -22,7 +22,7 @@ const steps = (): DriveStep[] => {
     ['#today-tasks', tx.tasksTitle, tx.tasks],
     ['#today-topics', tx.topicsTitle, tx.topics],
     ['#today-week', tx.weekTitle, tx.week],
-    ['.focus-card', tx.focusTitle, tx.focus],
+    ['#today-topics .focus-mark', tx.focusTitle, tx.focus],
     ['.top .plus-btn', tx.addTitle, tx.add],
     ['.top .bar-text', tx.editTitle, tx.edit],
     [phone ? '.bottom-nav' : '.tabs', tx.navTitle, tx.nav],

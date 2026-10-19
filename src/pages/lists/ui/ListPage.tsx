@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
-import { MessageSquarePlus, MessageSquareText, Pencil, Share2, Trash2 } from 'lucide-react'
-import { usePageBar, Check, Chip, ChipsList, Header, List, Progress, Row, SortList, SearchField, ConfirmSheet, RemoveButton, moveTo, useSheet } from '@/shared/ui'
+import { MessageSquarePlus, MessageSquareText, Share2, Trash2 } from 'lucide-react'
+import { usePageBar, Check, Chip, ChipsList, Header, List, Dial, Row, SortList, SearchField, ConfirmSheet, RemoveButton, moveTo, useSheet } from '@/shared/ui'
 import { listSnapshot, uid } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
 import type { ListDef, ListDefItem } from '@core/domain/types'
@@ -92,8 +92,8 @@ export function ListPage() {
 
   return (
     <>
-      <Header title={L.name} lead={L.title} action={edit ? { label: t.lists.page.editDetails(L.name), icon: Pencil, onClick: () => listSheet.open(L) } : undefined} />
-      <div className="mb-4"><Progress n={n} total={L.items.length} /></div>
+      <Header title={L.name} lead={L.title} action={edit ? { label: t.lists.page.editDetails(L.name), onClick: () => listSheet.open(L) } : undefined} />
+      <div className="mb-4"><Dial size="sm" n={n} total={L.items.length} /></div>
       <SearchField value={query} onChange={setQuery} placeholder={t.lists.page.search(L.name)} />
       {!edit && (
         <ChipsList label={t.lists.page.show}>
