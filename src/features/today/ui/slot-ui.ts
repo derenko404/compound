@@ -6,7 +6,6 @@ export const SLOT_UI: Record<Slot, { label: string; color: string }> = {
   focus: { label: t.today.slot.focus, color: '--slot-focus' },
   light: { label: t.today.slot.light, color: '--slot-light' },
   project: { label: t.today.slot.project, color: '--slot-project' },
-  resource: { label: t.today.slot.resource, color: '--slot-resource' },
   review: { label: t.today.slot.review, color: '--slot-review' },
   catchup: { label: t.today.slot.catchup, color: '--slot-catchup' },
 }

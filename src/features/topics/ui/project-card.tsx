@@ -5,8 +5,9 @@ import type { TopicId, Project, ProjectStatus } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { burst, celebrate } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
-import { cvar } from '@/shared/ui'
+import { Check, Row, cvar } from '@/shared/ui'
 import { t } from '@/shared/i18n'
+import { useTick } from '../model/use-tick'
 import { Linkify } from './linkify'
 
 const LABEL: Record<ProjectStatus, string> = t.topics.project.status
@@ -17,8 +18,10 @@ const NEXT: Record<ProjectStatus, ProjectStatus> = { todo: 'doing', doing: 'done
 // readOnly: no status button (someone else's shared topic); ch can be left out and the colour comes from around it.
 export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; readOnly?: boolean }) {
   const { state, dispatch } = useStore()
+  const tick = useTick()
   const { hash } = useLocation()
   const sv = state.projects[p.id] ?? 'todo'
+  const stepsDone = p.steps?.filter((x) => tick.on(x.id)).length ?? 0
   const [open, setOpen] = useState(hash === p.code)
   const ref = useRef<HTMLDivElement>(null)
   const hasBody = !!(p.goal || p.steps?.length || p.done || p.trains?.length || p.size)
@@ -45,7 +48,7 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
       <div className="project-head">
         <button className="project-code" aria-expanded={open} onClick={() => setOpen(!open)}>{p.code || '•'}</button>
         <button className="project-name" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {p.name}
+          <span>{p.name}{p.steps && p.steps.length > 0 && !readOnly && <span className="muted text-caption project-count">{`${stepsDone}/${p.steps.length}`}</span>}</span>
           {hasBody && <ChevronDown className="chev" style={open ? { transform: 'rotate(180deg)' } : undefined} aria-hidden="true" />}
         </button>
         {readOnly ? null : (
@@ -59,7 +62,15 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
       {open && hasBody && (
         <div className="project-body">
           {p.goal && <p><Linkify text={p.goal} /></p>}
-          {p.steps && p.steps.length > 0 && <ol>{p.steps.map((s, i) => <li key={i}><Linkify text={s} /></li>)}</ol>}
+          {/* Steps tick like a skill's; the one Today shows is the first still open. */}
+          {p.steps && p.steps.length > 0 && (
+            <div className="project-steps">
+              {p.steps.map((x) => (
+                <Row key={x.id} done={!readOnly && tick.on(x.id)} title={<span className="font-normal"><Linkify text={x.text} /></span>}
+                  check={readOnly ? undefined : <Check on={tick.on(x.id)} label={x.text} onToggle={(v) => tick.set(x.id, v)} />} />
+              ))}
+            </div>
+          )}
           <dl>
             {p.done && <><dt>{t.topics.project.doneWhen}</dt><dd><Linkify text={p.done} /></dd></>}
             {p.trains?.length ? <><dt>{t.topics.project.trains}</dt><dd>{p.trains.join(', ')}</dd></> : null}

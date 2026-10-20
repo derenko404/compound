@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import type { SearchHit } from '@core/domain/search'
 
 /**
- * Opens what a search result points at: the topic (at the project, or on its resources tab), the list scrolled to
+ * Opens what a search result points at: the topic (at the project, or on its resources or tasks tab), the list scrolled to
  * the item, Today for a task, Wellbeing for a habit.
  */
 export function useOpenHit() {
@@ -15,6 +15,8 @@ export function useOpenHit() {
         return nav({ to: '/topics/$ch', params: { ch: hit.topicId! } })
       case 'resource':
         return nav({ to: '/topics/$ch', params: { ch: hit.topicId! }, hash: 'resources' })
+      case 'task':
+        return nav({ to: '/topics/$ch', params: { ch: hit.topicId! }, hash: 'tasks' })
       case 'project':
         return nav({ to: '/topics/$ch', params: { ch: hit.topicId! }, hash: hit.code })
       case 'list':

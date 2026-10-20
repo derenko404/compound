@@ -1,8 +1,8 @@
-import { PALETTE, codePrefix, freshId, nextPosition } from '../domain/content'
+import { PALETTE, codePrefix, freshId, nextPosition, normalizeTopic } from '../domain/content'
 import { fail } from '../domain/errors'
-import type { Project, Resource, Skill, Topic } from '../domain/types'
+import type { Project, Resource, Skill, Step, Task, Topic } from '../domain/types'
 import type { Repositories } from '../ports/repositories'
-import type { ProjectInput, ResourceInput, SkillInput, TopicInput } from './inputs'
+import type { ProjectInput, ResourceInput, SkillInput, StepInput, TaskInput, TopicInput } from './inputs'
 import { keep } from './keep'
 
 /** Topics: reading them with their ticks, and creating or changing them from outside the app (AI, API). */
@@ -13,8 +13,9 @@ export class TopicService {
     this.repos = repos
   }
 
-  all() {
-    return this.repos.topics.all()
+  // Brought to the current shape: a topic saved before a list existed has it empty, not missing.
+  async all() {
+    return (await this.repos.topics.all()).map(normalizeTopic)
   }
 
   // Ticked step and resource ids.
@@ -34,7 +35,7 @@ export class TopicService {
       color: this.isColor(input.color) ? input.color : this.freeColor(all),
       description: input.description || undefined, outcomes: input.goals ?? [],
       months: this.months(input.months), created_at: new Date().toISOString(),
-      skills: this.skills(input.skills), resources: this.resources(input.resources), projects: [], hint: input.hint || undefined,
+      skills: this.skills(input.skills), tasks: this.tasks(input.tasks), resources: this.resources(input.resources), projects: [], hint: input.hint || undefined,
     }
     t.projects = this.projects(input.projects, t, [...all, t])
     await this.repos.topics.put(t)
@@ -58,8 +59,16 @@ export class TopicService {
       })
       t.skills = keep.byId(sent, t.skills)
     }
+    if (input.tasks !== undefined) t.tasks = keep.byId(this.tasks(input.tasks), t.tasks)
     if (input.resources !== undefined) t.resources = keep.byId(this.resources(input.resources), t.resources)
-    if (input.projects !== undefined) t.projects = keep.byId(this.projects(input.projects, t, all), t.projects)
+    if (input.projects !== undefined) {
+      // A project sent back keeps the steps it didn't mention, as a skill does.
+      const sent = this.projects(input.projects, t, all).map((p) => {
+        const old = t.projects.find((o) => o.id === p.id)
+        return old?.steps ? { ...p, steps: keep.byId(p.steps ?? [], old.steps) } : p
+      })
+      t.projects = keep.byId(sent, t.projects)
+    }
     await this.repos.topics.put(t)
     return t
   }
@@ -80,14 +89,26 @@ export class TopicService {
     return m && Number.isInteger(m) && m > 0 ? m : undefined
   }
 
-  // Steps may come as plain text or as { id, text }. Keeping an id keeps its tick.
+  // Steps (of a skill or a project) may come as plain text or as { id, text }. Keeping an id keeps its tick.
+  private steps(xs: (string | StepInput)[] = []): Step[] {
+    return xs.map((s) => (typeof s === 'string' ? { id: crypto.randomUUID(), text: s } : { id: s.id || crypto.randomUUID(), text: s.text })).filter((s) => s.text)
+  }
+
   private skills(xs: SkillInput[] = []): Skill[] {
     return xs.map((k) => ({
       id: k.id || crypto.randomUUID(),
       name: k.name || fail(400, 'Every skill needs a name.'),
       intro: k.intro || undefined,
-      steps: (k.steps ?? []).map((s) => (typeof s === 'string' ? { id: crypto.randomUUID(), text: s } : { id: s.id || crypto.randomUUID(), text: s.text }))
-        .filter((s) => s.text),
+      steps: this.steps(k.steps),
+    }))
+  }
+
+  private tasks(xs: TaskInput[] = []): Task[] {
+    return xs.map((x) => ({
+      id: x.id || crypto.randomUUID(),
+      title: x.title || fail(400, 'Every task needs a title.'),
+      sub: x.details || undefined,
+      when: x.when ?? { kind: 'daily' },
     }))
   }
 
@@ -111,7 +132,7 @@ export class TopicService {
       code: p.code || `${prefix}${++n}`,
       name: p.name || fail(400, 'Every project needs a name.'),
       goal: p.goal || undefined,
-      steps: p.steps?.length ? p.steps : undefined,
+      steps: p.steps?.length ? this.steps(p.steps) : undefined,
       done: p.done || undefined,
       trains: p.trains?.length ? p.trains : undefined,
       size: p.size,

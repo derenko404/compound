@@ -1,21 +1,21 @@
 import {
-  usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, FocusMark, Header, InnerLink, Kind, LinkCard, List, Row, SortList, Section, cvar, tone, useDoneLastOnOpen,
+  usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, FocusMark, Header, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
-import { TopicTag, Linkify } from '@/features/topics'
+import { Linkify, TaskSheet } from '@/features/topics'
 import { DONE, HABIT_UI, WaterCount, waterStats } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
 import { WeekStrip } from './focus'
 import { RoutineSheet } from './RoutineSheet'
 import { celebrate } from '@/shared/lib/celebrate'
-import { FALLBACK_TOPIC, nextPosition, topicOf, uid } from '@core/domain/content'
+import { nextPosition, topicOf, topics, uid } from '@core/domain/content'
 import { dates } from '@/shared/lib/dates'
-import { SLOT_UI, dayProgress, describeWhen, focusOf, streak, todayItems, type DayItem, type Slot } from '@/features/today'
+import { SLOT_UI, dayProgress, describeWhen, focusOf, streak, todayItems, useDayTick, type DayItem } from '@/features/today'
 import { t } from '@/shared/i18n'
-import type { Habit, Routine } from '@core/domain/types'
+import type { Habit, Routine, Task, Topic } from '@core/domain/types'
 import { reduce } from '@core/domain/reduce'
 import { useStore } from '@/shared/store/StoreProvider'
 import { Flame } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 
 
 export function Today() {
@@ -23,19 +23,22 @@ export function Today() {
   const [edit, setEdit] = useState(false)
   usePageBar({ add: { label: t.today.addTask, onClick: () => addTask() }, edit: () => setEdit(true), done: edit ? () => setEdit(false) : undefined })
   const sheet = useSheet<Routine>()
+  // A topic's task opens its own form, the same one as on the topic's page.
+  const taskSheet = useSheet<{ topic: Topic; task: Task }>()
   const today = new Date()
-  const k = dates.keyOf(today)
+  const tick = useDayTick()
+  const k = tick.day
   const items = todayItems(state, today)
-  const day = state.days[k] ?? { done: [] }
-  const done = new Set(day.done)
-  const isDone = (it: DayItem) => it.done ?? done.has(it.id)
+  const isDone = (it: DayItem) => it.done ?? tick.on(it.id)
   const n = items.filter(isDone).length
   // Past one-off tasks drop out of the editable list.
   const routines = [...state.routines].filter((r) => r.when.kind !== 'once' || r.when.date >= k).sort((a, b) => a.position - b.position)
+  // The topics' tasks, editable here too; deleting one takes it off its topic.
+  const topicTasks = topics(state, 'learn').flatMap((c) => c.tasks.map((x) => ({ c, x })))
+  const removeTask = (c: Topic, x: Task) => dispatch({ type: 'putTopic', topic: { ...c, tasks: c.tasks.filter((y) => y.id !== x.id) } })
 
   const toggleDay = (id: string, on: boolean) => {
-    const next = { ...day, done: on ? [...day.done, id] : day.done.filter((x) => x !== id) }
-    dispatch({ type: 'day', day: k, log: next })
+    const next = tick.set(id, on)
     if (on) cheer({ ...state, days: { ...state.days, [k]: next } })
   }
 
@@ -44,6 +47,13 @@ export function Today() {
     const value = on ? (h.type === 'water' ? waterStats(state, h, today).target : DONE) : null
     dispatch({ type: 'habitLog', habit: h.id, day: k, value })
     if (on) cheer(reduce(state, { type: 'habitLog', habit: h.id, day: k, value }))
+  }
+
+  // A project step's tick goes to the topic's progress, as on the topic's page.
+  const togglePlan = (id: string, on: boolean) => {
+    const op = { type: 'plan' as const, taskId: id, doneAt: on ? new Date().toISOString() : null }
+    dispatch(op)
+    if (on) cheer(reduce(state, op))
   }
 
   // confetti and the streak when the whole day is done
@@ -66,24 +76,22 @@ export function Today() {
   // Rows from the focus topic get their own section under its name. The rest say which topic they come from.
   const focus = topicOf(state, focusOf(state))
   const fromFocus = (it: DayItem) => !!it.slot && it.ch === focus?.id
-  // The sub line of a row from a topic: what it is (Next step, Project…), then its own text.
-  const slotSub = (it: DayItem, slot: Slot) => {
-    const { label, color } = SLOT_UI[slot]
-    const rest = it.sub ? <Linkify text={it.sub} /> : null
-    return fromFocus(it)
-      ? <Kind label={label} color={color}>{rest}</Kind>
-      : <Kind label={topicOf(state, it.ch)?.name}>{label}{rest && <> · {rest}</>}</Kind>
-  }
+  // Rows from the other topics, one group per topic, in the order they come.
+  const otherTopics = [...new Set(shown.filter((it) => it.slot && !fromFocus(it)).map((it) => it.ch))].map((ch) => topicOf(state, ch)).filter((c) => !!c)
+  const quiet = (text: string | undefined) => (text ? <span className="muted text-caption">{text}</span> : null)
   const row = (it: DayItem) => {
     const h = it.habit
     const ui = h && HABIT_UI[h.type]
-    const tag: ReactNode = !it.slot && !h && it.ch !== FALLBACK_TOPIC ? <TopicTag ch={it.ch} /> : null
     return (
-      <Row key={it.id} ch={it.ch} done={isDone(it)} style={ui ? tone(ui.color) : undefined} tagInline
-        title={it.slot ? <Linkify text={it.title} /> : it.title}
-        sub={it.slot ? slotSub(it, it.slot) : it.sub ? <Linkify text={it.sub} /> : undefined}
-        tag={tag}
-        check={<Check on={isDone(it)} label={it.title} onToggle={(on) => (h ? toggleHabit(h, on) : toggleDay(it.id, on))} />}>
+      // A short topic name stays on the title line on phones; a row's kind is longer and moves under the title there.
+      <Row key={it.id} ch={it.ch} done={isDone(it)} style={ui ? tone(ui.color) : undefined} tagInline={!it.slot}
+        // Own tasks lead: habit rows and the topics' suggestions keep a normal-weight title, as steps in a skill do.
+        title={it.slot ? <span className="font-normal"><Linkify text={it.title} /></span> : h ? <span className="font-normal">{it.title}</span> : it.title}
+        // Rows from the topics stay quiet: the sub line is their own text, what they are sits on the right as muted text.
+        sub={it.sub ? <Linkify text={it.sub} /> : undefined}
+        // On the right: a topic row's kind. Tasks carry nothing, their colour bar says the topic.
+        tag={it.slot ? quiet(SLOT_UI[it.slot].label) : null}
+        check={<Check on={isDone(it)} label={it.title} onToggle={(on) => (h ? toggleHabit(h, on) : it.step ? togglePlan(it.step, on) : toggleDay(it.id, on))} />}>
         {h?.type === 'water' && <WaterCount h={h} />}
       </Row>
     )
@@ -99,50 +107,64 @@ export function Today() {
         </Header>
       </div>
 
-      <Section id="today-tasks" title={edit ? t.today.routines : t.today.goals}>
-        {edit ? (
-          <SortList empty={t.today.noRoutines} onMove={reorder}>
-            {routines.map((r) => (
-              <Row key={r.id} ch={r.topic} title={r.title} sub={`${describeWhen(r.when)}${r.core ? t.today.countsForStreak : ''}`}
-                check={<RemoveButton label={t.common.deleteNamed(r.title)} title={t.common.deleteAsk(r.title)} onConfirm={() => { dispatch({ type: 'deleteRoutine', id: r.id }) }} />}
-                onOpen={() => sheet.open(r)} sort />
+      {edit ? (
+        <>
+          <Section id="today-tasks" group title={t.today.routines}>
+            <SortList empty={t.today.noRoutines} onMove={reorder}>
+              {routines.map((r) => (
+                <Row key={r.id} ch={r.topic} title={r.title} sub={`${describeWhen(r.when)}${r.core ? t.today.countsForStreak : ''}`}
+                  check={<RemoveButton label={t.common.deleteNamed(r.title)} title={t.common.deleteAsk(r.title)} onConfirm={() => { dispatch({ type: 'deleteRoutine', id: r.id }) }} />}
+                  onOpen={() => sheet.open(r)} sort />
+              ))}
+            </SortList>
+          </Section>
+          {topicTasks.length > 0 && (
+            <Section group title={t.today.topicTasks}>
+              <List>
+                {topicTasks.map(({ c, x }) => (
+                  <Row key={x.id} ch={c.id} title={x.title} sub={describeWhen(x.when)} tag={<span className="muted text-caption">{c.name}</span>} tagInline
+                    check={<RemoveButton label={t.common.deleteNamed(x.title)} title={t.common.deleteAsk(x.title)} onConfirm={() => removeTask(c, x)} />}
+                    onOpen={() => taskSheet.open({ topic: c, task: x })} />
+                ))}
+              </List>
+            </Section>
+          )}
+        </>
+      ) : (
+        /* One list for the whole day, in labelled groups, so it reads as one set of tasks. */
+        <section>
+          <List>
+            <ListGroup id="today-tasks" label={t.today.goals}>
+              {shown.some((it) => !it.slot && !it.habit) ? shown.filter((it) => !it.slot && !it.habit).map(row) : empty(t.today.nothingPlanned)}
+            </ListGroup>
+            {shown.some((it) => it.habit) && (
+              <ListGroup label={t.today.fromHabits}>
+                {shown.filter((it) => it.habit).map(row)}
+              </ListGroup>
+            )}
+            {focus && shown.some(fromFocus) && (
+              <ListGroup id="today-topics" style={cvar(focus.id)} label={<span className="title-row">{focus.name}<FocusMark /></span>}>
+                {shown.filter(fromFocus).map(row)}
+              </ListGroup>
+            )}
+            {otherTopics.map((c) => (
+              <ListGroup key={c.id} label={c.name} style={cvar(c.id)}>{shown.filter((it) => it.slot && it.ch === c.id && !fromFocus(it)).map(row)}</ListGroup>
             ))}
-          </SortList>
-        ) : (
-          <List empty={t.today.nothingPlanned}>{shown.filter((it) => !it.slot && !it.habit).map(row)}</List>
-        )}
-      </Section>
-
-      {!edit && shown.some((it) => it.habit) && (
-        <Section title={t.today.fromHabits} aside={<InnerLink to="/wellbeing">{t.today.wellbeing}</InnerLink>}>
-          <List>{shown.filter((it) => it.habit).map(row)}</List>
-        </Section>
-      )}
-
-      {!edit && focus && shown.some(fromFocus) && (
-        <Section id="today-topics" style={cvar(focus.id)}
-          title={<span className="title-row">{focus.name}<FocusMark /></span>}
-          aside={<InnerLink to="/topics/$ch" params={{ ch: focus.id }}>{t.today.openTopic}</InnerLink>}>
-          <List>{shown.filter(fromFocus).map(row)}</List>
-        </Section>
+          </List>
+        </section>
       )}
 
       {!edit && !focus && (
         <section id="today-topics"><LinkCard to="/topics" title={t.today.focus.label} sub={t.today.focus.none} /></section>
       )}
 
-      {!edit && shown.some((it) => it.slot && !fromFocus(it)) && (
-        <Section title={t.today.fromTopics}>
-          <List>{shown.filter((it) => it.slot && !fromFocus(it)).map(row)}</List>
-        </Section>
-      )}
-
-      <Section id="today-week" title={t.today.thisWeek} aside={run ? <span className="today-streak on"><Flame aria-hidden="true" />{t.today.streak(run)}</span> : undefined}>
+      <Section id="today-week" group title={t.today.thisWeek} aside={run ? <span className="today-streak on"><Flame aria-hidden="true" />{t.today.streak(run)}</span> : undefined}>
         <WeekStrip />
       </Section>
 
 
       {sheet.value && <RoutineSheet key={sheet.value.id} {...sheet.props} routine={sheet.value} />}
+      {taskSheet.value && <TaskSheet key={taskSheet.value.task.id} {...taskSheet.props} topic={taskSheet.value.topic} task={taskSheet.value.task} />}
     </>
   )
 }

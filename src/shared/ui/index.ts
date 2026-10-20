@@ -26,6 +26,7 @@ export { BarBack, BarMenu, BarProvider, useBar, usePageBar, type BarAction, type
 
 /* ---------- Surfaces ---------- */
 export { List } from './list'
+export { ListGroup } from './list-group'
 export { Row, SortList } from './row'
 export { MenuRow } from './menu-row'
 export { Panel } from './panel'
@@ -71,3 +72,4 @@ export { LinesField } from './form/lines-field'
 export { TopicField, TopicSelect } from './form/topic-field'
 export { ColorField } from './form/color-field'
 export { WeekdaysField } from './form/weekdays-field'
+export { useWhenField, type WhenKind } from './form/when-field'

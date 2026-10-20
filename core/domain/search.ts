@@ -1,12 +1,12 @@
 /**
- * Searching the loaded state: topics with their skills, steps, resources and projects, lists with their items and
+ * Searching the loaded state: topics with their skills, steps, tasks, resources and projects, lists with their items and
  * reviews, routines and habits. Notes aren't in the state and are searched by the note repository. Matching ignores
  * case and accents. Every word of the query must appear, in the item or in where it lives, and at least one in the
  * item itself: "films" finds the Films list, not each of its films, while "films godfather" finds the film.
  */
 import type { State } from './types'
 
-export type SearchKind = 'topic' | 'skill' | 'step' | 'resource' | 'project' | 'list' | 'listItem' | 'routine' | 'habit'
+export type SearchKind = 'topic' | 'skill' | 'step' | 'task' | 'resource' | 'project' | 'list' | 'listItem' | 'routine' | 'habit'
 
 /** One match: what it is, its text, and where it lives (a topic's or list's name, for display and opening it). */
 export interface SearchHit {
@@ -50,6 +50,8 @@ function inState(s: State, query: string, kinds?: SearchKind[]): SearchHit[] {
       for (const step of k.steps)
         if (want('step') && within(ws, [step.text], [k.name, c.name])) hits.push({ kind: 'step', id: step.id, title: step.text, detail: `${c.name} · ${k.name}`, topicId: c.id })
     }
+    for (const x of c.tasks)
+      if (want('task') && within(ws, [x.title, x.sub], [c.name])) hits.push({ kind: 'task', id: x.id, title: x.title, detail: c.name, topicId: c.id })
     for (const r of c.resources)
       if (want('resource') && within(ws, [r.title, r.note, r.url], [c.name])) hits.push({ kind: 'resource', id: r.id, title: r.title, detail: c.name, topicId: c.id })
     for (const p of c.projects)

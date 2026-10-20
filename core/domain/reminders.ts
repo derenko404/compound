@@ -1,6 +1,6 @@
 // Daily push reminders: when a device gets one, and what's left to put in it. The worker's hourly cron runs this.
 import type { State } from './types'
-import { matchesWhen } from './content'
+import { matchesWhen, topics } from './content'
 import { days } from './days'
 import { DONE, SLIP, dueOn, gymMissedDay, habitsOf, started, valueOn, waterStats } from './habits'
 
@@ -37,17 +37,18 @@ function wallClock(now: Date, timeZone: string) {
 
 /**
  * Your own tasks and habits today: how many, and the ones still open by name (water with its glasses:
- * "Water 3/8"). Rows from the topics are suggestions and never count. Matches the Today page's routines and habit rows.
+ * "Water 3/8"). Topic tasks count too; the rows built from the topics are suggestions and never do. Matches the
+ * Today page's task and habit rows.
  */
 function ownToday(s: State, today: Date) {
   const k = days.keyOf(today)
   const done = new Set(s.days[k]?.done ?? [])
-  const due = s.routines.filter((r) => matchesWhen(r.when, today, k))
+  const due = [
+    ...[...s.routines].sort((a, b) => a.position - b.position),
+    ...topics(s).flatMap((c) => c.tasks),
+  ].filter((r) => matchesWhen(r.when, today, k))
   let total = due.length
-  const left = [...due]
-    .sort((a, b) => a.position - b.position)
-    .filter((r) => !done.has(r.id))
-    .map((r) => r.title)
+  const left = due.filter((r) => !done.has(r.id)).map((r) => r.title)
   for (const h of habitsOf(s)) {
     // Gym also shows on a free day to make up a missed one.
     const makeUp = h.type === 'gym' && !dueOn(h, today) && started(h, today) && !!gymMissedDay(s, h, today)

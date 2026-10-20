@@ -29,10 +29,8 @@ export function TopicSheet({ topic, onSaved, ...sheet }: SheetProps & { topic: T
         save(next)
         onSaved?.(next)
       }}>
-      <div className="grid2">
-        <TextField label={t.topics.form.name} value={c.name} onChange={(name) => set({ name })} placeholder={t.topics.form.topicNamePlaceholder} hint={t.topics.form.topicNameHint} required />
-        <ColorField value={c.color} onChange={(color) => set({ color })} />
-      </div>
+      <TextField label={t.topics.form.name} value={c.name} onChange={(name) => set({ name })} placeholder={t.topics.form.topicNamePlaceholder} hint={t.topics.form.topicNameHint} required full autoFocus />
+      <ColorField value={c.color} onChange={(color) => set({ color })} />
       <AreaField label={t.topics.form.about} rows={5} value={c.description ?? ''} onChange={(description) => set({ description })} placeholder={t.topics.form.aboutPlaceholder} hint={t.topics.form.aboutHint} />
       <LinesField label={target ? t.topics.goalsBy(monthName(target)) : t.topics.goals} value={c.outcomes} onChange={(outcomes) => set({ outcomes })} rows={3} />
       {c.kind === 'learn' && (

@@ -52,7 +52,6 @@
   --slot-focus: #0e7490;
   --slot-light: #4d7c0f;
   --slot-project: #a16207;
-  --slot-resource: #0f766e;
   --slot-review: #6d28d9;
   --slot-catchup: #b91c1c;
   /* Wellbeing habit types and the mood scale (awful → great). */
@@ -112,7 +111,6 @@
     --slot-focus: #22d3ee;
     --slot-light: #a3e635;
     --slot-project: #facc15;
-    --slot-resource: #5eead4;
     --slot-review: #c4b5fd;
     --slot-catchup: #fca5a5;
     --habit-gym: #5eead4;
@@ -160,7 +158,6 @@
   --slot-focus: #22d3ee;
   --slot-light: #a3e635;
   --slot-project: #facc15;
-  --slot-resource: #5eead4;
   --slot-review: #c4b5fd;
   --slot-catchup: #fca5a5;
   --habit-gym: #5eead4;
@@ -563,6 +560,12 @@ a.qbtn { color: inherit; text-decoration: none; }
 .title-chev { width: var(--icon-lg); height: var(--icon-lg); color: var(--muted-foreground); flex: none; }
 @media (hover: hover) { .title-btn:hover .title-chev { color: var(--foreground); } }
 .list-label { padding: var(--space-2) var(--space-4); font-size: var(--text-caption); font-weight: var(--weight-bold); color: var(--muted-foreground); border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--c, var(--primary)) 6%, transparent); }
+/* Groups inside one list (ListGroup): the rows' own top borders divide them, the label of the next group draws the line between groups. */
+.list-group .list-label { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); border-bottom: 0; }
+.list-group + .list-group > .list-label { border-top: 1px solid var(--border); }
+.list-group .list-label small { font-size: var(--text-caption); font-weight: normal; }
+.list-group .focus-mark { min-height: 0; padding: var(--space-half) var(--space-2); font-size: var(--text-micro); }
+.list-group .focus-mark.on { background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c); border-color: transparent; }
 
 
 /* Labelled facts in a row (Facts in src/shared/ui/facts.tsx). */
@@ -603,10 +606,14 @@ a.qbtn { color: inherit; text-decoration: none; }
 .sync[data-state="synced"] { color: var(--good); }
 @keyframes blink { 50% { opacity: 0.35; } }
 
-.tabs { display: flex; flex-wrap: wrap; gap: var(--space-1); padding-block: var(--space-3); }
-.tab { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border-radius: 999px; color: var(--muted-foreground); font-weight: var(--weight-bold); white-space: nowrap; text-decoration: none; }
-.tab svg { width: var(--icon-md); height: var(--icon-md); }
-.tab[data-status="active"] { background: var(--foreground); color: var(--background); }
+/* Wider screens: one row of equal tabs, icon over a small label, the thumb sliding under the current one. */
+.tabs { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin-block: var(--space-3); padding: var(--space-1); }
+.tab { position: relative; z-index: 1; display: grid; justify-items: center; gap: var(--space-half); padding: var(--space-2) var(--space-1); border-radius: var(--radius-md); color: var(--muted-foreground); font-size: var(--text-micro); font-weight: var(--weight-bold); white-space: nowrap; text-decoration: none; }
+.tab svg { width: var(--icon-lg); height: var(--icon-lg); }
+.tab[data-status="active"] { color: var(--primary); }
+/* The thumb of both bars: a tinted pill one column wide (--n columns) moved to column --i; sliding by whole columns, it passes the items between. */
+.nav-thumb { position: absolute; top: var(--space-1); bottom: var(--space-1); left: var(--space-1); width: calc((100% - 2 * var(--space-1)) / var(--n)); border-radius: var(--radius-md); background: color-mix(in srgb, var(--primary) 12%, transparent); transform: translateX(calc(var(--i) * 100%)); transition: transform var(--dur-base) var(--ease-out); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .nav-thumb { transition: none; } }
 
 /* Bottom navigation (phones). */
 .bottom-nav { display: none; }
@@ -620,7 +627,9 @@ a.qbtn { color: inherit; text-decoration: none; }
     padding: var(--space-1) var(--space-2) env(safe-area-inset-bottom, 0px); align-items: center;
   }
 }
-.bnav { display: grid; justify-items: center; gap: var(--space-half); padding: var(--space-2) var(--space-half); border-radius: var(--radius-md); color: var(--muted-foreground); font-size: var(--text-micro); font-weight: var(--weight-bold); text-decoration: none; background: none; border: 0; cursor: pointer; }
+.bnav { position: relative; z-index: 1; display: grid; justify-items: center; gap: var(--space-half); padding: var(--space-2) var(--space-half); border-radius: var(--radius-md); color: var(--muted-foreground); font-size: var(--text-micro); font-weight: var(--weight-bold); text-decoration: none; background: none; border: 0; cursor: pointer; }
+/* The bottom bar's padding differs: its thumb follows it. */
+.bottom-nav .nav-thumb { bottom: env(safe-area-inset-bottom, 0px); left: var(--space-2); width: calc((100% - 2 * var(--space-2)) / var(--n)); }
 .bnav svg { width: var(--icon-lg); height: var(--icon-lg); }
 .bnav[data-status="active"], .bnav[aria-expanded="true"], .bnav.active { color: var(--primary); }
 .more-menu { display: grid; gap: var(--space-4); }
@@ -803,6 +812,12 @@ main > :last-child { margin-bottom: 0; }
 .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
 .sec-head h2 { font-size: var(--text-heading); font-weight: var(--weight-bold); }
 .sec-head small { color: var(--muted-foreground); font-size: var(--text-small); text-align: right; }
+/* Groups of one page's list (Section group): a small muted label, as iOS grouped lists have, and the groups close together. */
+main section.sec-group { margin-bottom: var(--space-5); }
+.sec-group .sec-head { align-items: center; margin-bottom: var(--space-1); padding: 0 var(--space-1); }
+.sec-group .sec-head h2 { font-family: var(--font-body); font-size: var(--text-caption); font-weight: var(--weight-bold); color: var(--muted-foreground); letter-spacing: 0.04em; text-transform: uppercase; }
+.sec-group .sec-head small { font-size: var(--text-caption); }
+.sec-group .focus-mark { min-height: 0; padding: var(--space-half) var(--space-2); font-size: var(--text-micro); letter-spacing: 0; text-transform: none; }
 .sec-actions { display: flex; align-items: center; gap: var(--space-2); }
 
 /* =====================================================================
@@ -943,7 +958,10 @@ main > :last-child { margin-bottom: 0; }
 .project-name { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); text-align: left; font-weight: var(--weight-bold); cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
 .project-body { padding: 0 var(--space-4) var(--space-4); display: grid; gap: var(--space-3); }
 .project-body p { margin: 0; }
-.project-body ol { margin: 0; padding-left: var(--space-5); list-style: decimal; display: grid; gap: var(--space-1); }
+/* A project's steps: rows without the card's padding, their check lining up with the body's text. */
+.project-steps { margin: 0 calc(-1 * var(--space-4)); }
+.project-steps .row:first-child { border-top: 1px solid var(--border); }
+.project-count { margin-left: var(--space-2); font-weight: normal; }
 .project-body dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); margin: 0; }
 .project-body dt { color: var(--muted-foreground); font-size: var(--text-caption); font-weight: var(--weight-bold); padding-top: var(--space-half); }
 .project-body dd { margin: 0; }
@@ -1065,10 +1083,8 @@ main > :last-child { margin-bottom: 0; }
 .mood-week .mood-face, .mood-empty { width: var(--icon-lg); height: var(--icon-lg); }
 .mood-empty { border: 2px dashed var(--border); border-radius: 50%; }
 
-/* Edit controls. */
-.swatches { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.swatch { width: 30px; height: 30px; border-radius: 50%; background: var(--c); border: 3px solid var(--card); box-shadow: 0 0 0 1px var(--border); cursor: pointer; }
-.swatch[aria-checked="true"] { box-shadow: var(--ring-selected); }
+/* Edit controls. A colour choice in a select: its dot and name. */
+.select-color { display: inline-flex; align-items: center; gap: var(--space-2); }
 
 /* =====================================================================
    Phones
@@ -1135,7 +1151,6 @@ main > :last-child { margin-bottom: 0; }
   details > summary:hover .fold-title, .project-name:hover { color: var(--c, var(--foreground)); }
   .fold > summary:hover { background: color-mix(in srgb, var(--foreground) 3%, transparent); }
   .project-code:hover { background: color-mix(in srgb, var(--c) 24%, transparent); }
-  .swatch:not([aria-checked="true"]):hover { box-shadow: 0 0 0 2px var(--muted-foreground); }
   .link-card:hover, .topic-card:not(.is-focus):hover { border-color: color-mix(in srgb, var(--c) 45%, var(--border)); }
   .topic-card.is-focus:hover { box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent), var(--shadow-card); }
   .sync:hover { color: var(--foreground); }

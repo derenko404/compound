@@ -8,7 +8,7 @@ export const search: typeof en['search'] = {
   nothing: 'Нічого не знайдено.',
   listsPlaceholder: 'Шукайте списки та їхні пункти',
   kinds: {
-    topic: 'Теми', skill: 'Навички', step: 'Кроки', resource: 'Ресурси', project: 'Проєкти',
+    topic: 'Теми', skill: 'Навички', step: 'Кроки', task: 'Завдання тем', resource: 'Ресурси', project: 'Проєкти',
     list: 'Списки', listItem: 'У ваших списках', routine: 'Завдання', habit: 'Звички', note: 'Нотатник',
   },
 }

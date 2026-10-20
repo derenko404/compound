@@ -27,7 +27,7 @@ export const topics = {
     other: 'Other',
     newTopic: 'New topic',
     empty: 'No topics yet. Tap + to add one.',
-    deleteTopic: "Its skills, resources and projects go with it. Notes filed under it stay in your notebook. This can't be undone.",
+    deleteTopic: "Its skills, tasks, resources and projects go with it. Notes filed under it stay in your notebook. This can't be undone.",
   },
 
   card: {
@@ -55,11 +55,12 @@ export const topics = {
     notesEmpty: 'Nothing here yet. Add notes, ideas and links with +, or send them to your Telegram bot.',
   },
 
-  tabs: { skills: 'Skills', resources: 'Resources', projects: 'Projects', notebook: 'Notebook' },
-  add: { skill: 'New skill', resource: 'New resource', project: 'New project', note: 'New note' },
+  tabs: { skills: 'Skills', tasks: 'Tasks', resources: 'Resources', projects: 'Projects', notebook: 'Notebook' },
+  add: { skill: 'New skill', task: 'New task', resource: 'New resource', project: 'New project', note: 'New note' },
   empty: {
     projects: 'No projects yet.',
     skills: 'No skills yet. Tap + to add one.',
+    tasks: 'No tasks yet. Tap + to add one: it shows on My day when due.',
     resources: 'No resources yet.',
     steps: 'No steps yet.',
   },
@@ -132,6 +133,11 @@ export const topics = {
     stepsInOrder: 'Steps, in order',
     stepsPlaceholder: 'Introduce yourself in one minute',
     stepsHint: "Ticks stay on items you don't change.",
+
+    newTask: 'New task',
+    editTask: 'Edit task',
+    taskPlaceholder: 'Practise for 15 minutes',
+    taskHint: 'Shows on My day when due, and goes along when you share the topic',
   },
 
   share: {

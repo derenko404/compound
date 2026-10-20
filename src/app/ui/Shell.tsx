@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Toaster } from '@/shared/ui/primitives/sonner'
 import { TopicColors } from '@/shared/ui'
@@ -19,7 +19,7 @@ import { supabase } from '@/shared/api/backends'
 import { useFirstRunTour } from '@/features/tour'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
-import { TABS } from './tabs'
+import { TopTabs } from './TopTabs'
 
 export function Shell() {
   const { mode, sync, ready, state } = useStore()
@@ -90,9 +90,7 @@ export function Shell() {
         {mode === 'signin' || (mode === 'loading' && pathname === '/') ? (open ? <main><Outlet /></main> : <SignIn />) : (
           <>
             <TopBar sync={sync} />
-            <nav className="tabs" aria-label={t.nav.views}>
-              {TABS.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="tab"><Icon aria-hidden="true" />{label}</Link>)}
-            </nav>
+            <TopTabs />
             <TopicColors topics={state.topics} />
             <main>{ready && !seeding ? <Outlet /> : <div className="empty">{t.nav.loadingProgress}</div>}</main>
             <BottomNav />

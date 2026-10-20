@@ -41,7 +41,7 @@ export function NoteSheet({ open, onOpenChange, note, topic }: { open: boolean; 
           url: isLink ? url : null, kind: isLink ? (url === note?.url && n.kind) || links.kindFromUrl(url!) || 'site' : null,
         } })
       }}>
-      <AreaField label={t.notebook.sheet.note} value={n.body} rows={5} onChange={(body) => set({ body })}
+      <AreaField label={t.notebook.sheet.note} value={n.body} rows={5} onChange={(body) => set({ body })} autoFocus
         placeholder={t.notebook.sheet.notePlaceholder} />
       {n.context && (
         <div className="field span-all">

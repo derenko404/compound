@@ -1,16 +1,16 @@
+import type { CSSProperties } from 'react'
 import { PALETTE } from '@core/domain/content'
 import { t } from '@/shared/i18n'
-import { Label } from '../primitives/label'
+import { Dot } from '../dot'
+import { SelectField } from './fields'
 
+// A topic's colour: a select of the palette, each choice as its dot and name.
 export function ColorField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div className="field span-all">
-      <Label>{t.nav.edit.colour}</Label>
-      <div className="swatches" role="radiogroup" aria-label={t.nav.edit.colour}>
-        {PALETTE.map((p) => (
-          <button key={p} type="button" role="radio" aria-checked={value === p} aria-label={t.nav.edit.colours[p]} className="swatch" style={{ '--c': `var(--p-${p})` } as React.CSSProperties} onClick={() => onChange(p)} />
-        ))}
-      </div>
-    </div>
+    <SelectField label={t.nav.edit.colour} value={value} onChange={onChange}
+      options={PALETTE.map((p) => ({
+        value: p,
+        label: <span className="select-color" style={{ '--c': `var(--p-${p})` } as CSSProperties}><Dot />{t.nav.edit.colours[p]}</span>,
+      }))} />
   )
 }

@@ -2,7 +2,7 @@ import type { SearchHit, SearchKind } from '@core/domain/search'
 import { List, Row, Section } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
-const ORDER: SearchKind[] = ['topic', 'project', 'skill', 'step', 'resource', 'list', 'listItem', 'routine', 'habit']
+const ORDER: SearchKind[] = ['topic', 'project', 'skill', 'step', 'task', 'resource', 'list', 'listItem', 'routine', 'habit']
 // Each group shows this many; more means the query should be narrower.
 const PER_GROUP = 8
 

@@ -38,11 +38,12 @@ export const TextField = ({ label, value, onChange, placeholder, hint, type, req
   </Field>
 )
 
-export const AreaField = ({ label, value, onChange, placeholder, hint, rows }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string; rows?: number
+// autoFocus: as on TextField, the field FormSheet focuses when it opens.
+export const AreaField = ({ label, value, onChange, placeholder, hint, rows, autoFocus }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string; rows?: number; autoFocus?: boolean
 }) => (
   <Field label={label} hint={hint} full>
-    {(id) => <Textarea id={id} rows={rows} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />}
+    {(id) => <Textarea id={id} rows={rows} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} data-autofocus={autoFocus || undefined} />}
   </Field>
 )
 

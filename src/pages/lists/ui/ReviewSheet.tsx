@@ -14,7 +14,7 @@ export function ReviewSheet({ list, item, open, onOpenChange }: { list: ListDef;
       onSubmit={() => {
         dispatch({ type: 'listItem', list: list.id, item: item.id, progress: { ...p, note: note.trim() || null } })
       }}>
-      <AreaField label={t.lists.review.label} value={note} onChange={setNote} rows={4} placeholder={t.lists.review.placeholder} />
+      <AreaField label={t.lists.review.label} value={note} onChange={setNote} rows={4} placeholder={t.lists.review.placeholder} autoFocus />
     </FormSheet>
   )
 }

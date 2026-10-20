@@ -6,15 +6,15 @@ import {
 } from '@/shared/ui'
 import { RESOURCE_KINDS, topicOf, program, topicSnapshot } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
-import { SLOT_UI, focusOf, nextUp, skillProgress, topicProgress } from '@/features/today'
-import type { Topic, Note, Project, Resource, ResourceKind, Skill } from '@core/domain/types'
+import { SLOT_UI, describeWhen, focusOf, nextUp, skillProgress, topicProgress } from '@/features/today'
+import type { Topic, Note, Project, Resource, ResourceKind, Skill, Task } from '@core/domain/types'
 import { useNoteCount, useStore } from '@/shared/store/StoreProvider'
 import { lockOn } from '@/shared/lib/celebrate'
 import { playFocus } from '@/shared/lib/sound'
 import { t } from '@/shared/i18n'
 import {
-  ProjectCard, ResourceGroups, SkillFolds, TopicSheet, SkillSheet, ProjectSheet, ResourceSheet,
-  blankSkill, blankProject, blankResource, useTopicSave,
+  ProjectCard, ResourceGroups, SkillFolds, TaskRows, TopicSheet, SkillSheet, ProjectSheet, ResourceSheet, TaskSheet,
+  blankSkill, blankProject, blankResource, blankTask, useTopicSave,
 } from '@/features/topics'
 import { NoteSheet } from '@/features/notes'
 
@@ -34,9 +34,9 @@ export function Topics() {
 
 type Editing =
   | { kind: 'topic' }
-  | { kind: 'project'; v: Project } | { kind: 'resource'; v: Resource } | { kind: 'skill'; v: Skill }
+  | { kind: 'project'; v: Project } | { kind: 'resource'; v: Resource } | { kind: 'skill'; v: Skill } | { kind: 'task'; v: Task }
 
-type Tab = 'learn' | 'resources' | 'projects' | 'notes'
+type Tab = 'learn' | 'tasks' | 'resources' | 'projects' | 'notes'
 
 // A topic's page.
 function TopicPage({ c }: { c: Topic }) {
@@ -46,10 +46,10 @@ function TopicPage({ c }: { c: Topic }) {
   const [deleting, setDeleting] = useState(false)
   const [sharing, setSharing] = useState(false)
   const { hash } = useLocation()
-  const empty0 = !c.projects.length && !c.resources.length && !c.skills.length
-  // A fresh topic opens in edit mode, ready to fill. A link to a project (#T1) opens the Projects tab, #resources the Resources tab.
+  const empty0 = !c.projects.length && !c.resources.length && !c.skills.length && !c.tasks.length
+  // A fresh topic opens in edit mode, ready to fill. A link to a project (#T1) opens the Projects tab, #resources and #tasks those tabs.
   const [edit, setEdit] = useState(empty0)
-  const [tab, setTab] = useState<Tab>(hash === 'resources' ? 'resources' : c.projects.some((p) => p.code && p.code === hash) ? 'projects' : 'learn')
+  const [tab, setTab] = useState<Tab>(hash === 'resources' || hash === 'tasks' ? hash : c.projects.some((p) => p.code && p.code === hash) ? 'projects' : 'learn')
   const sheet = useSheet<Editing>()
   const [noting, setNoting] = useState<{ note?: Note } | null>(null)
   const [about, setAbout] = useState(false)
@@ -69,15 +69,18 @@ function TopicPage({ c }: { c: Topic }) {
    */
   const add: Record<Tab, { label: string; onClick: () => void }> = {
     learn: { label: t.topics.add.skill, onClick: () => sheet.open({ kind: 'skill', v: blankSkill() }) },
+    tasks: { label: t.topics.add.task, onClick: () => sheet.open({ kind: 'task', v: blankTask() }) },
     resources: { label: t.topics.add.resource, onClick: () => sheet.open({ kind: 'resource', v: blankResource() }) },
     projects: { label: t.topics.add.project, onClick: () => sheet.open({ kind: 'project', v: blankProject() }) },
     notes: { label: t.topics.add.note, onClick: () => setNoting({}) },
   }
-  const moveIn = (key: 'projects' | 'skills') => (from: number, to: number) => save({ ...c, [key]: moveTo<unknown>(c[key], from, to) })
+  const moveIn = (key: 'projects' | 'skills' | 'tasks') => (from: number, to: number) => save({ ...c, [key]: moveTo<unknown>(c[key], from, to) })
 
   const noteCount = useNoteCount({ topic: c.id })
   const tabs: { id: Tab; label: string; count?: string | number; show: boolean }[] = [
     { id: 'learn', label: t.topics.tabs.skills, count: skills.total ? `${skills.done}/${skills.total}` : undefined, show: true },
+    // Personal's tasks are the routines on Today, so it has no tasks of its own.
+    { id: 'tasks', label: t.topics.tabs.tasks, count: c.tasks.length || undefined, show: c.kind === 'learn' },
     { id: 'resources', label: t.topics.tabs.resources, count: c.resources.length || undefined, show: true },
     { id: 'projects', label: t.topics.tabs.projects, count: c.projects.length || undefined, show: true },
     { id: 'notes', label: t.topics.tabs.notebook, count: noteCount || undefined, show: true },
@@ -165,6 +168,22 @@ function TopicPage({ c }: { c: Topic }) {
         </Section>
       )}
 
+      {tab === 'tasks' && (
+        <Section title={t.topics.tabs.tasks}>
+          {edit ? (
+            <SortList empty={t.topics.empty.tasks} onMove={moveIn('tasks')}>
+              {c.tasks.map((x) => (
+                <Row key={x.id} ch={c.id} title={x.title} sub={describeWhen(x.when)}
+                  check={<RemoveButton label={t.common.deleteNamed(x.title)} title={t.common.deleteAsk(x.title)} onConfirm={() => save({ ...c, tasks: c.tasks.filter((y) => y.id !== x.id) })} />}
+                  onOpen={() => sheet.open({ kind: 'task', v: x })} sort />
+              ))}
+            </SortList>
+          ) : (
+            <TaskRows ch={c.id} tasks={c.tasks} empty={t.topics.empty.tasks} />
+          )}
+        </Section>
+      )}
+
       {tab === 'resources' && (
         <Section title={t.topics.tabs.resources}>
           {c.resources.length > 3 && (
@@ -204,6 +223,7 @@ function TopicPage({ c }: { c: Topic }) {
             {sheet.value?.kind === 'project' && <ProjectSheet {...sheet.props} topic={c} project={sheet.value.v} />}
       {sheet.value?.kind === 'resource' && <ResourceSheet {...sheet.props} topic={c} resource={sheet.value.v} />}
       {sheet.value?.kind === 'skill' && <SkillSheet {...sheet.props} topic={c} skill={sheet.value.v} />}
+      {sheet.value?.kind === 'task' && <TaskSheet {...sheet.props} topic={c} task={sheet.value.v} />}
     </>
   )
 }

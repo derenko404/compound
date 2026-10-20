@@ -8,8 +8,9 @@ export interface StepInput { id?: string; text: string }
 export interface SkillInput { id?: string; name: string; intro?: string; steps?: (string | StepInput)[] }
 export interface ResourceInput { id?: string; title: string; url?: string; kind?: ResourceKind; note?: string; free?: boolean }
 export interface ProjectInput {
-  id?: string; code?: string; name: string; goal?: string; steps?: string[]; done?: string; trains?: string[]; size?: ProjectSize
+  id?: string; code?: string; name: string; goal?: string; steps?: (string | StepInput)[]; done?: string; trains?: string[]; size?: ProjectSize
 }
+export interface TaskInput { id?: string; title: string; details?: string; when?: When }
 
 export interface TopicInput {
   name?: string
@@ -19,6 +20,7 @@ export interface TopicInput {
   color?: string
   hint?: string
   skills?: SkillInput[]
+  tasks?: TaskInput[]
   resources?: ResourceInput[]
   projects?: ProjectInput[]
 }

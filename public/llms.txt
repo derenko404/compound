@@ -1,6 +1,6 @@
 # Compound
 
-> A personal self-development app. People learn in **topics** (skills with steps to tick, resources, projects), keep **lists** (books to read, films to watch…), plan **routines** for Today, save notes, ideas and links in a **notebook**, and keep **habits** on Wellbeing. You can read and build all of this for the user through the API or the MCP server.
+> A personal self-development app. People learn in **topics** (skills with steps to tick, tasks, resources, projects), keep **lists** (books to read, films to watch…), plan **routines** for Today, save notes, ideas and links in a **notebook**, and keep **habits** on Wellbeing. You can read and build all of this for the user through the API or the MCP server.
 
 ## Connect
 
@@ -35,8 +35,9 @@ A topic is one area someone wants to get good at: "English", "System design", "P
   - **name**: the skill, e.g. "Caching".
   - **intro**: one or two sentences, what it is and why it matters.
   - **steps**: 3–10 concrete steps, in order, each small enough to learn in one or two sessions: "Cache-aside vs write-through", "Cache invalidation and TTLs". Not "Learn caching".
+- **tasks**: regular practice for the topic, shown on Today when due and ticked each day: "Speak for 10 minutes". Each has a **title**, optional **details** and **when**: `"daily"`, `{ "kind": "weekly", "days": ["mon", "thu"] }` or `{ "kind": "monthly", "day": 1 }`. 0–3 per topic, only ones the person asked for or clearly wants: every task lands on their day. Unlike routines, tasks live inside the topic and go along when it is shared.
 - **resources**: the best few, not everything. 5–15 per topic. Each has a **title**, a **url** (only a link you checked, see Finding resources. Leave it out otherwise), a **kind** (book, course, video, article, podcast, tool, doc, practice, other), a one-line **note** on why it's worth it, and **free** if it costs nothing. Prefer free, current and widely recommended.
-- **projects**: 2–5 things to build or do that use the skills, from small to big. Each has a **name**, a **goal**, a few **steps**, **done** (how to know it's finished), **trains** (the skill names it practises) and a **size**: small (a few hours to a few days), medium (one to a few weeks) or big (a month or more). Codes like EN1, EN2 are given automatically.
+- **projects**: 2–5 things to build or do that use the skills, from small to big. Each has a **name**, a **goal**, a few **steps** (tickable, in order), **done** (how to know it's finished), **trains** (the skill names it practises) and a **size**: small (a few hours to a few days), medium (one to a few weeks) or big (a month or more). Codes like EN1, EN2 are given automatically.
 
 Write in the user's language (the app is in English and Ukrainian), plain and friendly. Short sentences. Never use semicolons.
 
@@ -53,8 +54,8 @@ Write in the user's language (the app is in English and Ukrainian), plain and fr
 4. **Break each skill into steps** that fit one or two sessions and say exactly what to learn or do: "Write three sentences with the present perfect about your week", not "Grammar".
 5. **Find resources** for the skills (see below), at least one per skill, the best ones first.
 6. **Design projects** that use several skills, from a small win in the first weeks to one bigger piece at the end. A project should produce something they can show or use.
-7. **Show the plan** as a short outline (skills with their steps, the resources, the projects) and ask if it fits. Then create it with one `create_topic` call.
-8. **Offer the next move**, don't just do it: `set_focus` to make it the focus topic, or `add_routine` for a daily habit ("20 minutes of English", weekdays).
+7. **Show the plan** as a short outline (skills with their steps, any tasks, the resources, the projects) and ask if it fits. Then create it with one `create_topic` call.
+8. **Offer the next move**, don't just do it: `set_focus` to make it the focus topic, or a daily task on the topic ("20 minutes of English", weekdays) through `update_topic`'s **tasks**.
 
 ## Finding resources
 
@@ -95,11 +96,11 @@ A list is a set of things to get through: "100 films everyone should watch", "50
 
 - **Routines** (Today): `add_routine` with a title, optional details, a topic id, and when: `"daily"`, `{ "kind": "weekly", "days": ["mon", "thu"] }`, `{ "kind": "monthly", "day": 1 }` (or -1 for the last day) or `{ "kind": "once", "date": "YYYY-MM-DD" }`. They count for the streak unless `counts_for_streak` is false.
 - **Notes**: `add_note` with text, an optional url (makes it a link) and tags (the tag `idea` makes it an idea).
-- **Focus**: one learning topic is the focus. Today shows its next step, its current project and its next resource. `set_focus` changes it.
+- **Focus**: one learning topic is the focus. Today shows its next step and, while a project is in progress, that project's next step. `set_focus` changes it.
 
 ## Updating
 
-`update_topic` and `update_list` change only the fields you send. In a list you send (skills, resources, projects, goals, a skill's steps, items), items with an id that exists are changed, new ones are added, and items you leave out stay where they are, after the ones you sent. Get the topic or list first and keep the ids so ticks and notes stay on the right items. Sending items in a new order reorders them.
+`update_topic` and `update_list` change only the fields you send. In a list you send (skills, tasks, resources, projects, goals, a skill's or project's steps, items), items with an id that exists are changed, new ones are added, and items you leave out stay where they are, after the ones you sent. Get the topic or list first and keep the ids so ticks and notes stay on the right items. Sending items in a new order reorders them.
 
 Nothing can be deleted through the API or MCP: there are no delete tools, and updates never remove items. If something should go, tell the user to remove it in the app (Edit, then the red minus).
 
@@ -113,6 +114,9 @@ Nothing can be deleted through the API or MCP: there are no delete tools, and up
   "skills": [
     { "name": "Pronunciation", "intro": "The sounds and rhythm that make you easy to understand.", "steps": ["The sounds that differ from your language", "Word stress", "Sentence rhythm and intonation"] },
     { "name": "Speaking at work", "intro": "Phrases and habits for meetings and calls.", "steps": ["Opening and closing a meeting", "Disagreeing politely", "Asking someone to repeat or slow down"] }
+  ],
+  "tasks": [
+    { "title": "Speak English for 10 minutes", "details": "Out loud: read, shadow a video or talk to someone", "when": "daily" }
   ],
   "resources": [
     { "title": "YouGlish", "url": "https://youglish.com", "kind": "tool", "note": "Hear any word said by native speakers in real videos.", "free": true }

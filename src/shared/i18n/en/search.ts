@@ -8,7 +8,7 @@ export const search = {
   listsPlaceholder: 'Search lists and their items',
   // Result groups, by kind of result.
   kinds: {
-    topic: 'Topics', skill: 'Skills', step: 'Steps', resource: 'Resources', project: 'Projects',
+    topic: 'Topics', skill: 'Skills', step: 'Steps', task: 'Topic tasks', resource: 'Resources', project: 'Projects',
     list: 'Lists', listItem: 'In your lists', routine: 'Tasks', habit: 'Habits', note: 'Notebook',
   },
 }

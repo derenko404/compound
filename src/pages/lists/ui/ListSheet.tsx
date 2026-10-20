@@ -18,7 +18,7 @@ export function ListSheet({ list, open, onOpenChange, onSaved }: { list: ListDef
         onSaved(id)
       }}>
       <div className="grid2">
-        <TextField label={t.lists.sheet.shortName} value={l.name} onChange={(name) => setL({ ...l, name })} placeholder={t.lists.sheet.shortNamePlaceholder} required />
+        <TextField label={t.lists.sheet.shortName} value={l.name} onChange={(name) => setL({ ...l, name })} placeholder={t.lists.sheet.shortNamePlaceholder} required autoFocus />
         <TextField label={t.lists.sheet.detail} value={l.sub_label} onChange={(sub_label) => setL({ ...l, sub_label })} placeholder={t.lists.sheet.detailPlaceholder} hint={t.lists.sheet.detailHint} />
       </div>
       <TextField label={t.lists.sheet.title} value={l.title} onChange={(title) => setL({ ...l, title })} placeholder={t.lists.sheet.titlePlaceholder} full />

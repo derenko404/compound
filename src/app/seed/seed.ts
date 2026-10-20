@@ -25,12 +25,13 @@ const personal = (): Topic => ({
     "Anything that fits no other topic: personal notes, tasks and routines.",
   outcomes: [],
   skills: [],
+  tasks: [],
   resources: [],
   projects: [],
   hint: "anything personal that fits no other topic",
 });
 
-// An example learning topic: one skill, one resource, one project.
+// An example learning topic: one skill, one task, one resource, one project.
 const english = (): Topic => ({
   id: "english",
   kind: "learn",
@@ -60,6 +61,14 @@ const english = (): Topic => ({
       ],
     },
   ],
+  tasks: [
+    {
+      id: "english-speak",
+      title: "Speak English for 10 minutes",
+      sub: "Out loud: read, shadow a video or talk to someone",
+      when: { kind: "daily" },
+    },
+  ],
   resources: [
     {
       id: "english-youglish",
@@ -79,9 +88,9 @@ const english = (): Topic => ({
       trains: ["Pronunciation"],
       goal: "Record the same 2-minute text today and again in 3 months.",
       steps: [
-        "Pick a 2-minute text",
-        "Record it today",
-        "Record it again in 3 months and compare",
+        { id: "english-record-1", text: "Pick a 2-minute text" },
+        { id: "english-record-2", text: "Record it today" },
+        { id: "english-record-3", text: "Record it again in 3 months and compare" },
       ],
       done: "Two recordings, and you can hear the difference.",
     },

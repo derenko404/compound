@@ -1,5 +1,5 @@
 // Pure functions that turn stored state into what the views show.
-import type { Topic, TopicId, Habit, Routine, State, When } from '@core/domain/types'
+import type { Topic, TopicId, Habit, Project, Routine, State, Task, When } from '@core/domain/types'
 import { habitRows } from '@/features/habits'
 import { topicOf, topics, matchesWhen, program } from '@core/domain/content'
 import { dates } from '@/shared/lib/dates'
@@ -61,8 +61,11 @@ export function nextUp(s: State, c: Topic) {
   return null
 }
 
-// The weekend slot's project: the first one not done.
-export const currentProject = (s: State, c: Topic) => c.projects.find((p) => (s.projects[p.id] ?? 'todo') !== 'done')
+// The project being worked on: the first one set to In progress. Today shows nothing for a topic without one.
+export const currentProject = (s: State, c: Topic) => c.projects.find((p) => s.projects[p.id] === 'doing')
+
+// A project's step for today: the first still open, or one ticked today, so the row stays done for the rest of the day.
+export const projectStep = (s: State, p: Project, k: string) => p.steps?.find((x) => !s.plan[x.id] || dates.keyOf(new Date(s.plan[x.id])) === k)
 
 // Steps ticked per week over the last 4 weeks, and when the topic would finish at that pace.
 export function pace(s: State, c: Topic, today: Date) {
@@ -126,7 +129,7 @@ const nextRow = (s: State, c: Topic) => {
 
 export const checkCount = (s: State, id: string) => Object.values(s.days).filter((d) => d.done.includes(id)).length
 
-export type Slot = 'focus' | 'light' | 'project' | 'resource' | 'review' | 'catchup'
+export type Slot = 'focus' | 'light' | 'project' | 'review' | 'catchup'
 
 export interface DayItem {
   id: string
@@ -134,6 +137,8 @@ export interface DayItem {
   title: string
   sub: string
   routine?: Routine // set when the item comes from an editable routine
+  task?: Task // set when the item is a topic's task (edited on the topic's page)
+  step?: string // set when the row ticks a step in the topic's progress (a project's step) instead of the day's log
   slot?: Slot // set on the rows from the topics
   habit?: Habit // set on wellbeing habit rows
   done?: boolean // set when the tick isn't in the day's done list (habit rows)
@@ -148,16 +153,24 @@ export function todayItems(s: State, today: Date): DayItem[] {
     if (!matchesWhen(r.when, today, k)) continue
     items.push({ id: r.id, ch: r.topic, title: r.title, sub: r.sub ?? '', routine: r })
   }
+  // The topics' own tasks due today, after the routines. Ticked into the same day log.
+  for (const c of topics(s)) {
+    for (const x of c.tasks) if (matchesWhen(x.when, today, k)) items.push({ id: x.id, ch: c.id, title: x.title, sub: x.sub ?? '', task: x })
+  }
 
   // Rows from the topics: the focus topic's next step, another topic's (rotating weekly), the focus topic's current project.
   const fc = topicOf(s, focus)
   if (fc) items.push({ id: 'slot-focus', ch: fc.id, slot: 'focus', ...nextRow(s, fc) })
   const lc = topicOf(s, lightTopic(s, today, focus))
   if (lc) items.push({ id: 'slot-light', ch: lc.id, slot: 'light', ...nextRow(s, lc) })
+  // The project in progress: its step for today, so a tick advances the project. Without steps, the project itself.
   const p = fc ? currentProject(s, fc) : undefined
-  if (fc && p) items.push({ id: 'slot-project', ch: fc.id, slot: 'project', title: `${p.code} ${p.name}`, sub: '' })
-  const res = fc?.resources.find((r) => !s.plan[r.id])
-  if (fc && res) items.push({ id: 'slot-resource', ch: fc.id, slot: 'resource', title: res.title, sub: res.note ?? '' })
+  const ps = p ? projectStep(s, p, k) : undefined
+  if (fc && p) {
+    items.push(ps
+      ? { id: 'slot-project', ch: fc.id, slot: 'project', title: ps.text, sub: `${p.code} ${p.name}`, step: ps.id, done: !!s.plan[ps.id] }
+      : { id: 'slot-project', ch: fc.id, slot: 'project', title: `${p.code} ${p.name}`, sub: '' })
+  }
   const rev = reviewStep(s, today)
   if (rev) items.push({ id: 'slot-review', ch: rev.c.id, slot: 'review', title: rev.step.text, sub: t.today.rows.tickedAgo(rev.skill.name, rev.ago) })
   const cu = fc ? catchUp(s, fc, today) : null

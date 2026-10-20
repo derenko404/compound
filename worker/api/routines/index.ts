@@ -2,8 +2,7 @@ import { z } from 'zod'
 import { Endpoint, HttpStatuses, zodBody } from '../../lib/http'
 import type { ApiContext } from '../context'
 import { authenticated } from '../guards'
-import { text } from '../schemas'
-import { when } from './when'
+import { text, when } from '../schemas'
 
 /** Routines and one-off tasks on Today. */
 export const listRoutinesEndpoint = new Endpoint<ApiContext>()

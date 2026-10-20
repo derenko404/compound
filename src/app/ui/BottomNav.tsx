@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { MoreHorizontal, Search } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/primitives/dialog'
@@ -16,8 +16,11 @@ export function BottomNav() {
   const { pathname } = useLocation()
   const inMore = MORE.some((m) => pathname.startsWith(m.to))
   useEffect(() => setMore(false), [pathname])
+  // The thumb slides under the current view, column by column, so it passes the items in between.
+  const slot = inMore ? MAIN.length : MAIN.findIndex((m) => pathname.startsWith(m.to))
   return (
-    <nav className="bottom-nav" aria-label={t.nav.views}>
+    <nav className="bottom-nav" aria-label={t.nav.views} style={{ '--n': MAIN.length + 1 } as CSSProperties}>
+      {slot >= 0 && <span className="nav-thumb" style={{ '--i': slot } as CSSProperties} aria-hidden="true" />}
       {MAIN.map(({ to, label, icon: Icon }) => <Link key={to} to={to} className="bnav"><Icon aria-hidden="true" />{label}</Link>)}
       <button className={`bnav${inMore ? ' active' : ''}`} aria-expanded={more} onClick={() => setMore(true)}><MoreHorizontal aria-hidden="true" />{t.nav.more}</button>
       <Dialog open={more} onOpenChange={setMore}>

@@ -41,7 +41,7 @@ export function AiAccessRows() {
             void qc.invalidateQueries({ queryKey: ['api-tokens'] })
           }).catch(() => toast.error(t.settings.ai.makeFailed))
         }}>
-        <TextField label={t.settings.ai.name} value={name} onChange={setName} placeholder={t.settings.ai.namePlaceholder} hint={t.settings.ai.nameHint} required full />
+        <TextField label={t.settings.ai.name} value={name} onChange={setName} placeholder={t.settings.ai.namePlaceholder} hint={t.settings.ai.nameHint} required full autoFocus />
       </FormSheet>
       <FormSheet open={!!made} onOpenChange={(o) => !o && setMade(null)} title={t.settings.ai.yourToken} submit={t.common.done} onSubmit={() => {}}
         description={t.settings.ai.yourTokenSub}>

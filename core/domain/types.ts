@@ -14,7 +14,7 @@ export interface Project {
   code: string // short code like T1; text that mentions it links to the project
   name: string
   goal?: string
-  steps?: string[]
+  steps?: Step[] // tickable, like a skill's; Today shows the current project's first open one
   done?: string
   trains?: string[] // skills the project practises
   size?: ProjectSize
@@ -32,6 +32,12 @@ export interface Resource {
 export interface Step { id: string; text: string }
 // What to learn: a skill with its steps in order, each tickable. Resources are a separate list on the topic.
 export interface Skill { id: string; name: string; intro?: string; steps: Step[] }
+
+/**
+ * Something to do regularly for the topic ("Speak for 10 minutes", daily). Shown on Today when due and ticked per
+ * day like a routine (DayLog.done), but kept inside the topic, so it travels with it when shared.
+ */
+export interface Task { id: string; title: string; sub?: string; when: When }
 
 export interface Milestone { mins: number; label: string; text: string }
 
@@ -52,6 +58,7 @@ export interface Topic {
   projects: Project[] // in order: the weekend slot takes the first unfinished one
   resources: Resource[]
   skills: Skill[]
+  tasks: Task[]
   hint?: string // what belongs here, for the Telegram bot's AI
   archived?: boolean
 }

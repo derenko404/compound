@@ -74,10 +74,11 @@ export function HabitSheet({ habit, ...sheet }: { habit: Habit; open: boolean; o
       )}
       {/* Ready-made trackers keep their own name. */}
       {!HABIT_DEFAULTS[h.type].single && (
-        <TextField label={W.form.name} value={h.name} onChange={(name) => set({ name })} required full
+        <TextField label={W.form.name} value={h.name} onChange={(name) => set({ name })} required full autoFocus
           placeholder={h.type === 'break' ? W.form.breakPlaceholder : W.form.buildPlaceholder} />
       )}
-      <TextField label={W.form.why} value={h.why ?? ''} onChange={(why) => set({ why })} placeholder={W.form.whyPlaceholder} full />
+      {/* The first field gets the focus: the name, or the reason on a ready-made tracker that has none. */}
+      <TextField label={W.form.why} value={h.why ?? ''} onChange={(why) => set({ why })} placeholder={W.form.whyPlaceholder} full autoFocus={!!HABIT_DEFAULTS[h.type].single} />
       <div className="grid2">
         <TextField label={START_LABEL[h.type]} type="date" value={h.start_date ?? ''} onChange={(start_date) => set({ start_date: start_date || null })} />
         {h.type === 'water' && <TextField label={W.form.glassesADay} type="number" value={String(h.custom_data.target ?? '')} onChange={(v) => setData({ target: num(v) })} />}

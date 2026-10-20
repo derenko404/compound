@@ -1,5 +1,5 @@
 // Helpers over the editable content in State. Shared with the Telegram worker, so keep it free of DOM and app imports.
-import type { ListDef, Note, Program, ProjectSize, ResourceKind, State, Topic, TopicId, TopicKind, When } from './types'
+import type { ListDef, Note, Program, ProjectSize, ResourceKind, State, Step, Topic, TopicId, TopicKind, When } from './types'
 
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -111,8 +111,9 @@ export function topicFromShare(shared: Topic, mine: Topic[]): Topic {
   }
   c.skills = c.skills.map((k) => ({ ...k, id: uid(), steps: k.steps.map((t) => ({ ...t, id: uid() })) }))
   c.resources = c.resources.map((r) => ({ ...r, id: uid() }))
+  c.tasks = c.tasks.map((x) => ({ ...x, id: uid() }))
   const prefix = codePrefix(c, [...mine, c])
-  c.projects = c.projects.map((p, i) => ({ ...p, id: uid(), code: `${prefix}${i + 1}` }))
+  c.projects = c.projects.map((p, i) => ({ ...p, id: uid(), code: `${prefix}${i + 1}`, steps: p.steps?.map((x) => ({ ...x, id: uid() })) }))
   return c
 }
 
@@ -134,6 +135,14 @@ export const sizeLabel = (s: ProjectSize) => {
   return z ? `${z.label}, ${z.means}` : s
 }
 
+// Project steps used to be plain text: those get an id from their place, which stays put once the topic is saved again.
+const isStep = (s: unknown): s is Step => !!s && typeof s === 'object' && typeof (s as Step).id === 'string' && typeof (s as Step).text === 'string'
+function projectSteps(projectId: string, raw: unknown): Step[] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const steps = raw.map((s, i) => (typeof s === 'string' ? { id: `${projectId}-step-${i}`, text: s } : s)).filter(isStep)
+  return steps.length ? steps : undefined
+}
+
 const list = <T,>(x: unknown, ok: (v: T) => boolean = () => true): T[] => (Array.isArray(x) ? (x as T[]).filter((v) => v && typeof v === 'object' && ok(v)) : [])
 
 export function normalizeTopic(raw: Topic): Topic {
@@ -141,9 +150,13 @@ export function normalizeTopic(raw: Topic): Topic {
   return {
     ...c,
     outcomes: Array.isArray(c.outcomes) ? c.outcomes.filter((x) => typeof x === 'string') : [],
-    projects: list<Topic['projects'][number]>(c.projects).map((p) => ({ ...p, trains: Array.isArray(p.trains) ? p.trains : undefined, size: PROJECT_SIZES.some((s) => s.value === p.size) ? p.size : undefined })),
+    projects: list<Topic['projects'][number]>(c.projects).map((p) => ({
+      ...p, trains: Array.isArray(p.trains) ? p.trains : undefined, size: PROJECT_SIZES.some((s) => s.value === p.size) ? p.size : undefined,
+      steps: projectSteps(p.id, p.steps),
+    })),
     resources: list(c.resources),
     skills: list<Topic['skills'][number]>(c.skills, (k) => Array.isArray(k.steps)),
+    tasks: list<Topic['tasks'][number]>(c.tasks, (x) => typeof x.title === 'string' && !!x.when),
   }
 }
 

@@ -37,7 +37,7 @@ export function FormSheet({ open, onOpenChange, title, description, children, on
         {description ? <DialogDescription>{description}</DialogDescription> : <DialogDescription className="sr-only">{title}</DialogDescription>}
         <form
           id={formId}
-          className="grid gap-3"
+          className="grid gap-5"
           onSubmit={(e) => {
             e.preventDefault()
             if (onSubmit() !== false) onOpenChange(false)
