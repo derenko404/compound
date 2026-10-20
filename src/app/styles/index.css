@@ -945,8 +945,10 @@ main section.sec-group { margin-bottom: var(--space-5); }
 .fold-meta { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .fold-body { border-top: 1px solid var(--border); }
 /* Rows inside a fold are its items: a faint tint of the colour, no strip, dividers inset to the text as on iOS. */
-.fold-body .row { background: color-mix(in srgb, var(--c) 5%, transparent); border-top: 0; }
+/* Rows in a fold stay plain, as in a list, so the group's tinted label reads as the header. */
+.fold-body .row { border-top: 0; }
 .fold-body .row::before { display: none; }
+.fold-body .list-label + .row { border-top: 1px solid var(--border); }
 .fold-body .row + .row::after { content: ""; position: absolute; top: 0; right: 0; left: calc(var(--space-4) + var(--control-sm)); border-top: 1px solid var(--border); }
 /* Fold done: every item inside is ticked. */
 .fold.is-done > summary { background: color-mix(in srgb, var(--c) 10%, transparent); }
