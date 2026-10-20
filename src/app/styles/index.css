@@ -833,6 +833,10 @@ main section.sec-group { margin-bottom: var(--space-5); }
 .row-note { margin-top: var(--space-1); font-size: var(--text-small); font-style: italic; overflow-wrap: anywhere; }
 .row.is-done .row-title { color: var(--muted-foreground); text-decoration: line-through; text-decoration-color: var(--c); text-decoration-thickness: 2px; }
 .row-tag { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-micro); color: var(--muted-foreground); white-space: nowrap; padding-top: var(--space-1); }
+/* A topic row's kind on Today: a muted icon, its name in the tooltip. */
+.row-kind { position: relative; display: inline-flex; color: var(--muted-foreground); border-radius: var(--radius-sm); }
+.row-kind svg { width: var(--icon-sm); height: var(--icon-sm); }
+.row-kind:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 /* Edit mode, as on iOS (Row onOpen, sort): the whole row opens its form, with › and a ≡ handle on the right. */
 .row.is-openable { cursor: pointer; align-items: center; }
 .row.is-tappable { cursor: pointer; }

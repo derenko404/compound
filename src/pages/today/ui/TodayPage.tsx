@@ -9,7 +9,7 @@ import { RoutineSheet } from './RoutineSheet'
 import { celebrate } from '@/shared/lib/celebrate'
 import { nextPosition, topicOf, topics, uid } from '@core/domain/content'
 import { dates } from '@/shared/lib/dates'
-import { SLOT_UI, dayProgress, describeWhen, focusOf, streak, todayItems, useDayTick, type DayItem } from '@/features/today'
+import { SLOT_UI, dayProgress, describeWhen, focusOf, streak, todayItems, useDayTick, type DayItem, type Slot } from '@/features/today'
 import { t } from '@/shared/i18n'
 import type { Habit, Routine, Task, Topic } from '@core/domain/types'
 import { reduce } from '@core/domain/reduce'
@@ -78,19 +78,22 @@ export function Today() {
   const fromFocus = (it: DayItem) => !!it.slot && it.ch === focus?.id
   // Rows from the other topics, one group per topic, in the order they come.
   const otherTopics = [...new Set(shown.filter((it) => it.slot && !fromFocus(it)).map((it) => it.ch))].map((ch) => topicOf(state, ch)).filter((c) => !!c)
-  const quiet = (text: string | undefined) => (text ? <span className="muted text-caption">{text}</span> : null)
+  // What a topic row is, as a small muted icon with its name as the tooltip.
+  const kindIcon = (slot: Slot) => {
+    const { label, icon: Icon } = SLOT_UI[slot]
+    return <span className="row-kind" data-tip={label} role="img" aria-label={label} tabIndex={0}><Icon aria-hidden="true" /></span>
+  }
   const row = (it: DayItem) => {
     const h = it.habit
     const ui = h && HABIT_UI[h.type]
     return (
-      // A short topic name stays on the title line on phones; a row's kind is longer and moves under the title there.
-      <Row key={it.id} ch={it.ch} done={isDone(it)} style={ui ? tone(ui.color) : undefined} tagInline={!it.slot}
+      <Row key={it.id} ch={it.ch} done={isDone(it)} style={ui ? tone(ui.color) : undefined} tagInline
         // Own tasks lead: habit rows and the topics' suggestions keep a normal-weight title, as steps in a skill do.
         title={it.slot ? <span className="font-normal"><Linkify text={it.title} /></span> : h ? <span className="font-normal">{it.title}</span> : it.title}
         // Rows from the topics stay quiet: the sub line is their own text, what they are sits on the right as muted text.
         sub={it.sub ? <Linkify text={it.sub} /> : undefined}
         // On the right: a topic row's kind. Tasks carry nothing, their colour bar says the topic.
-        tag={it.slot ? quiet(SLOT_UI[it.slot].label) : null}
+        tag={it.slot ? kindIcon(it.slot) : null}
         check={<Check on={isDone(it)} label={it.title} onToggle={(on) => (h ? toggleHabit(h, on) : it.step ? togglePlan(it.step, on) : toggleDay(it.id, on))} />}>
         {h?.type === 'water' && <WaterCount h={h} />}
       </Row>
