@@ -960,7 +960,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .list.dense { background: none; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
 .list.dense .list-label, .list.dense .list-group + .list-group > .list-label { padding: var(--space-4) var(--space-4) var(--space-1); border: 0; background: none; color: var(--muted-foreground); }
 .list.dense .list-group:first-child > .list-label { padding-top: 0; }
-.list.dense .row { align-items: center; padding-block: var(--space-2); background: var(--card); }
+.list.dense .row { align-items: center; padding-block: var(--space-3); background: var(--card); }
 .list.dense .row-title, .list.dense .row-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .list.dense .row-sub { margin-top: 0; }
 .list.dense .row-tag { padding-top: 0; }

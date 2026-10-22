@@ -31,3 +31,5 @@ dist-ssr
 
 # Wrangler local dev state
 .wrangler/
+
+.superpowers/
