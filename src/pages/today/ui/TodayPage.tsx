@@ -136,7 +136,7 @@ export function Today() {
               {shown.some((it) => !it.slot && !it.habit) ? shown.filter((it) => !it.slot && !it.habit).map(row) : empty(t.today.nothingPlanned)}
             </ListGroup>
             {shown.some((it) => it.habit) && (
-              <ListGroup label={t.today.fromHabits}>
+              <ListGroup id="today-habits" label={t.today.fromHabits}>
                 {shown.filter((it) => it.habit).map(row)}
               </ListGroup>
             )}

@@ -17,16 +17,21 @@ const shown = (selector: string) => {
 
 const steps = (): DriveStep[] => {
   const phone = matchMedia(PHONE).matches
+  const nav = phone ? '.bottom-nav' : '.tabs'
   const list: [string | null, string, string][] = [
     [null, tx.welcomeTitle, tx.welcome],
     ['.today-head', tx.dayTitle, tx.day],
     ['#today-tasks', tx.tasksTitle, tx.tasks],
+    ['#today-habits', tx.habitsTitle, tx.habits],
     ['#today-topics', tx.topicsTitle, tx.topics],
+    ['#today-topics > .list-label', tx.focusTitle, tx.focus],
     ['#today-week', tx.weekTitle, tx.week],
-    ['#today-topics .focus-mark', tx.focusTitle, tx.focus],
     ['.top .plus-btn', tx.addTitle, tx.add],
     ['.top .bar-text', tx.editTitle, tx.edit],
-    [phone ? '.bottom-nav' : '.tabs', tx.navTitle, tx.nav],
+    // The tabs one by one: where lists and habits live.
+    [`${nav} [data-tab="/topics"]`, tx.topicsTabTitle, tx.topicsTab],
+    [`${nav} [data-tab="/lists"]`, tx.libraryTitle, tx.library],
+    [`${nav} [data-tab="/wellbeing"]`, tx.wellbeingTitle, tx.wellbeing],
     [phone ? '.dock-search' : '.bar-search', tx.searchTitle, phone ? tx.search : tx.searchKeys],
   ]
   return list.flatMap(([selector, title, description]) => {

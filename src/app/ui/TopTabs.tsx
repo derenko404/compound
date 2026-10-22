@@ -14,7 +14,7 @@ export function TopTabs() {
     <nav className="tabs" aria-label={t.nav.views} style={{ '--n': TABS.length } as CSSProperties}>
       {slot >= 0 && <span className="nav-thumb" style={{ '--i': slot } as CSSProperties} aria-hidden="true" />}
       {TABS.map((tab, i) => (
-        <Link key={tab.to} to={tabTarget(tab)} className={`tab${i === slot ? ' active' : ''}`}><tab.icon aria-hidden="true" />{tab.label}</Link>
+        <Link key={tab.to} to={tabTarget(tab)} className={`tab${i === slot ? ' active' : ''}`} data-tab={tab.to}><tab.icon aria-hidden="true" />{tab.label}</Link>
       ))}
     </nav>
   )

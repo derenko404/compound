@@ -21,7 +21,7 @@ export function BottomNav() {
         <nav className="bottom-nav" aria-label={t.nav.views} style={{ '--n': TABS.length } as CSSProperties}>
           {slot >= 0 && <span className="nav-thumb" style={{ '--i': slot } as CSSProperties} aria-hidden="true" />}
           {TABS.map((tab, i) => (
-            <Link key={tab.to} to={tabTarget(tab)} className={`bnav${i === slot ? ' active' : ''}`} aria-label={tab.label}>
+            <Link key={tab.to} to={tabTarget(tab)} className={`bnav${i === slot ? ' active' : ''}`} data-tab={tab.to} aria-label={tab.label}>
               <tab.icon aria-hidden="true" />
             </Link>
           ))}
