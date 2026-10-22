@@ -83,7 +83,7 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
             </div>
           )}
           {/* The next step in words: start it, finish it, or take a finished one back up. */}
-          {!readOnly && <Button variant="outline" onClick={() => setStatus(NEXT[sv])}>{NEXT_LABEL[sv]}</Button>}
+          {!readOnly && <Button variant={sv === 'done' ? 'outline' : 'tint'} onClick={() => setStatus(NEXT[sv])}>{NEXT_LABEL[sv]}</Button>}
         </div>
       )}
     </div>
