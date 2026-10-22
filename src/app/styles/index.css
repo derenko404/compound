@@ -942,6 +942,8 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .row-note { margin-top: var(--space-1); font-size: var(--text-small); font-style: italic; overflow-wrap: anywhere; }
 .row.is-done .row-title { color: var(--muted-foreground); text-decoration: line-through; text-decoration-color: var(--c); text-decoration-thickness: 2px; }
 .row-tag { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-micro); color: var(--muted-foreground); white-space: nowrap; padding-top: var(--space-1); }
+/* No tag, no cell: on phones an empty one would add a line under the row. */
+.row-tag:empty { display: none; }
 /* A topic row's kind on Today: a muted icon, its name in the tooltip. */
 /* Edit mode, as on iOS (Row onOpen, sort): the whole row opens its form, with › and a ≡ handle on the right. */
 .row.is-openable { cursor: pointer; align-items: center; }
@@ -1072,12 +1074,9 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .fold-title { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); flex: 1; min-width: 0; }
 .fold-meta { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .fold-body { border-top: 1px solid var(--border); }
-/* Rows inside a fold are its items: a faint tint of the colour, no strip, dividers inset to the text as on iOS. */
-/* Rows in a fold stay plain, as in a list, so the group's tinted label reads as the header. */
-.fold-body .row { border-top: 0; }
-.fold-body .row::before { display: none; }
-.fold-body .list-label + .row { border-top: 1px solid var(--border); }
-.fold-body .row + .row::after { content: ""; position: absolute; top: 0; right: 0; left: calc(var(--space-4) + var(--control-sm)); border-top: 1px solid var(--border); }
+/* Rows in a fold (a skill's steps, a resource group) and a project's steps look like My day's: centred, no strip. */
+.fold-body .row, .project-steps .row { align-items: center; }
+.fold-body .row::before, .project-steps .row::before { display: none; }
 /* Fold done: every item inside is ticked. */
 .fold.is-done > summary { background: color-mix(in srgb, var(--c) 10%, transparent); }
 .fold-done { display: grid; place-items: center; width: var(--icon-lg); height: var(--icon-lg); flex: none; border-radius: 50%; background: var(--c); }
