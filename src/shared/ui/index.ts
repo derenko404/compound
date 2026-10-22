@@ -56,6 +56,7 @@ export { CountRow, type CountUnit } from './count-row'
 
 /* ---------- Inputs and buttons ---------- */
 export { SearchField } from './search-field'
+export { NativeSelect } from './native-select'
 export { SettingSelect } from './setting-select'
 export { Segmented } from './segmented'
 export { CopyButton } from './copy-button'

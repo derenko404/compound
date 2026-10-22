@@ -2,6 +2,8 @@ import { useId, type ReactNode } from 'react'
 import { Input } from '../primitives/input'
 import { Label } from '../primitives/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../primitives/select'
+import { NativeSelect } from '../native-select'
+import { useTouch } from '../lib/use-touch'
 import { Switch } from '../primitives/switch'
 import { Textarea } from '../primitives/textarea'
 
@@ -50,9 +52,13 @@ export const AreaField = ({ label, value, onChange, placeholder, hint, rows, aut
 export function SelectField<T extends string>({ label, value, onChange, options, hint }: {
   label: string; value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode }[]; hint?: string
 }) {
+  // Touch devices get the system picker when the options are plain text (the colour field keeps its swatches).
+  const native = useTouch() && options.every((o) => typeof o.label === 'string')
   return (
     <Field label={label} hint={hint}>
-      {(id) => (
+      {(id) => native ? (
+        <NativeSelect id={id} value={value} onChange={(v) => onChange(v as T)} className="w-full" groups={[{ options: options as { value: T; label: string }[] }]} />
+      ) : (
         <Select value={value} onValueChange={(v) => onChange(v as T)}>
           <SelectTrigger id={id} className="w-full"><SelectValue /></SelectTrigger>
           <SelectContent>{options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>

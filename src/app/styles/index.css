@@ -993,6 +993,11 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .focus-play { display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); flex: none; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--primary) 16%, transparent); color: var(--primary); cursor: pointer; }
 .focus-play svg { width: var(--icon-md); height: var(--icon-md); }
 .focus-play[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+/* NativeSelect: the system picker dressed as our field, the chevron drawn over it. */
+.native-select { position: relative; display: inline-flex; align-items: center; }
+.native-select select { appearance: none; -webkit-appearance: none; width: 100%; height: var(--control-field); padding: 0 calc(var(--space-3) + var(--icon-md) + var(--space-2)) 0 var(--space-3); border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent; color: var(--foreground); font: inherit; font-size: var(--text-body); }
+.native-select select:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.native-select svg { position: absolute; right: var(--space-3); width: var(--icon-md); height: var(--icon-md); color: var(--muted-foreground); pointer-events: none; }
 .link-card.has-aside { grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-3); }
 .link-card-aside { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 
@@ -1162,7 +1167,12 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .mood-empty { border: 2px dashed var(--border); border-radius: 50%; }
 
 /* Edit controls. A colour choice in a select: its dot and name. */
-.select-color { display: inline-flex; align-items: center; gap: var(--space-2); }
+/* ColorField: the palette as circles; the chosen one ringed in its colour (a clear gap, whatever the background) with a tick. */
+.swatches { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.swatch { display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); padding: 0; border: 0; border-radius: 50%; background: var(--c); color: var(--card); cursor: pointer; outline: 2px solid transparent; outline-offset: 2px; transition: outline-color var(--dur-fast); }
+.swatch svg { width: var(--icon-md); height: var(--icon-md); stroke-width: 3; }
+.swatch[aria-checked="true"] { outline-color: var(--c); }
+.swatch:focus-visible { outline-color: var(--ring); }
 
 /* =====================================================================
    Phones
