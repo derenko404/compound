@@ -3,13 +3,14 @@ import { Link, type LinkProps } from '@tanstack/react-router'
 import type { TopicId } from '@core/domain/types'
 import { cvar } from './lib/cvar'
 import { Dot } from './dot'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * A row of chips. `scroll` keeps them on one line that scrolls sideways (filters); otherwise they wrap.
  * Chips that wrap onto more lines: tags, quick values, pickers inside cards and forms.
  */
 export const Chips = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={`chips${className ? ` ${className}` : ''}`}>{children}</div>
+  <div className={clx('chips', className)}>{children}</div>
 )
 
 // A filter bar above a list: every option visible, wrapping onto more lines as needed.
@@ -28,7 +29,7 @@ export function Chip({ pressed, onClick, count, ch, icon: Icon, tone, children }
 }) {
   const style = tone ? ({ '--c': `var(${tone})` } as CSSProperties) : ch ? cvar(ch) : undefined
   return (
-    <button type="button" className={`chbtn${tone ? ' toned' : ''}`} aria-pressed={pressed} onClick={onClick} style={style}>
+    <button type="button" className={clx('chbtn', tone && 'toned')} aria-pressed={pressed} onClick={onClick} style={style}>
       {ch && !Icon && <Dot />}{Icon && <Icon className="chip-icon" aria-hidden />}{children}{count != null && <span className="count">{count}</span>}
     </button>
   )

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * The one progress ring. size lg: the one big dial on a page (the timer), md: beside a page title, sm: in a card
@@ -22,7 +23,7 @@ export function Dial({ n, total, sub, pulse, value, size, caption, children }: {
     el.classList.add('pulse')
   }, [pulse])
   let ring = (
-    <div ref={ref} className={`dial${size ? ` dial-${size}` : ''}${full ? ' done' : ''}${typeof label === 'string' && label.length > 5 ? ' is-long' : ''}`}>
+    <div ref={ref} className={clx('dial', size && `dial-${size}`, full && 'done', typeof label === 'string' && label.length > 5 && 'is-long')}>
       <svg viewBox="0 0 120 120" aria-hidden="true">
         <circle className="track" cx="60" cy="60" r="52" fill="none" strokeWidth="10" />
         <circle className="fill" cx="60" cy="60" r="52" fill="none" strokeWidth="10" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />

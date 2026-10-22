@@ -4,6 +4,7 @@ import type { TopicId } from '@core/domain/types'
 import { t } from '@/shared/i18n'
 import { cvar } from './lib/cvar'
 import { List } from './list'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * note: the user's own text under the sub line (a list item's note). tagInline: on phones the tag stays on the
@@ -43,7 +44,7 @@ export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onO
     was.current = done
   }, [done])
   return (
-    <div ref={ref} id={id} className={`row${className ? ` ${className}` : ''}${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}${onOpen ? ' is-openable' : ''}${check && !onOpen ? ' is-tappable' : ''}`}
+    <div ref={ref} id={id} className={clx('row', className, { 'is-done': done, 'no-check': !check, 'tag-inline': tagInline, 'is-openable': onOpen, 'is-tappable': check && !onOpen })}
       style={{ ...(ch ? cvar(ch) : {}), ...style }}
       {...(check && !onOpen && { onClick: (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('button, a, input')) ref.current?.querySelector<HTMLElement>(':scope > .check')?.click() } })}
       {...(onOpen && { role: 'button', tabIndex: 0, onClick: (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('button, a')) onOpen() }, onKeyDown: (e: KeyboardEvent) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen() } } })}>

@@ -3,6 +3,7 @@ import { burst } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
 import { t } from '@/shared/i18n'
 import { Stepper } from './stepper'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * A count toward a daily goal (glasses of water): one icon per unit, filled up to n. Tap one to set the count to it,
@@ -33,7 +34,7 @@ export function CountRow({ n, target, onSet, icon: Icon, unit: u }: {
   return (
     <div className="count-row" role="group" aria-label={unit.of(n, target)}>
       {Array.from({ length: shown }, (_, i) => (
-        <button key={i} type="button" className={`count-unit${i < n ? ' on' : ''}${i >= target ? ' extra' : ''}`}
+        <button key={i} type="button" className={clx('count-unit', i < n && 'on', i >= target && 'extra')}
           aria-label={unit.count(i + 1)} aria-pressed={i < n} onClick={(e) => set(i + 1 === n ? i : i + 1, e.currentTarget)}>
           <Icon aria-hidden />
         </button>

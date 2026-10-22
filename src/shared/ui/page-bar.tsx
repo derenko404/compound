@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './primitives/dialog'
 import { PlusButton } from './plus-button'
 import { t } from '@/shared/i18n'
+import { clx } from '@/shared/lib/clx'
 
 export interface BarAction { label: string; icon?: LucideIcon; onSelect: () => void; danger?: boolean }
 
@@ -93,7 +94,7 @@ function BarMore({ actions: all }: { actions: BarAction[] }) {
           <DialogDescription className="sr-only">{t.common.actionsForPage}</DialogDescription>
           <div className="action-list">
             {actions.map(({ label, icon: Icon, onSelect, danger }) => (
-              <button key={label} type="button" className={`action-item${danger ? ' is-danger' : ''}`} onClick={() => { setOpen(false); onSelect() }}>
+              <button key={label} type="button" className={clx('action-item', danger && 'is-danger')} onClick={() => { setOpen(false); onSelect() }}>
                 {Icon && <Icon aria-hidden="true" />}{label}
               </button>
             ))}

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { burst } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * Round tick button. Plays the bounce, row pop and particle burst when turned on.
@@ -22,7 +23,7 @@ export function Check({ on, label, onToggle, progress }: { on: boolean; label: s
   return (
     <button
       ref={ref}
-      className={`check${on ? ' on' : ''}${partial ? ' has-progress' : ''}`}
+      className={clx('check', on && 'on', partial && 'has-progress')}
       aria-pressed={on}
       aria-label={label}
       onClick={() => {

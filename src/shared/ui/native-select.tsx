@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react'
+import { clx } from '@/shared/lib/clx'
 
 export interface NativeOption { value: string; label: string }
 export interface NativeGroup { label?: string; options: NativeOption[] }
@@ -9,7 +10,7 @@ export function NativeSelect({ id, label, value, onChange, groups, className }: 
 }) {
   const option = (o: NativeOption) => <option key={o.value} value={o.value}>{o.label}</option>
   return (
-    <span className={`native-select${className ? ` ${className}` : ''}`}>
+    <span className={clx('native-select', className)}>
       <select id={id} aria-label={label} value={value} onChange={(e) => onChange(e.target.value)}>
         {groups.map((g) => (g.label ? <optgroup key={g.label} label={g.label}>{g.options.map(option)}</optgroup> : g.options.map(option)))}
       </select>

@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import type { TopicId } from '@core/domain/types'
 import { celebrate } from '@/shared/lib/celebrate'
 import { cvar } from './lib/cvar'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * A collapsible card: title, an optional counter or controls on the right, and its body.
@@ -18,7 +19,7 @@ export function Fold({ title, meta, icon, ch, open, done, children }: {
     was.current = done
   }, [done])
   return (
-    <details className={`fold${done ? ' is-done' : ''}`} open={open} style={ch ? cvar(ch) : undefined}>
+    <details className={clx('fold', done && 'is-done')} open={open} style={ch ? cvar(ch) : undefined}>
       <summary>
         {icon}
         <span className="fold-title">{title}</span>

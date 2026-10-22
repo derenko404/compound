@@ -7,6 +7,7 @@ import { useStore } from '@/shared/store/StoreProvider'
 import { Linkify } from '@/features/topics'
 import { RemoveButton, Dot, Entry } from '@/shared/ui'
 import { t } from '@/shared/i18n'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * One entry: a link shows its page, an idea its title and details, a note its text. Tapping the card (not a link) edits it.
@@ -31,7 +32,7 @@ export function NoteCard({ n, onOpen, onTag, showTopic = true, removable }: { n:
         {n.context && <div className="nb-context"><div className="line-clamp-3">{n.context}</div></div>}
         {n.body && (n.type === 'idea'
           ? <div className="note-text nb-idea"><Lightbulb aria-hidden="true" /><span><Linkify text={n.body} /></span></div>
-          : <div className={`note-text${n.type === 'link' ? ' nb-quote' : ''}`}><Linkify text={n.body} /></div>)}
+          : <div className={clx('note-text', n.type === 'link' && 'nb-quote')}><Linkify text={n.body} /></div>)}
         <div className="note-meta nb-meta">
           {showTopic && n.topic && <span className="inline-flex items-center gap-1"><Dot />{topicOf(state, n.topic)?.name ?? t.common.noTopic}</span>}
           {n.tags.map((tag) => onTag

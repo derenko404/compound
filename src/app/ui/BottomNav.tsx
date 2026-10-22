@@ -5,6 +5,7 @@ import { searchSheet } from '@/features/search'
 import { t } from '@/shared/i18n'
 import { TABS, tabFor, tabTarget } from './tabs'
 import { DockTimer, useTimerShown } from './DockTimer'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * Phones: iOS 26's floating tab bar, the views as icons in a glass capsule, and Search as a round button beside it;
@@ -21,7 +22,7 @@ export function BottomNav() {
         <nav className="bottom-nav" aria-label={t.nav.views} style={{ '--n': TABS.length } as CSSProperties}>
           {slot >= 0 && <span className="nav-thumb" style={{ '--i': slot } as CSSProperties} aria-hidden="true" />}
           {TABS.map((tab, i) => (
-            <Link key={tab.to} to={tabTarget(tab)} className={`bnav${i === slot ? ' active' : ''}`} data-tab={tab.to} aria-label={tab.label}>
+            <Link key={tab.to} to={tabTarget(tab)} className={clx('bnav', i === slot && 'active')} data-tab={tab.to} aria-label={tab.label}>
               <tab.icon aria-hidden="true" />
             </Link>
           ))}

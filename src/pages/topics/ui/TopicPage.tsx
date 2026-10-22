@@ -21,6 +21,7 @@ import { NoteSheet } from '@/features/notes'
 import { AboutSheet } from './AboutSheet'
 import { TopicNotes } from './TopicNotes'
 import { DELETE_TOPIC } from './delete-topic'
+import { clx } from '@/shared/lib/clx'
 
 const route = getRouteApi('/topics/$ch')
 
@@ -111,7 +112,7 @@ function TopicPage({ c }: { c: Topic }) {
 
   return (
     <>
-      <div ref={head} className={`topic-head${pop ? ' focus-pop' : ''}`} style={cvar(c.id)} onAnimationEnd={(e) => e.target === e.currentTarget && setPop(false)}>
+      <div ref={head} className={clx('topic-head', pop && 'focus-pop')} style={cvar(c.id)} onAnimationEnd={(e) => e.target === e.currentTarget && setPop(false)}>
       {/* The name opens About; in edit mode it opens the details form. */}
       <Header title={c.name}
         action={edit

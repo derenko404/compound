@@ -3,6 +3,7 @@ import { dates } from '@/shared/lib/dates'
 import { dayProgress, weekdayShort } from '@/features/today'
 import { t } from '@/shared/i18n'
 import { useStore } from '@/shared/store/StoreProvider'
+import { clx } from '@/shared/lib/clx'
 
 const weekDays = (today: Date) => {
   const monday = dates.addDays(today, -((today.getDay() + 6) % 7))
@@ -23,7 +24,7 @@ export function WeekStrip() {
         const pct = total ? done / total : 0
         const state_ = dk > k ? 'future' : pct === 1 ? 'full' : pct > 0 ? 'part' : 'empty'
         return (
-          <div key={dk} className={`wday${dk === k ? ' today' : ''}`} data-state={state_}>
+          <div key={dk} className={clx('wday', dk === k && 'today')} data-state={state_}>
             <span>{weekdayShort(d.getDay())}</span>
             <i style={{ '--pct': `${pct * 100}%` } as React.CSSProperties} aria-label={dk > k ? t.today.week.upcoming : t.today.week.doneOf(done, total)} />
             <small aria-hidden="true">{total ? `${done}/${total}` : '–'}</small>

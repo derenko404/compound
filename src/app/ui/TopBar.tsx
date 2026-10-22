@@ -7,6 +7,7 @@ import { useSyncStatus, type SyncState } from '@/shared/store/StoreProvider'
 import { clock, remaining, useTimer } from '@/features/timer'
 import { t } from '@/shared/i18n'
 import { searchSheet } from '@/features/search'
+import { clx } from '@/shared/lib/clx'
 
 function SyncIcon({ sync }: { sync: SyncState }) {
   const state = sync === 'loadError' || sync === 'saveError' ? 'error' : sync
@@ -21,7 +22,7 @@ function SyncIcon({ sync }: { sync: SyncState }) {
   }, [tip])
   // Tap shows the tooltip on phones; hover and focus show it elsewhere.
   return (
-    <button type="button" className={`sync tip-start${tip ? ' tip-open' : ''}`} data-state={state} data-tip={tipText} aria-label={tipText} onClick={() => setTip(true)}>
+    <button type="button" className={clx('sync tip-start', tip && 'tip-open')} data-state={state} data-tip={tipText} aria-label={tipText} onClick={() => setTip(true)}>
       <Icon aria-hidden="true" />
     </button>
   )

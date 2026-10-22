@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { t } from '@/shared/i18n'
 import { TABS, tabFor, tabTarget } from './tabs'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * Wider screens: every view in one row of equal tabs under the header, icon over a small label, with the same
@@ -14,7 +15,7 @@ export function TopTabs() {
     <nav className="tabs" aria-label={t.nav.views} style={{ '--n': TABS.length } as CSSProperties}>
       {slot >= 0 && <span className="nav-thumb" style={{ '--i': slot } as CSSProperties} aria-hidden="true" />}
       {TABS.map((tab, i) => (
-        <Link key={tab.to} to={tabTarget(tab)} className={`tab${i === slot ? ' active' : ''}`} data-tab={tab.to}><tab.icon aria-hidden="true" />{tab.label}</Link>
+        <Link key={tab.to} to={tabTarget(tab)} className={clx('tab', i === slot && 'active')} data-tab={tab.to}><tab.icon aria-hidden="true" />{tab.label}</Link>
       ))}
     </nav>
   )

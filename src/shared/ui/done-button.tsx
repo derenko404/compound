@@ -3,6 +3,7 @@ import { Check as CheckIcon } from 'lucide-react'
 import { burst } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
 import { t } from '@/shared/i18n'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * A full-width "done" toggle at the bottom of a card (a habit's tick for today). Coloured by --c; filled when done.
@@ -15,7 +16,7 @@ export function DoneButton({ on, label, done = t.nav.kit.doneToday, onToggle, re
 }) {
   const ref = useRef<HTMLButtonElement>(null)
   return (
-    <button ref={ref} type="button" className={`done-btn${on ? ' on' : ''}`} aria-pressed={repeat ? undefined : on}
+    <button ref={ref} type="button" className={clx('done-btn', on && 'on')} aria-pressed={repeat ? undefined : on}
       onClick={() => {
         const next = repeat || !on
         if (next && ref.current) {

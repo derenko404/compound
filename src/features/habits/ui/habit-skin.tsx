@@ -6,6 +6,7 @@ import { t } from '@/shared/i18n'
 import { amountStats, amountText, chain, cleanStats, dueOn, gymMakeUp, gymStats, smokingStats } from '../model/habits'
 import { GymWeek, HabitDone, SlipButton, WaterCount } from './habit-log'
 import { AmountControl } from './amount-controls'
+import { clx } from '@/shared/lib/clx'
 
 const W = t.wellbeing
 const WEEKDAYS_SHORT = t.nav.weekdaysShort
@@ -36,7 +37,7 @@ export function skinOf(s: State, h: Habit, today: Date): Skin {
             </Dial>
           )}
           <Fold title={W.smoking.milestones} meta={`${st.milestones.filter((m) => m.hit).length}/${st.milestones.length}`}>
-            <div>{st.milestones.map((m) => <div key={m.label} className={`mile${m.hit ? ' hit' : ''}`}><i /><div><b>{m.label}</b> <span className="text-muted-foreground">{m.text}</span></div></div>)}</div>
+            <div>{st.milestones.map((m) => <div key={m.label} className={clx('mile', m.hit && 'hit')}><i /><div><b>{m.label}</b> <span className="text-muted-foreground">{m.text}</span></div></div>)}</div>
           </Fold>
         </>,
         actions: <SlipButton h={h} />,

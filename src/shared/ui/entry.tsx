@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react'
 import type { TopicId } from '@core/domain/types'
 import { t } from '@/shared/i18n'
 import { cvar } from './lib/cvar'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * One entry in a list of notes, ideas or finds: a meta line, then the content.
@@ -12,7 +13,7 @@ import { cvar } from './lib/cvar'
 export const Entry = ({ ch, meta, onEdit, editLabel = t.common.edit, remove, children }: {
   ch?: TopicId | null; meta?: ReactNode; onEdit?: () => void; editLabel?: string; remove?: ReactNode; children: ReactNode
 }) => (
-  <div className={`note${onEdit ? ' editable' : ''}${remove ? ' has-remove' : ''}`} style={ch ? cvar(ch) : { '--c': 'var(--primary)' } as CSSProperties}
+  <div className={clx('note', onEdit && 'editable', remove && 'has-remove')} style={ch ? cvar(ch) : { '--c': 'var(--primary)' } as CSSProperties}
     onClick={onEdit ? (e) => { if (!(e.target as HTMLElement).closest('a, button')) onEdit() } : undefined}>
     {remove}
     <div className="min-w-0">

@@ -3,6 +3,7 @@ import { Link, type LinkProps } from '@tanstack/react-router'
 import type { TopicId } from '@core/domain/types'
 import { cvar } from './lib/cvar'
 import { Dot } from './dot'
+import { clx } from '@/shared/lib/clx'
 
 /**
  * A static pill for facts: "Day 1 of 548", "Q1", a topic. With `to` it links somewhere.
@@ -14,7 +15,7 @@ export function Badge({ ch, tint, color, children, ...link }: { ch?: TopicId | n
   const cls = `chip${color || tint ? ' tint' : ''}`
   const style = color ? ({ '--c': `var(${color})` } as CSSProperties) : ch ? cvar(ch) : undefined
   return link.to
-    ? <Link {...(link as LinkProps)} className={`${cls} text-foreground no-underline`} style={style}>{inner}</Link>
+    ? <Link {...(link as LinkProps)} className={clx(cls, 'text-foreground no-underline')} style={style}>{inner}</Link>
     : <span className={cls} style={style}>{inner}</span>
 }
 
