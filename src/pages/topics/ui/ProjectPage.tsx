@@ -45,12 +45,13 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
   const { status, set } = useProjectStatus(p)
   const steps = p.steps ?? []
   const done = steps.filter((x) => tick.on(x.id)).length
-  // Under the name: its code as a chip, then what it trains and its size.
-  const facts = [p.trains?.join(', '), p.size && t.topics.sizes[p.size].label].filter(Boolean).join(' · ')
+  // Above the name: its code (in the topic's colour), what it trains and its size.
+  const facts = [p.trains?.join(', '), p.size ? t.topics.sizes[p.size].label : null].filter((x): x is string => !!x)
   return (
     <div style={cvar(ch)}>
-      <Header title={p.name} lead={p.goal ? <Linkify text={p.goal} /> : undefined}
-        sub={(p.code || facts) && <span className="title-row">{p.code && <span className="project-code">{p.code}</span>}{facts}</span>} />
+      <Header title={p.name} kicker={[p.code && <b key="code">{p.code}</b>, ...facts].filter(Boolean).flatMap((x, i) => (i ? [' · ', x] : [x]))} />
+      {/* The goal is what the page is about: normal text, not a muted lead. */}
+      {p.goal && <p className="page-intro"><Linkify text={p.goal} /></p>}
       <div className="page-control">
         <Segmented label={t.topics.project.statusLabel} value={status} onChange={set}
           options={PROJECT_STATUSES.map((v) => ({ value: v, label: PROJECT_STATUS_LABEL[v], color: PROJECT_STATUS_TONE[v] }))} />
