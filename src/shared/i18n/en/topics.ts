@@ -28,7 +28,7 @@ export const topics = {
     yours: 'Your topics',
     other: 'Other',
     newTopic: 'New topic',
-    empty: 'No topics yet. Tap + to add one.',
+    empty: 'No topics yet. Tap Add to add one.',
     deleteTopic: "Its skills, tasks, resources and projects go with it. Notes filed under it stay in your notebook. This can't be undone.",
   },
 
@@ -54,15 +54,15 @@ export const topics = {
     deleteTopic: 'Delete topic',
     deleteProject: (code: string, name: string) => `Delete ${code} ${name}?`,
     deleteSkill: "Its steps and their ticks go with it. This can't be undone.",
-    notesEmpty: 'Nothing here yet. Add notes, ideas and links with +, or send them to your Telegram bot.',
+    notesEmpty: 'Nothing here yet. Tap Add for notes, ideas and links, or send them to your Telegram bot.',
   },
 
   tabs: { skills: 'Skills', tasks: 'Tasks', resources: 'Resources', projects: 'Projects', notebook: 'Notebook' },
   add: { skill: 'New skill', task: 'New task', resource: 'New resource', project: 'New project', note: 'New note' },
   empty: {
     projects: 'No projects yet.',
-    skills: 'No skills yet. Tap + to add one.',
-    tasks: 'No tasks yet. Tap + to add one: it shows on My day when due.',
+    skills: 'No skills yet. Tap Add to add one.',
+    tasks: 'No tasks yet. Tap Add to add one: it shows on My day when due.',
     resources: 'No resources yet.',
     steps: 'No steps yet.',
   },

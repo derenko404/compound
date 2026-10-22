@@ -6,7 +6,7 @@ export const notebook = {
   searchPlaceholder: 'Search by text, link or #tag',
   filter: 'Filter',
   all: 'All',
-  empty: 'Nothing here yet. Tap + to add a note, an idea or a link.',
+  empty: 'Nothing here yet. Tap Add for a note, an idea or a link.',
   today: 'Today',
   yesterday: 'Yesterday',
   sheet: {

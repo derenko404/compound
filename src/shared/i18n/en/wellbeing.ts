@@ -7,7 +7,7 @@ export const wellbeing = {
   quoteOfDay: 'Quote of the day',
   habits: 'Habits',
   add: 'Add a tracker',
-  empty: 'No habits yet. Tap + to add a tracker: gym, water, sleep, meditation, reading, quitting smoking, or a habit of your own.',
+  empty: 'No habits yet. Tap Add for a tracker: gym, water, sleep, meditation, reading, quitting smoking, or a habit of your own.',
   deleteText: "Its history goes with it. This can't be undone.",
   mood: {
     // Mood 1 to 5.

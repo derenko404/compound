@@ -1,10 +1,10 @@
 // Lists: the index, one list's page and its sheets.
 export const lists = {
   title: 'Lists',
-  empty: 'No lists yet. Start one with +.',
+  empty: 'No lists yet. Tap Add to start one.',
   newList: 'New list',
   deleteList: 'Delete list',
-  deleteListText: "Its items, ticks and notes go with it. This can't be undone.",
+  deleteListText: "Its items and ticks go with it. This can't be undone.",
   // The list's own sheet: name, title and the detail label.
   sheet: {
     createList: 'Create list',
@@ -31,7 +31,7 @@ export const lists = {
     search: (name: string) => `Search ${name.toLowerCase()}`,
     show: 'Show',
     filters: { all: 'All', todo: 'Still to do', done: 'Done' },
-    emptyList: 'This list is empty. Tap + to add items.',
+    emptyList: 'This list is empty. Tap Add to add items.',
     emptyFilter: 'Nothing here with this filter.',
   },
 }

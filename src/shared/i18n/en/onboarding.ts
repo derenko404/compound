@@ -20,7 +20,7 @@ export const onboarding = {
     focusTitle: 'Your focus',
     focus: 'The topic you work on most comes first. Change it on any topic’s page.',
     addTitle: 'Add',
-    add: 'The + adds to the page you’re on: a task here, a step or project on a topic, a note in the Notebook.',
+    add: 'Add puts something on the page you’re on: a task here, a step or project on a topic, a note in the Notebook.',
     editTitle: 'Edit',
     edit: 'Reorder, change or delete. Tap Done when you finish.',
     topicsTabTitle: 'Topics',

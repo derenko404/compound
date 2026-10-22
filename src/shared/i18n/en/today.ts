@@ -7,8 +7,8 @@ export const today = {
   routines: 'Routines',
   // Edit mode: the topics' own tasks, under the routines.
   topicTasks: 'Topic tasks',
-  noRoutines: 'No routines yet. Add one with +.',
-  nothingPlanned: 'Nothing planned today. Add a task with +.',
+  noRoutines: 'No routines yet. Tap Add to add one.',
+  nothingPlanned: 'Nothing planned today. Tap Add to plan a task.',
   fromHabits: 'Habits',
   // A topic's group on My day with its mark first: "Focus · English".
   markedGroup: (mark: string, name: string) => `${mark} · ${name}`,
