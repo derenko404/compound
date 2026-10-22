@@ -81,16 +81,18 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
           <List><p className="list-text"><Linkify text={p.done} /></p></List>
         </Section>
       )}
-      {/* By hand only what the steps can't say: starting, and for a project without steps, finishing and back. */}
-      {(!steps.length || status === 'todo') && (
-        <Button variant="tint" style={{ '--tint': `var(${PROJECT_STATUS_TONE[PROJECT_NEXT[status]]})` } as CSSProperties} onClick={() => set(PROJECT_NEXT[status])}>
-          {PROJECT_NEXT_LABEL[status]}
-        </Button>
-      )}
-      {/* Started by hand but nothing ticked yet: a quiet way back. Once a step is ticked, the ticks decide. */}
-      {steps.length > 0 && done === 0 && status === 'doing' && (
-        <Button variant="outline" onClick={() => set('todo')}>{t.topics.project.unstart}</Button>
-      )}
+      <div className="page-actions">
+        {/* By hand only what the steps can't say: starting, and for a project without steps, finishing and back. */}
+        {(!steps.length || status === 'todo') && (
+          <Button variant="tint" style={{ '--tint': `var(${PROJECT_STATUS_TONE[PROJECT_NEXT[status]]})` } as CSSProperties} onClick={() => set(PROJECT_NEXT[status])}>
+            {PROJECT_NEXT_LABEL[status]}
+          </Button>
+        )}
+        {/* Started by hand but nothing ticked yet: a quiet way back. Once a step is ticked, the ticks decide. */}
+        {steps.length > 0 && done === 0 && status === 'doing' && (
+          <Button variant="outline" onClick={() => set('todo')}>{t.topics.project.unstart}</Button>
+        )}
+      </div>
       {editing && <ProjectSheet open onOpenChange={setEditing} topic={topic} project={p} />}
       <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={t.topics.page.deleteProject(p.code, p.name)} description={t.common.cantUndo}
         onConfirm={onDelete} />
