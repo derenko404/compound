@@ -821,7 +821,7 @@ a.qbtn { color: inherit; text-decoration: none; }
 .day { display: grid; grid-template-columns: 1fr auto; gap: var(--space-5); align-items: center; padding-block: var(--space-6) var(--space-4); }
 .day-date { font-weight: var(--weight-black); font-size: var(--text-page); line-height: 1.02; text-wrap: pretty; }
 /* Header kicker: the small caps line above a title; a <b> in it takes the page's colour (--c). */
-.day-kicker { margin-bottom: var(--space-2); font-size: var(--text-caption); font-weight: var(--weight-bold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted-foreground); }
+.day-kicker { margin-bottom: var(--space-3); font-size: var(--text-caption); font-weight: var(--weight-bold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted-foreground); }
 .day-kicker b { color: var(--c); }
 /* A page's opening text right under its header, in normal text (a project's goal). */
 .page-intro { margin: 0 0 var(--space-5); max-width: 62ch; }
