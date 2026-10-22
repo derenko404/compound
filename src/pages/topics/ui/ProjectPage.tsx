@@ -45,11 +45,11 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
   const { status, set } = useProjectStatus(p)
   const steps = p.steps ?? []
   const done = steps.filter((x) => tick.on(x.id)).length
-  // Above the name: its code (in the topic's colour), what it trains and its size.
+  // Above the name: its code as a badge, then what it trains and its size.
   const facts = [p.trains?.join(', '), p.size ? t.topics.sizes[p.size].label : null].filter((x): x is string => !!x)
   return (
     <div style={cvar(ch)}>
-      <Header title={p.name} kicker={[p.code && <b key="code">{p.code}</b>, ...facts].filter(Boolean).flatMap((x, i) => (i ? [' · ', x] : [x]))} />
+      <Header title={p.name} kicker={(p.code || facts.length > 0) && <span className="title-row">{p.code && <span className="project-code">{p.code}</span>}{facts.join(' · ')}</span>} />
       {/* The goal is what the page is about: normal text, not a muted lead. */}
       {p.goal && <p className="page-intro"><Linkify text={p.goal} /></p>}
       <div className="page-control">
