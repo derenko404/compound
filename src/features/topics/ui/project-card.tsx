@@ -5,7 +5,7 @@ import type { TopicId, Project, ProjectStatus } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { burst, celebrate } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
-import { Check, Row, cvar } from '@/shared/ui'
+import { Check, Kind, Row, cvar } from '@/shared/ui'
 import { Button } from '@/shared/ui/primitives/button'
 import { t } from '@/shared/i18n'
 import { useTick } from '../model/use-tick'
@@ -74,12 +74,13 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
               ))}
             </div>
           )}
-          {/* The rest is a quiet note under the steps: the goal, when it's done, what it trains and its size. */}
+          {/* The rest under the steps, one labelled line each: the goal, when it's done, what it trains, its size. */}
           {(p.goal || p.done || p.trains?.length || p.size) && (
             <div className="project-notes">
-              {p.goal && <p><Linkify text={p.goal} /></p>}
-              {p.done && <p><b>{t.topics.project.doneWhen}</b> <Linkify text={p.done} /></p>}
-              {(p.trains?.length || p.size) && <p>{[p.trains?.join(', '), p.size && t.topics.sizes[p.size].label].filter(Boolean).join(' · ')}</p>}
+              {p.goal && <p><Kind label={t.topics.form.goal}><Linkify text={p.goal} /></Kind></p>}
+              {p.done && <p><Kind label={t.topics.project.doneWhen}><Linkify text={p.done} /></Kind></p>}
+              {p.trains?.length ? <p><Kind label={t.topics.project.trains}>{p.trains.join(', ')}</Kind></p> : null}
+              {p.size && <p><Kind label={t.topics.project.size}>{`${t.topics.sizes[p.size].label}, ${t.topics.sizes[p.size].means}`}</Kind></p>}
             </div>
           )}
           {/* The next step in words: start it, finish it, or take a finished one back up. */}

@@ -1097,9 +1097,8 @@ main section.sec-group { margin-bottom: var(--space-6); }
 /* A project's steps: full width, a line above and below, so they read as their own block. */
 .project-steps { margin: 0 calc(-1 * var(--space-4)); border-bottom: 1px solid var(--border); }
 .project-steps .row:first-child { border-top: 1px solid var(--border); }
-/* A project's goal and details: a quiet caption under its steps, like a skill's intro. */
-.project-notes { display: grid; gap: var(--space-1); color: var(--muted-foreground); font-size: var(--text-caption); }
-.project-notes b { color: var(--foreground); font-weight: var(--weight-bold); }
+/* A project's goal and details under its steps: one labelled line each (Kind), in small text. */
+.project-notes { display: grid; gap: var(--space-2); font-size: var(--text-small); }
 .row.flash { animation: flash 1.6s ease; }
 .project.flash { animation: flash 1.6s ease; }
 @keyframes flash { 0%, 40% { background: color-mix(in srgb, var(--c) 16%, transparent); } 100% { background: transparent; } }
