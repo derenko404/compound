@@ -87,6 +87,10 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
           {PROJECT_NEXT_LABEL[status]}
         </Button>
       )}
+      {/* Started by hand but nothing ticked yet: a quiet way back. Once a step is ticked, the ticks decide. */}
+      {steps.length > 0 && done === 0 && status === 'doing' && (
+        <Button variant="outline" onClick={() => set('todo')}>{t.topics.project.unstart}</Button>
+      )}
       {editing && <ProjectSheet open onOpenChange={setEditing} topic={topic} project={p} />}
       <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={t.topics.page.deleteProject(p.code, p.name)} description={t.common.cantUndo}
         onConfirm={onDelete} />
