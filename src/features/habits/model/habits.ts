@@ -103,12 +103,11 @@ export function gymMakeUp(s: State, h: Habit, today: Date) {
 /* ---------- Today ---------- */
 
 /**
- * The row's text is the habit's name. sub is today's value ("3/10 pages"), then a note when there is one (a day to
- * catch up, a slip). progress (0..1) fills the row's check as a ring.
+ * A habit's My day row: the name, today's value for its pill on the right ("0/10 pages", this week's "1/3", "12 days";
+ * the pill opens the log sheet), and sub only for a note (a day to catch up, a slip, when it starts). progress (0..1)
+ * fills the row's check as a ring.
  */
-export interface HabitRow { habit: Habit; title: string; sub: string; done: boolean; progress: number }
-
-const cleanText = (n: number) => W.amountValue(String(n), W.clean.days(n))
+export interface HabitRow { habit: Habit; title: string; value: string; sub: string; done: boolean; progress: number }
 
 // One row per habit due today. Its tick writes the habit's log, not the day's done list.
 export function habitRows(s: State, today: Date): HabitRow[] {
@@ -120,29 +119,28 @@ export function habitRows(s: State, today: Date): HabitRow[] {
   }).map((h) => habitRow(s, h, today))
 }
 
-// A habit's row for today, due or not (Wellbeing lists them all). One not started yet says when it starts.
+// A habit's row for today. One not started yet says when it starts and has no value.
 export function habitRow(s: State, h: Habit, today: Date): HabitRow {
   const v = valueOn(s, h, dates.keyOf(today))
   const done = v === DONE
-  const row = { habit: h, title: h.name, done, progress: done ? 1 : 0 }
-  if (!started(h, today)) return { ...row, sub: waitingText(h, today) }
-  const sub = (value: string, note?: string | null) => (note ? W.rowValue.withNote(value, note) : value)
-  const slip = v === SLIP ? W.slip.logged : null
+  const row = { habit: h, title: h.name, done, progress: done ? 1 : 0, sub: '' }
+  if (!started(h, today)) return { ...row, value: '', sub: waitingText(h, today) }
+  const slip = v === SLIP ? W.slip.logged : ''
   switch (h.type) {
     case 'gym': {
       const { week, perWeek } = gymStats(s, h, today)
       const makeUp = !dueOn(h, today) ? gymMakeUp(s, h, today) : null
-      return { ...row, sub: sub(W.rowValue.week(week, perWeek), makeUp && W.gym.rowCatchUp(makeUp)) }
+      return { ...row, value: W.rowValue.of(week, perWeek), sub: makeUp ? W.gym.rowCatchUp(makeUp) : '' }
     }
     case 'water': case 'sleep': case 'meditation': case 'reading': {
       const { today: n, target } = amountStats(s, { ...h, type: h.type }, today)
-      return { ...row, sub: W.rowValue.amount(amountText(n), amountText(target), W.amounts[h.type].unit), done: n >= target, progress: Math.min(1, n / target) }
+      return { ...row, value: W.rowValue.amount(amountText(n), amountText(target), W.amounts[h.type].unit), done: n >= target, progress: Math.min(1, n / target) }
     }
-    case 'smoking': return { ...row, sub: sub(cleanText(smokingStats(s, h, today).clean), slip) }
-    case 'break': return { ...row, sub: sub(cleanText(cleanStats(s, h, today).clean), slip) }
+    case 'smoking': return { ...row, value: W.rowValue.days(smokingStats(s, h, today).clean), sub: slip }
+    case 'break': return { ...row, value: W.rowValue.days(cleanStats(s, h, today).clean), sub: slip }
     case 'build': {
       const c = chain(s, h, today)
-      return { ...row, sub: c.complete ? W.build.built : W.rowValue.chain(Math.min(c.day, c.target), c.target) }
+      return { ...row, value: W.rowValue.of(Math.min(c.day, c.target), c.target), sub: c.complete ? W.build.built : '' }
     }
   }
 }

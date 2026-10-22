@@ -108,9 +108,8 @@ export const wellbeing: typeof en['wellbeing'] = {
 
   rowValue: {
     amount: (n, target, unit) => `${n}/${target} ${unit}`,
-    week: (n, of) => `${n}/${of} цього тижня`,
-    chain: (n, of) => `День ${n} з ${of}`,
-    withNote: (value, note) => `${value} · ${note}`,
+    of: (n, of) => `${n}/${of}`,
+    days: (n) => `${n} дн.`,
   },
   amountValue: (n, unit) => `${n} ${unit}`,
   amountAverage: (n, unit) => `У середньому ${n} ${unit} цього тижня`,

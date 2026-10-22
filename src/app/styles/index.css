@@ -1194,11 +1194,10 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .amount-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .amount-row .chips { margin: 0; }
 /* A row's own round button on its right (a habit's ⋯, a list item's review), the same size on every row. on: tinted (--c). */
-/* A row's › that is its own button (a habit's log sheet): a full tap target, its chevron lined up with the rows' own ›. */
-.row-btn { flex: none; width: var(--control-md); height: var(--control-md); margin-right: calc((var(--icon-md) - var(--control-md)) / 2); border-radius: 50%; }
-.row-btn svg { width: var(--icon-md); height: var(--icon-md); }
-.row-btn.on { color: var(--c); border-color: color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 10%, transparent); }
-.row-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+/* A habit's value as a pill on its My day row: compact to look at, a 44px tap target through ::after. */
+.value-pill { position: relative; flex: none; min-height: var(--control-sm); padding: 0 var(--space-3); border: 0; border-radius: 999px; background: var(--muted); color: var(--foreground); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer; }
+.value-pill::after { content: ""; position: absolute; inset: calc((var(--control-sm) - var(--control-md)) / 2) 0; }
+.value-pill:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 /* HabitLogSheet: the value under the title, as big as on the habit's card. */
 .log-sheet-value { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-stat); line-height: var(--leading-tight); color: var(--c); font-variant-numeric: tabular-nums; }
 .log-sheet-value small { font-family: var(--font-body); font-size: var(--text-small); font-weight: normal; color: var(--muted-foreground); }
@@ -1323,7 +1322,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
   .chbtn[aria-pressed="true"]:hover { opacity: 0.9; }
   a.chip:hover { border-color: color-mix(in srgb, var(--c, var(--foreground)) 50%, var(--border)); }
   .btn-tint:hover { background: color-mix(in srgb, var(--tint, var(--primary)) 25%, transparent); }
-  .row-btn:hover { background: color-mix(in srgb, var(--c) 10%, transparent); color: var(--c); }
+  .value-pill:hover { background: color-mix(in srgb, var(--c) 14%, var(--muted)); }
   .check:not(.on):hover { background: color-mix(in srgb, var(--c) 14%, transparent); }
   .dock-search:hover { color: var(--primary); }
   .bnav:hover, .tab:not([data-status="active"]):hover { color: var(--foreground); }

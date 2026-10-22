@@ -96,7 +96,7 @@ export const wellbeing = {
     meditation: { unit: 'min', less: '5 minutes less', more: '5 minutes more' },
     reading: { unit: 'pages', less: '5 pages less', more: '5 pages more' },
   },
-  // The ⋯ on a habit's My day row, which opens its log sheet.
+  // The value pill on a habit's My day row, which opens its log sheet.
   logAmount: (name: string) => `Log ${name}`,
   // A habit's line on its Wellbeing card: where it stands, or what to do next.
   glance: {
@@ -112,12 +112,11 @@ export const wellbeing = {
     chainKeep: (run: number) => `${plural(run, { one: '# day', other: '# days' })} in a row. Mark today to keep it going`,
   },
 
-  // A habit's value on its My day row, under the name, with a note after it.
+  // A habit's value in the pill on its My day row.
   rowValue: {
     amount: (n: string, target: string, unit: string) => `${n}/${target} ${unit}`,
-    week: (n: number, of: number) => `${n}/${of} this week`,
-    chain: (n: number, of: number) => `Day ${n} of ${of}`,
-    withNote: (value: string, note: string) => `${value} · ${note}`,
+    of: (n: number, of: number) => `${n}/${of}`,
+    days: (n: number) => plural(n, { one: '# day', other: '# days' }),
   },
   amountValue: (n: string, unit: string) => `${n} ${unit}`,
   amountAverage: (n: string, unit: string) => `${n} ${unit} on average this week`,

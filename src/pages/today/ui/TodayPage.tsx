@@ -2,7 +2,7 @@ import {
   usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, Header, IconBadge, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
 import { Linkify, TaskSheet } from '@/features/topics'
-import { HABIT_UI, HabitDetails, HabitLogSheet, tickValue } from '@/features/habits'
+import { HABIT_UI, HabitLogSheet, HabitValue, tickValue } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
 import { FocusCard } from './FocusCard'
 import { TodayWeek } from './focus'
@@ -92,7 +92,7 @@ export function Today() {
         title={it.slot ? <span className="font-normal"><Linkify text={it.title} /></span> : h ? <span className="title-row font-normal"><IconBadge icon={HABIT_UI[h.type].icon} label={HABIT_UI[h.type].label} color={HABIT_UI[h.type].color} />{it.title}</span> : it.title}
         // Rows from the topics stay quiet: the sub line is their own text, what they are sits on the right as muted text.
         sub={it.sub ? <Linkify text={it.sub} /> : undefined}
-        tag={h ? <HabitDetails label={t.wellbeing.logAmount(h.name)} onOpen={() => logSheet.open(h)} /> : undefined}
+        tag={h && it.value ? <HabitValue value={it.value} label={t.wellbeing.logAmount(h.name)} onOpen={() => logSheet.open(h)} /> : undefined}
         check={<Check on={isDone(it)} label={it.title} progress={it.progress} onToggle={(on) => (h ? toggleHabit(h, on) : it.step ? togglePlan(it.step, on) : toggleDay(it.id, on))} />} />
     )
   }
