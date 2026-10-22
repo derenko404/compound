@@ -1,6 +1,6 @@
 // Wellbeing habits: the maths every skin shares, and each type's Today row. No UI here.
 import type { Habit, HabitData, HabitType, State } from '@core/domain/types'
-import { AMOUNTS, DONE, SLIP, amountStats, dueOn, gymMissedDay, gymStats, habitsOf, logOf, started, valueOn } from '@core/domain/habits'
+import { AMOUNTS, DONE, SLIP, amountStats, dueOn, gymMissedDay, gymStats, habitsOf, isAmount, logOf, started, valueOn } from '@core/domain/habits'
 import { dates } from '@/shared/lib/dates'
 import { currentLocale, t } from '@/shared/i18n'
 
@@ -113,39 +113,48 @@ const cleanText = (n: number) => W.amountValue(String(n), W.clean.days(n))
 // One row per habit due today. Its tick writes the habit's log, not the day's done list.
 export function habitRows(s: State, today: Date): HabitRow[] {
   const k = dates.keyOf(today)
-  const rows: HabitRow[] = []
-  for (const h of habitsOf(s)) {
-    const v = valueOn(s, h, k)
-    const done = v === DONE
+  return habitsOf(s).filter((h) => {
     // Gym also shows on a free day to make up a missed one, and stays once ticked.
-    const makeUp = h.type === 'gym' && !dueOn(h, today) && started(h, today) ? gymMakeUp(s, h, today) : null
-    if (!dueOn(h, today) && !makeUp && !(h.type === 'gym' && done)) continue
-    const row = { habit: h, title: h.name, done, progress: done ? 1 : 0 }
-    const sub = (value: string, note?: string | null) => (note ? W.rowValue.withNote(value, note) : value)
-    const slip = v === SLIP ? W.slip.logged : null
-    switch (h.type) {
-      case 'gym': {
-        const { week, perWeek } = gymStats(s, h, today)
-        rows.push({ ...row, sub: sub(W.rowValue.week(week, perWeek), makeUp && W.gym.rowCatchUp(makeUp)) })
-        break
-      }
-      case 'water': case 'sleep': case 'meditation': case 'reading': {
-        const { today: n, target } = amountStats(s, { ...h, type: h.type }, today)
-        rows.push({ ...row, sub: W.rowValue.amount(amountText(n), amountText(target), W.amounts[h.type].unit), done: n >= target, progress: Math.min(1, n / target) })
-        break
-      }
-      case 'smoking':
-        rows.push({ ...row, sub: sub(cleanText(smokingStats(s, h, today).clean), slip) })
-        break
-      case 'break':
-        rows.push({ ...row, sub: sub(cleanText(cleanStats(s, h, today).clean), slip) })
-        break
-      case 'build': {
-        const c = chain(s, h, today)
-        rows.push({ ...row, sub: c.complete ? W.build.built : W.rowValue.chain(Math.min(c.day, c.target), c.target) })
-        break
-      }
+    const makeUp = h.type === 'gym' && !dueOn(h, today) && started(h, today) && gymMakeUp(s, h, today)
+    return dueOn(h, today) || makeUp || (h.type === 'gym' && valueOn(s, h, k) === DONE)
+  }).map((h) => habitRow(s, h, today))
+}
+
+// A habit's row for today, due or not (Wellbeing lists them all). One not started yet says when it starts.
+export function habitRow(s: State, h: Habit, today: Date): HabitRow {
+  const v = valueOn(s, h, dates.keyOf(today))
+  const done = v === DONE
+  const row = { habit: h, title: h.name, done, progress: done ? 1 : 0 }
+  if (!started(h, today)) return { ...row, sub: waitingText(h, today) }
+  const sub = (value: string, note?: string | null) => (note ? W.rowValue.withNote(value, note) : value)
+  const slip = v === SLIP ? W.slip.logged : null
+  switch (h.type) {
+    case 'gym': {
+      const { week, perWeek } = gymStats(s, h, today)
+      const makeUp = !dueOn(h, today) ? gymMakeUp(s, h, today) : null
+      return { ...row, sub: sub(W.rowValue.week(week, perWeek), makeUp && W.gym.rowCatchUp(makeUp)) }
+    }
+    case 'water': case 'sleep': case 'meditation': case 'reading': {
+      const { today: n, target } = amountStats(s, { ...h, type: h.type }, today)
+      return { ...row, sub: W.rowValue.amount(amountText(n), amountText(target), W.amounts[h.type].unit), done: n >= target, progress: Math.min(1, n / target) }
+    }
+    case 'smoking': return { ...row, sub: sub(cleanText(smokingStats(s, h, today).clean), slip) }
+    case 'break': return { ...row, sub: sub(cleanText(cleanStats(s, h, today).clean), slip) }
+    case 'build': {
+      const c = chain(s, h, today)
+      return { ...row, sub: c.complete ? W.build.built : W.rowValue.chain(Math.min(c.day, c.target), c.target) }
     }
   }
-  return rows
 }
+
+// What a row's tick writes: an amount fills its target, the rest log the day as done. Unticking clears it.
+export const tickValue = (s: State, h: Habit, today: Date, on: boolean) =>
+  on ? (isAmount(h) ? amountStats(s, h, today).target : DONE) : null
+
+// The label of a habit's start date, as its form names it ("Quit day", "Day 1").
+export const START_LABEL: Record<HabitType, string> = W.start
+
+// When a habit not started yet begins, or that it has no start date.
+export const waitingText = (h: Habit, today: Date) => h.start_date
+  ? W.waiting(START_LABEL[h.type], dates.fmtShort(dates.parseKey(h.start_date)), dates.dayDiff(today, dates.parseKey(h.start_date)))
+  : W.notStarted

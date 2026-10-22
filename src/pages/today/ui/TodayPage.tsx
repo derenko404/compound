@@ -2,7 +2,7 @@ import {
   usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, Header, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
 import { Linkify, TaskSheet } from '@/features/topics'
-import { DONE, HABIT_UI, HabitDetails, HabitLogSheet, amountStats, isAmount } from '@/features/habits'
+import { HABIT_UI, HabitDetails, HabitLogSheet, tickValue } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
 import { FocusCard } from './FocusCard'
 import { WeekStrip } from './focus'
@@ -47,7 +47,7 @@ export function Today() {
 
   // A habit row's tick goes to the habit's log. Water's tick fills the day's target.
   const toggleHabit = (h: Habit, on: boolean) => {
-    const value = on ? (isAmount(h) ? amountStats(state, h, today).target : DONE) : null
+    const value = tickValue(state, h, today, on)
     dispatch({ type: 'habitLog', habit: h.id, day: k, value })
     if (on) cheer(reduce(state, { type: 'habitLog', habit: h.id, day: k, value }))
   }

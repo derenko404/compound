@@ -1,6 +1,6 @@
 /**
  * The look of each habit type (its skin): icon, name, one-line pitch and colour token.
- * Shared by Today's habit rows and the Wellbeing widgets.
+ * Shared by the habit rows on My day and Wellbeing, and the log sheet.
  */
 import { Ban, BookOpen, CigaretteOff, Dumbbell, Flower2, GlassWater, Moon, Sprout, type LucideIcon } from 'lucide-react'
 import type { HabitType } from '@core/domain/types'

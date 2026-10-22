@@ -335,8 +335,13 @@
    ===================================================================== */
 
 /* Surfaces: a list of rows, a padded panel, a fold. All share card colour, border, radius, shadow. */
-.list, .panel, .fold { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
-.list, .fold { overflow: hidden; }
+.panel, .fold { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.fold { overflow: hidden; }
+/* List: flat, no card around it. Each item sits on its own background, with a hairline between items. */
+.list > :not(.list-group), .list-group > :not(.list-label) { background: var(--card); }
+/* Rounded as one block per run of items: the first item's top corners, the last one's bottom (all four when alone). */
+.list > :not(.list-group):first-child, .list-label + * { border-top: 0; border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); }
+.list > :not(.list-group):last-child, .list-group > :not(.list-label):last-child { border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg); }
 .panel { padding: var(--space-4); }
 
 /* A topic-coloured strip on the left edge of rows, projects and cards. */
@@ -620,10 +625,11 @@ a.qbtn { color: inherit; text-decoration: none; }
 .title-btn { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; }
 .title-chev { width: var(--icon-lg); height: var(--icon-lg); color: var(--muted-foreground); flex: none; }
 @media (hover: hover) { .title-btn:hover .title-chev { color: var(--foreground); } }
-.list-label { padding: var(--space-2) var(--space-4); font-size: var(--text-caption); font-weight: var(--weight-bold); color: var(--muted-foreground); border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--c, var(--primary)) 6%, transparent); }
+/* A group's title inside a List: plain muted text over the page, no band or lines. */
+.list-label { padding: var(--space-4) var(--space-4) var(--space-1); font-size: var(--text-caption); font-weight: var(--weight-bold); color: var(--muted-foreground); }
+.list-group:first-child > .list-label { padding-top: 0; }
 /* Groups inside one list (ListGroup): the rows' own top borders divide them, the label of the next group draws the line between groups. */
-.list-group .list-label { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); border-bottom: 0; }
-.list-group + .list-group > .list-label { border-top: 1px solid var(--border); }
+.list-group .list-label { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .list-group .list-label small { font-size: var(--text-caption); font-weight: normal; }
 .list-group .focus-mark { min-height: 0; padding: var(--space-half) var(--space-2); font-size: var(--text-micro); }
 .list-group .focus-mark.on { background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c); border-color: transparent; }
@@ -956,11 +962,8 @@ main section.sec-group { margin-bottom: var(--space-6); }
 :root[data-reduce-motion] .is-sorting > .row { transition: none; }
 .row.pop { animation: rowpop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
 @keyframes rowpop { 0% { transform: scale(1); } 40% { transform: scale(1.015); background: color-mix(in srgb, var(--c) 10%, var(--card)); } 100% { transform: scale(1); } }
-/* List dense (My day): no card around it, each row on its own background, plain text group titles; lighter rows, the title and the sub line one line each, cut with "…". */
-.list.dense { background: none; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
-.list.dense .list-label, .list.dense .list-group + .list-group > .list-label { padding: var(--space-4) var(--space-4) var(--space-1); border: 0; background: none; color: var(--muted-foreground); }
-.list.dense .list-group:first-child > .list-label { padding-top: 0; }
-.list.dense .row { align-items: center; padding-block: var(--space-3); background: var(--card); }
+/* List dense (My day): one-line rows, the title and the sub line one line each, cut with "…". */
+.list.dense .row { align-items: center; padding-block: var(--space-3); }
 .list.dense .row-title, .list.dense .row-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .list.dense .row-sub { margin-top: 0; }
 .list.dense .row-tag { padding-top: 0; }

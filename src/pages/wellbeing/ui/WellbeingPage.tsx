@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { habitsOf, HABIT_UI, HabitCard } from '@/features/habits'
+import { habitsOf, habitRow, started, tickValue, HABIT_UI, HabitDetails, HabitLogSheet } from '@/features/habits'
 import type { Habit } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
-import { Header, List, Quote, Row, SortList, Section, RemoveButton, moveTo, useSheet, usePageBar, tone } from '@/shared/ui'
+import { Check, Header, List, Quote, Row, SortList, Section, RemoveButton, moveTo, useSheet, usePageBar, tone } from '@/shared/ui'
 import { dates } from '@/shared/lib/dates'
 import { t } from '@/shared/i18n'
 import { MoodWidget } from './MoodWidget'
@@ -14,6 +14,10 @@ const W = t.wellbeing
 export function Wellbeing() {
   const { state, dispatch } = useStore()
   const sheet = useSheet<Habit>()
+  // A habit's ⋯ opens its log sheet, as on My day.
+  const logSheet = useSheet<Habit>()
+  const today = new Date()
+  const k = dates.keyOf(today)
   const habits = habitsOf(state)
   const [edit, setEdit] = useState(false)
   usePageBar({
@@ -30,7 +34,7 @@ export function Wellbeing() {
       <Header title={W.title} lead={W.lead} />
       <MoodWidget />
       {/* One quote a day, once today's mood is logged, the same all day: the day's number picks it. */}
-      {state.days[dates.keyOf(new Date())]?.mood && <Quote label={W.quoteOfDay} {...t.quotes[dates.dayDiff(new Date(2024, 0, 1), new Date()) % t.quotes.length]} />}
+      {state.days[k]?.mood && <Quote label={W.quoteOfDay} {...t.quotes[dates.dayDiff(new Date(2024, 0, 1), new Date()) % t.quotes.length]} />}
       <Section title={W.habits}>
         {edit ? (
           <SortList onMove={reorder}>
@@ -42,9 +46,23 @@ export function Wellbeing() {
             ))}
           </SortList>
         ) : habits.length
-          ? <div className="widgets">{habits.map((h) => <HabitCard key={h.id} h={h} />)}</div>
+          ? (
+            /* The same rows as My day's habits: a tap logs today, ⋯ opens the log sheet. Every habit, due or not. */
+            <List dense>
+              {habits.map((h) => {
+                const r = habitRow(state, h, today)
+                return (
+                  <Row key={h.id} title={<span className="font-normal">{r.title}</span>} sub={r.sub} done={r.done} style={tone(HABIT_UI[h.type].color)} tagInline
+                    tag={<HabitDetails label={t.wellbeing.logAmount(h.name)} onOpen={() => logSheet.open(h)} />}
+                    check={started(h, today) ? <Check on={r.done} label={h.name} progress={r.progress}
+                      onToggle={(on) => dispatch({ type: 'habitLog', habit: h.id, day: k, value: tickValue(state, h, today, on) })} /> : undefined} />
+                )
+              })}
+            </List>
+          )
           : <List empty={W.empty} />}
       </Section>
+      {logSheet.value && <HabitLogSheet key={logSheet.value.id} {...logSheet.props} habit={logSheet.value} />}
       {sheet.value && <HabitSheet key={sheet.value.id} {...sheet.props} habit={sheet.value} />}
     </>
   )
