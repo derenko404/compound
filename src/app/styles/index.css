@@ -338,10 +338,10 @@
 .panel, .fold { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
 .fold { overflow: hidden; }
 /* List: flat, no card around it. Each item sits on its own background, with a hairline between items. */
-.list > :not(.list-group), .list-group > :not(.list-label) { background: var(--card); }
+.list > :not(.list-group), .list > .list-group > :not(.list-label) { background: var(--card); }
 /* Rounded as one block per run of items: the first item's top corners, the last one's bottom (all four when alone). */
-.list > :not(.list-group):first-child, .list-label + * { border-top: 0; border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); }
-.list > :not(.list-group):last-child, .list-group > :not(.list-label):last-child { border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg); }
+.list > :not(.list-group):first-child, .list > .list-group > .list-label + * { border-top: 0; border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); }
+.list > :not(.list-group):last-child, .list > .list-group > :not(.list-label):last-child { border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg); }
 .panel { padding: var(--space-4); }
 
 /* A topic-coloured strip on the left edge of rows, projects and cards. */
