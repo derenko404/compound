@@ -1,35 +1,17 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { searchSheet } from '@/features/search'
 import { t } from '@/shared/i18n'
 import { TABS, tabOf, tabTarget } from './tabs'
 
-// Shrinks the tab bar while the page scrolls down, and brings it back on the way up (as iOS 26 does).
-function useCompactOnScroll() {
-  const [compact, setCompact] = useState(false)
-  useEffect(() => {
-    let last = scrollY
-    const onScroll = () => {
-      const y = scrollY
-      if (Math.abs(y - last) < 8) return
-      setCompact(y > last && y > 64)
-      last = y
-    }
-    addEventListener('scroll', onScroll, { passive: true })
-    return () => removeEventListener('scroll', onScroll)
-  }, [])
-  return compact
-}
-
 // Phones: iOS 26's floating tab bar, the views as icons in a glass capsule, and Search as a round button beside it.
 export function BottomNav() {
   const { pathname } = useLocation()
-  const compact = useCompactOnScroll()
   // The thumb slides under the current view, column by column, so it passes the items in between.
   const slot = tabOf(pathname)
   return (
-    <div className="bottom-dock" data-compact={compact || undefined}>
+    <div className="bottom-dock">
       <nav className="bottom-nav" aria-label={t.nav.views} style={{ '--n': TABS.length } as CSSProperties}>
         {slot >= 0 && <span className="nav-thumb" style={{ '--i': slot } as CSSProperties} aria-hidden="true" />}
         {TABS.map((tab, i) => (

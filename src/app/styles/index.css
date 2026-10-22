@@ -227,8 +227,8 @@
   --thumb-w: 96px; /* video thumbnails in the notebook */
   --glass-bg: color-mix(in srgb, var(--card) 78%, transparent); /* floating glass controls: the tab bar, top bar buttons */
   --glass-blur: blur(16px) saturate(1.4);
-  --dock-h: 56px;     /* the phone's floating tab bar and search button */
-  --dock-compact: 0.86; /* the dock's scale while scrolling down */
+  --dock-h: 64px;     /* the phone's floating tab bar and search button */
+  --dock-icon: 24px;  /* their icons */
   --header-h: 60px;   /* the sticky app header, without the safe area */
   --dot: 9px;
   --accent-bar: 3px; /* topic colour strip on rows, cards and folds */
@@ -406,8 +406,8 @@ details > summary::-webkit-details-marker { display: none; }
 .icon-btn svg { width: var(--icon-md); height: var(--icon-md); }
 .icon-btn.danger { color: var(--card); background: var(--destructive); }
 .icon-btn:disabled { opacity: 0.3; cursor: default; background: none; }
-/* PlusButton: a plain + in the primary colour, as iOS does, with a soft tint on hover. */
-.plus-btn { display: inline-grid; place-items: center; width: var(--control-md); height: var(--control-md); margin-right: calc(-1 * var(--space-2)); border-radius: 50%; background: none; color: var(--primary); border: 0; cursor: pointer; flex: none; transition: background var(--dur-fast); }
+/* PlusButton: the page's "+ Add" in the primary colour (the top bar styles it as a tinted capsule). */
+.plus-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); width: var(--control-md); height: var(--control-md); margin-right: calc(-1 * var(--space-2)); border-radius: 50%; background: none; color: var(--primary); border: 0; cursor: pointer; flex: none; transition: background var(--dur-fast); }
 .plus-btn svg { width: var(--icon-lg); height: var(--icon-lg); stroke-width: 2.5; }
 .plus-btn:focus-visible { outline: 2px solid var(--ring); }
 /* In the top bar the + sits left of Edit, so only the last control pulls into the edge. */
@@ -566,13 +566,13 @@ a.qbtn { color: inherit; text-decoration: none; }
   margin: 0; color: var(--foreground); background: var(--glass-bg); box-shadow: 0 0 0 1px var(--border);
   backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
 }
-.plus-btn { background: color-mix(in srgb, var(--primary) 16%, transparent); color: var(--primary); }
-.plus-btn, .bar-more, .bar-search { width: var(--control-sm); height: var(--control-sm); border-radius: 50%; }
-.plus-btn svg, .bar-more svg, .bar-search svg { width: var(--icon-md); height: var(--icon-md); }
-.bar-text, .bar-back { min-height: var(--control-sm); border-radius: 999px; }
+.bar-more, .bar-search { width: var(--control-md); height: var(--control-md); border-radius: 50%; }
+.plus-btn { width: auto; height: var(--control-md); padding: 0 var(--space-4) 0 var(--space-3); border-radius: 999px; background: color-mix(in srgb, var(--primary) 16%, transparent); color: var(--primary); font: inherit; font-weight: var(--weight-bold); }
+.plus-btn svg, .bar-more svg, .bar-search svg { width: var(--icon-lg); height: var(--icon-lg); }
+.bar-text, .bar-back { min-height: var(--control-md); border-radius: 999px; }
 .bar-text { padding: 0 var(--space-3); font-weight: var(--weight-bold); }
 .bar-back { padding: 0 var(--space-3) 0 var(--space-2); }
-.bar-back svg { width: var(--icon-md); height: var(--icon-md); }
+.bar-back svg { width: var(--icon-lg); height: var(--icon-lg); }
 .bar-text.is-done { background: var(--primary); color: var(--primary-foreground); }
 .bar-menu, .chip-menu { min-width: var(--menu-w); }
 .bar-menu [data-slot="dropdown-menu-item"], .chip-menu [data-slot="dropdown-menu-item"] { min-height: var(--control-md); padding: 0 var(--space-3); font-size: var(--text-body); color: var(--foreground); text-decoration: none; cursor: pointer; }
@@ -654,8 +654,7 @@ a.qbtn { color: inherit; text-decoration: none; }
 :root[data-reduce-motion] .nav-thumb { transition: none; }
 
 /* Phones: iOS 26's floating tab bar. A glass capsule of tab icons across the width (the current one on a tinted
-   capsule that slides between them), Search split out into a round button beside it. While scrolling down the dock
-   scales down from its bottom edge (data-compact, set by BottomNav): a transform, so it stays smooth. */
+   capsule that slides between them), Search split out into a round button beside it. */
 .bottom-dock { display: none; }
 @media (max-width: 720px) {
   .tabs { display: none; }
@@ -666,8 +665,6 @@ a.qbtn { color: inherit; text-decoration: none; }
     /* Tucked into the home indicator's area, as iOS 26 does; 8px off the edge where there is none. */
     left: var(--gutter); right: var(--gutter); bottom: max(var(--space-2), calc(env(safe-area-inset-bottom, 0px) - var(--space-3))); pointer-events: none;
   }
-  .bottom-dock { transform-origin: 50% 100%; transition: transform var(--dur-base) var(--ease-out); will-change: transform; }
-  .bottom-dock[data-compact] { transform: scale(var(--dock-compact)); }
 }
 .bottom-nav, .dock-search {
   box-sizing: border-box; height: var(--h); pointer-events: auto; border-radius: 999px; box-shadow: 0 0 0 1px var(--border), var(--shadow-card);
@@ -676,10 +673,10 @@ a.qbtn { color: inherit; text-decoration: none; }
 .bottom-nav { flex: 1; position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: var(--space-1); }
 .bottom-nav .nav-thumb { top: var(--space-1); bottom: var(--space-1); left: var(--space-1); width: calc((100% - 2 * var(--space-1)) / var(--n)); border-radius: 999px; }
 .bnav { position: relative; z-index: 1; display: grid; place-items: center; min-width: 0; border-radius: 999px; color: var(--muted-foreground); text-decoration: none; }
-.bnav svg { width: var(--icon-lg); height: var(--icon-lg); }
+.bnav svg { width: var(--dock-icon); height: var(--dock-icon); }
 .bnav[data-status="active"], .bnav.active { color: var(--primary); }
 .dock-search { flex: none; width: var(--h); display: grid; place-items: center; border: 0; color: var(--foreground); cursor: pointer; }
-.dock-search svg { width: var(--icon-lg); height: var(--icon-lg); }
+.dock-search svg { width: var(--dock-icon); height: var(--dock-icon); }
 
 #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: var(--z-fx); }
 
@@ -708,9 +705,18 @@ a.qbtn { color: inherit; text-decoration: none; }
   .sheet, .sheet.sheet-wide { left: 0; right: 0; top: auto; bottom: 0; transform: none; max-width: none; max-height: 92dvh; align-content: start; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); animation: sheet-up var(--dur-base) var(--ease-out); }
   /* Drawers are as tall as their content, up to 92% of the screen. Form and search drawers are at least half the screen. */
   .sheet.search-sheet { min-height: var(--sheet-form-min); }
-  /* Forms open as iOS page sheets: nearly full height with their fields at the top, so the keyboard comes up under
-     them instead of covering or shoving a half-height drawer. */
-  .sheet.form-sheet, .sheet.form-sheet.sheet-wide { top: calc(env(safe-area-inset-top, 0px) + var(--space-2)); max-height: none; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  /* Forms open as a full page, like search: anchored top and bottom and faded in (no slide), Cancel, the title and
+     the action on top, fields under them. A sliding drawer got shoved around when the keyboard came up. */
+  .sheet.form-sheet, .sheet.form-sheet.sheet-wide {
+    inset: 0; height: 100dvh; max-height: none; min-height: 0; border: 0; border-radius: 0; box-shadow: none; background: var(--background);
+    align-content: start; overflow-y: auto; overscroll-behavior: contain;
+    padding: var(--space-5) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+    animation: search-in var(--dur-fast) var(--ease-out);
+  }
+  .sheet.form-sheet[data-state="closed"] { animation: search-out var(--dur-fast) var(--ease-out) forwards; }
+  /* The header bar runs under the status bar (its margin takes back the page's padding). */
+  .form-sheet .sheet-head { padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px)); }
+  .form-sheet .sheet-head::before { display: none; }
   .sheet[data-state="closed"] { animation: sheet-down var(--dur-base) var(--ease-out) forwards; }
   /* iOS/Android sheet: Cancel top-left, title centred, the action top-right; no footer. */
   .sheet-head.has-actions { display: grid; grid-template-columns: 1fr auto 1fr; padding-inline: var(--space-2); }
@@ -874,8 +880,9 @@ main > :last-child { margin-bottom: 0; }
 .sec-head h2 { font-size: var(--text-heading); font-weight: var(--weight-bold); }
 .sec-head small { color: var(--muted-foreground); font-size: var(--text-small); text-align: right; }
 /* Groups of one page's list (Section group): a small muted label, as iOS grouped lists have, and the groups close together. */
-main section.sec-group { margin-bottom: var(--space-5); }
-.sec-group .sec-head { align-items: center; margin-bottom: var(--space-1); padding: 0 var(--space-1); }
+/* A group's label sits 8px over its card and groups stand 24px apart, as in iOS's grouped lists. */
+main section.sec-group { margin-bottom: var(--space-6); }
+.sec-group .sec-head { align-items: center; margin-bottom: var(--space-2); padding: 0 var(--space-1); }
 .sec-group .sec-head h2 { font-family: var(--font-body); font-size: var(--text-caption); font-weight: var(--weight-bold); color: var(--muted-foreground); letter-spacing: 0.04em; text-transform: uppercase; }
 .sec-group .sec-head small { font-size: var(--text-caption); }
 .sec-group .focus-mark { min-height: 0; padding: var(--space-half) var(--space-2); font-size: var(--text-micro); letter-spacing: 0; text-transform: none; }
