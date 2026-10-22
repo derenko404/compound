@@ -10,7 +10,7 @@ import { GymWeek, SlipButton, WaterCount } from './habit-log'
 import { AmountControl } from './amount-controls'
 
 /**
- * Logging a habit beyond a tick, opened from its row's badge: today's control, then the week and the rest of its
+ * Logging a habit beyond a tick, opened from its row's ⋯: today's control, then the week and the rest of its
  * details. Changes apply at once, so there's no Save: a tap outside closes it.
  */
 export function HabitLogSheet({ habit: h, open, onOpenChange }: { habit: Habit; open: boolean; onOpenChange: (o: boolean) => void }) {

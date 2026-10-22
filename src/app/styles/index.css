@@ -1167,10 +1167,10 @@ main section.sec-group { margin-bottom: var(--space-6); }
 /* Meditation and reading: a ring, the main action, and −/+ at the end of the row. */
 .amount-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .amount-row .chips { margin: 0; }
-/* HabitBadge: a habit's value on its My day row, a pill that opens the log sheet. */
-.habit-badge { display: inline-flex; align-items: center; min-height: var(--control-sm); padding: 0 var(--space-3); flex: none; border: 1px solid var(--border); border-radius: 999px; background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-caption); white-space: nowrap; font-variant-numeric: tabular-nums; cursor: pointer; transition: background var(--dur-fast); }
-.habit-badge b { color: var(--c); }
-.habit-badge:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+/* HabitDetails: the round ⋯ on a habit's My day row, the same size on every row. */
+.habit-details { flex: none; border: 1px solid var(--border); border-radius: 50%; }
+.habit-details svg { width: var(--icon-md); height: var(--icon-md); }
+.habit-details:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 /* HabitLogSheet: the value under the title, as big as on the habit's card. */
 .log-sheet-value { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-stat); line-height: var(--leading-tight); color: var(--c); font-variant-numeric: tabular-nums; }
 .log-sheet-value small { font-family: var(--font-body); font-size: var(--text-small); font-weight: normal; color: var(--muted-foreground); }
@@ -1294,7 +1294,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
   .chbtn:not([aria-pressed="true"]):hover, .qbtn:not([aria-pressed="true"]):hover { border-color: color-mix(in srgb, var(--foreground) 35%, var(--border)); }
   .chbtn[aria-pressed="true"]:hover { opacity: 0.9; }
   a.chip:hover { border-color: color-mix(in srgb, var(--c, var(--foreground)) 50%, var(--border)); }
-  .habit-badge:hover { background: color-mix(in srgb, var(--c) 10%, transparent); }
+  .habit-details:hover { background: color-mix(in srgb, var(--c) 10%, transparent); color: var(--c); }
   .check:not(.on):hover { background: color-mix(in srgb, var(--c) 14%, transparent); }
   .dock-search:hover { color: var(--primary); }
   .bnav:hover, .tab:not([data-status="active"]):hover { color: var(--foreground); }

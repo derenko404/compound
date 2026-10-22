@@ -96,13 +96,14 @@ export const wellbeing = {
     meditation: { unit: 'min', less: '5 minutes less', more: '5 minutes more' },
     reading: { unit: 'pages', less: '5 pages less', more: '5 pages more' },
   },
-  // The value on a habit's row on My day, a button that opens its log sheet.
+  // The ⋯ on a habit's My day row, which opens its log sheet.
   logAmount: (name: string) => `Log ${name}`,
-  badge: {
+  // A habit's value on its My day row, under the name, with a note after it.
+  rowValue: {
     amount: (n: string, target: string, unit: string) => `${n}/${target} ${unit}`,
     week: (n: number, of: number) => `${n}/${of} this week`,
-    clean: (n: number) => `${n} d`,
-    chain: (n: number, of: number) => `${n}/${of}`,
+    chain: (n: number, of: number) => `Day ${n} of ${of}`,
+    withNote: (value: string, note: string) => `${value} · ${note}`,
   },
   amountValue: (n: string, unit: string) => `${n} ${unit}`,
   amountAverage: (n: string, unit: string) => `${n} ${unit} on average this week`,

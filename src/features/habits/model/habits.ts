@@ -103,10 +103,12 @@ export function gymMakeUp(s: State, h: Habit, today: Date) {
 /* ---------- Today ---------- */
 
 /**
- * The row's text is the habit's name. sub only says what the badge can't (a day to catch up, a slip), the badge holds
- * the number (opens the log sheet), and progress (0..1) fills the row's check as a ring.
+ * The row's text is the habit's name. sub is today's value ("3/10 pages"), then a note when there is one (a day to
+ * catch up, a slip). progress (0..1) fills the row's check as a ring.
  */
-export interface HabitRow { habit: Habit; title: string; sub: string; done: boolean; badge: string; progress: number }
+export interface HabitRow { habit: Habit; title: string; sub: string; done: boolean; progress: number }
+
+const cleanText = (n: number) => W.amountValue(String(n), W.clean.days(n))
 
 // One row per habit due today. Its tick writes the habit's log, not the day's done list.
 export function habitRows(s: State, today: Date): HabitRow[] {
@@ -118,27 +120,29 @@ export function habitRows(s: State, today: Date): HabitRow[] {
     // Gym also shows on a free day to make up a missed one, and stays once ticked.
     const makeUp = h.type === 'gym' && !dueOn(h, today) && started(h, today) ? gymMakeUp(s, h, today) : null
     if (!dueOn(h, today) && !makeUp && !(h.type === 'gym' && done)) continue
-    const row = { habit: h, title: h.name, sub: v === SLIP ? W.slip.logged : '', done, progress: done ? 1 : 0 }
+    const row = { habit: h, title: h.name, done, progress: done ? 1 : 0 }
+    const sub = (value: string, note?: string | null) => (note ? W.rowValue.withNote(value, note) : value)
+    const slip = v === SLIP ? W.slip.logged : null
     switch (h.type) {
       case 'gym': {
         const { week, perWeek } = gymStats(s, h, today)
-        rows.push({ ...row, sub: makeUp ? W.gym.rowCatchUp(makeUp) : '', badge: W.badge.week(week, perWeek) })
+        rows.push({ ...row, sub: sub(W.rowValue.week(week, perWeek), makeUp && W.gym.rowCatchUp(makeUp)) })
         break
       }
       case 'water': case 'sleep': case 'meditation': case 'reading': {
         const { today: n, target } = amountStats(s, { ...h, type: h.type }, today)
-        rows.push({ ...row, sub: '', done: n >= target, progress: Math.min(1, n / target), badge: W.badge.amount(amountText(n), amountText(target), W.amounts[h.type].unit) })
+        rows.push({ ...row, sub: W.rowValue.amount(amountText(n), amountText(target), W.amounts[h.type].unit), done: n >= target, progress: Math.min(1, n / target) })
         break
       }
       case 'smoking':
-        rows.push({ ...row, badge: W.badge.clean(smokingStats(s, h, today).clean) })
+        rows.push({ ...row, sub: sub(cleanText(smokingStats(s, h, today).clean), slip) })
         break
       case 'break':
-        rows.push({ ...row, badge: W.badge.clean(cleanStats(s, h, today).clean) })
+        rows.push({ ...row, sub: sub(cleanText(cleanStats(s, h, today).clean), slip) })
         break
       case 'build': {
         const c = chain(s, h, today)
-        rows.push({ ...row, badge: c.complete ? W.build.built : W.badge.chain(Math.min(c.day, c.target), c.target) })
+        rows.push({ ...row, sub: c.complete ? W.build.built : W.rowValue.chain(Math.min(c.day, c.target), c.target) })
         break
       }
     }

@@ -2,7 +2,7 @@ import {
   usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, Header, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
 import { Linkify, TaskSheet } from '@/features/topics'
-import { DONE, HABIT_UI, HabitBadge, HabitLogSheet, amountStats, isAmount } from '@/features/habits'
+import { DONE, HABIT_UI, HabitDetails, HabitLogSheet, amountStats, isAmount } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
 import { FocusCard } from './FocusCard'
 import { WeekStrip } from './focus'
@@ -26,7 +26,7 @@ export function Today() {
   const sheet = useSheet<Routine>()
   // A topic's task opens its own form, the same one as on the topic's page.
   const taskSheet = useSheet<{ topic: Topic; task: Task }>()
-  // A habit's badge opens its log sheet, for amounts short of the target and the rest of its details.
+  // A habit's ⋯ opens its log sheet, for amounts short of the target and the rest of its details.
   const logSheet = useSheet<Habit>()
   const today = new Date()
   const tick = useDayTick()
@@ -90,7 +90,7 @@ export function Today() {
         title={it.slot ? <span className="font-normal"><Linkify text={it.title} /></span> : h ? <span className="font-normal">{it.title}</span> : it.title}
         // Rows from the topics stay quiet: the sub line is their own text, what they are sits on the right as muted text.
         sub={it.sub ? <Linkify text={it.sub} /> : undefined}
-        tag={h && it.badge ? <HabitBadge text={it.badge} label={t.wellbeing.logAmount(h.name)} onOpen={() => logSheet.open(h)} /> : undefined}
+        tag={h ? <HabitDetails label={t.wellbeing.logAmount(h.name)} onOpen={() => logSheet.open(h)} /> : undefined}
         check={<Check on={isDone(it)} label={it.title} progress={it.progress} onToggle={(on) => (h ? toggleHabit(h, on) : it.step ? togglePlan(it.step, on) : toggleDay(it.id, on))} />} />
     )
   }

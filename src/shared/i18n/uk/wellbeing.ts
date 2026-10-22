@@ -93,11 +93,11 @@ export const wellbeing: typeof en['wellbeing'] = {
     reading: { unit: 'стор.', less: 'На 5 сторінок менше', more: 'На 5 сторінок більше' },
   },
   logAmount: (name) => `Записати: ${name}`,
-  badge: {
+  rowValue: {
     amount: (n, target, unit) => `${n}/${target} ${unit}`,
     week: (n, of) => `${n}/${of} цього тижня`,
-    clean: (n) => `${n} дн.`,
-    chain: (n, of) => `${n}/${of}`,
+    chain: (n, of) => `День ${n} з ${of}`,
+    withNote: (value, note) => `${value} · ${note}`,
   },
   amountValue: (n, unit) => `${n} ${unit}`,
   amountAverage: (n, unit) => `У середньому ${n} ${unit} цього тижня`,
