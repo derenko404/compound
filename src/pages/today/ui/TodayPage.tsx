@@ -1,11 +1,11 @@
 import {
-  usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, Header, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
+  usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, Header, IconBadge, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
 import { Linkify, TaskSheet } from '@/features/topics'
 import { HABIT_UI, HabitDetails, HabitLogSheet, tickValue } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
 import { FocusCard } from './FocusCard'
-import { WeekStrip } from './focus'
+import { TodayWeek } from './focus'
 import { RoutineSheet } from './RoutineSheet'
 import { celebrate } from '@/shared/lib/celebrate'
 import { nextPosition, topicOf, topics, uid } from '@core/domain/content'
@@ -83,11 +83,13 @@ export function Today() {
   const otherTopics = [...new Set(shown.filter((it) => it.slot && !fromFocus(it)).map((it) => it.ch))].map((ch) => topicOf(state, ch)).filter((c) => !!c)
   const row = (it: DayItem) => {
     const h = it.habit
-    const ui = h && HABIT_UI[h.type]
     return (
-      <Row key={it.id} ch={it.ch} done={isDone(it)} style={ui ? tone(ui.color) : undefined} tagInline
-        // Own tasks lead: habit rows and the topics' suggestions keep a normal-weight title, as steps in a skill do.
-        title={it.slot ? <span className="font-normal"><Linkify text={it.title} /></span> : h ? <span className="font-normal">{it.title}</span> : it.title}
+      <Row key={it.id} ch={it.ch} done={isDone(it)} style={h ? tone('--primary') : undefined} tagInline
+        /**
+         * Own tasks lead: habit rows and the topics' suggestions keep a normal-weight title, as steps in a skill do.
+         * A habit's name follows its type's icon in the type's colour, as on Wellbeing. The row itself stays blue.
+         */
+        title={it.slot ? <span className="font-normal"><Linkify text={it.title} /></span> : h ? <span className="title-row font-normal"><IconBadge icon={HABIT_UI[h.type].icon} label={HABIT_UI[h.type].label} color={HABIT_UI[h.type].color} />{it.title}</span> : it.title}
         // Rows from the topics stay quiet: the sub line is their own text, what they are sits on the right as muted text.
         sub={it.sub ? <Linkify text={it.sub} /> : undefined}
         tag={h ? <HabitDetails label={t.wellbeing.logAmount(h.name)} onOpen={() => logSheet.open(h)} /> : undefined}
@@ -158,7 +160,7 @@ export function Today() {
       )}
 
       <Section id="today-week" group title={t.today.thisWeek} aside={run ? <span className="today-streak on"><Flame aria-hidden="true" />{t.today.streak(run)}</span> : undefined}>
-        <WeekStrip />
+        <TodayWeek />
       </Section>
 
       {!edit && <Section id="today-focus" group title={t.nav.tabs.timer}><FocusCard /></Section>}

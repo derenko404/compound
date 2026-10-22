@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Check as CheckIcon, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react'
-import { Badge, Check, ConfirmSheet, Header, List, Row, Section, cvar, usePageBar } from '@/shared/ui'
+import { Badge, Check, ConfirmSheet, Dial, Header, Kind, List, Row, Section, cvar, usePageBar } from '@/shared/ui'
 import { Button } from '@/shared/ui/primitives/button'
 import { celebrate } from '@/shared/lib/celebrate'
 import { playUntick } from '@/shared/lib/sound'
@@ -57,34 +57,21 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
     tick.set(id, on)
     if (on && done + 1 === steps.length) setTimeout(celebrate, 250)
   }
-  // Above the name: its code as a badge, then what it trains and its size.
-  const facts = [p.trains?.join(', '), p.size ? t.topics.sizes[p.size].label : null].filter((x): x is string => !!x)
+  // Above the name: its code in colour, then what it trains and its size.
+  const facts = [p.trains?.join(', '), p.size ? t.topics.sizes[p.size].label : null].filter((x): x is string => !!x).join(' · ')
   return (
     <div style={cvar(ch)}>
-      <Header title={p.name} kicker={
-        <span className="title-row">
-          {p.code && <span className="project-code">{p.code}</span>}
-          {/* Where it stands, as a badge in its colour: grey, amber in progress, green when done. */}
-          <Badge color={PROJECT_STATUS_TONE[status]}>{PROJECT_STATUS_LABEL[status]}</Badge>
-          {facts.join(' · ')}
-        </span>} />
-      {/* The goal is what the page is about: normal text, not a muted lead. */}
-      {p.goal && <p className="page-intro"><Linkify text={p.goal} /></p>}
-      {steps.length > 0 && (
-        <Section group title={t.topics.form.steps} aside={`${done}/${steps.length}`}>
-          {/* Ticked like a skill's steps; the one My day shows is the first still open. */}
-          <List>
-            {steps.map((x) => (
-              <Row key={x.id} ch={ch} done={tick.on(x.id)} title={<span className="font-normal"><Linkify text={x.text} /></span>}
-                check={<Check on={tick.on(x.id)} label={x.text} onToggle={(v) => toggle(x.id, v)} />} />
-            ))}
-          </List>
-        </Section>
-      )}
-      {p.done && (
-        <Section group title={t.topics.project.doneWhen}>
-          <List><p className="list-text"><Linkify text={p.done} /></p></List>
-        </Section>
+      {/* With steps the ring says where it stands and the button whether it started; without, the status sits under the name. */}
+      <Header title={p.name} kicker={p.code ? <Kind label={p.code}>{facts || null}</Kind> : facts || null}
+        sub={steps.length ? undefined : <Badge color={PROJECT_STATUS_TONE[status]}>{PROJECT_STATUS_LABEL[status]}</Badge>}>
+        {steps.length > 0 && <Dial size="md" n={done} total={steps.length} />}
+      </Header>
+      {/* The brief: the goal in normal text, then when it counts as done. */}
+      {(p.goal || p.done) && (
+        <div className="page-intro">
+          {p.goal && <p><Linkify text={p.goal} /></p>}
+          {p.done && <p><Kind label={t.topics.project.doneWhen}><Linkify text={p.done} /></Kind></p>}
+        </div>
       )}
       <div className="page-actions">
         {/* By hand only what the steps can't say: starting, and for a project without steps, finishing and back. */}
@@ -96,6 +83,17 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
           </Button>
         )}
       </div>
+      {steps.length > 0 && (
+        <Section group title={t.topics.form.steps}>
+          {/* Ticked like a skill's steps; the one My day shows is the first still open. The page is the topic's colour, so no strip. */}
+          <List plain>
+            {steps.map((x) => (
+              <Row key={x.id} done={tick.on(x.id)} title={<span className="font-normal"><Linkify text={x.text} /></span>}
+                check={<Check on={tick.on(x.id)} label={x.text} onToggle={(v) => toggle(x.id, v)} />} />
+            ))}
+          </List>
+        </Section>
+      )}
       {editing && <ProjectSheet open onOpenChange={setEditing} topic={topic} project={p} />}
       <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={t.topics.page.deleteProject(p.code, p.name)} description={t.common.cantUndo}
         onConfirm={onDelete} />

@@ -81,7 +81,7 @@ export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onO
 const SortCtx = createContext<((from: number, to: number) => void) | null>(null)
 
 // A List whose rows (Row sort) can be dragged to a new place by their ≡ handle. onMove gets the old and new index.
-export function SortList({ onMove, ...list }: { onMove: (from: number, to: number) => void; children?: ReactNode; empty?: string; ch?: TopicId | null }) {
+export function SortList({ onMove, ...list }: { onMove: (from: number, to: number) => void; children?: ReactNode; empty?: string; ch?: TopicId | null; plain?: boolean }) {
   return <SortCtx.Provider value={onMove}><List {...list} /></SortCtx.Provider>
 }
 

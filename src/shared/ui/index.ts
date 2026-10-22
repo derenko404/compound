@@ -51,6 +51,7 @@ export { Badge, IconBadge } from './badge'
 export { Check } from './check'
 export { DoneButton } from './done-button'
 export { Dial } from './dial'
+export { WeekStrip, type WeekDay, type WeekDayState } from './week-strip'
 export { Stepper } from './stepper'
 export { CountRow, type CountUnit } from './count-row'
 

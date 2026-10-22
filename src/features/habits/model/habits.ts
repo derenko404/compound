@@ -1,6 +1,6 @@
 // Wellbeing habits: the maths every skin shares, and each type's Today row. No UI here.
 import type { Habit, HabitData, HabitType, State } from '@core/domain/types'
-import { AMOUNTS, DONE, SLIP, amountStats, dueOn, gymMissedDay, gymStats, habitsOf, isAmount, logOf, started, valueOn } from '@core/domain/habits'
+import { AMOUNTS, DONE, SLIP, type AmountType, amountStats, dueOn, gymMissedDay, gymStats, habitsOf, isAmount, logOf, started, valueOn } from '@core/domain/habits'
 import { dates } from '@/shared/lib/dates'
 import { currentLocale, t } from '@/shared/i18n'
 
@@ -146,6 +146,74 @@ export function habitRow(s: State, h: Habit, today: Date): HabitRow {
     }
   }
 }
+
+/* ---------- Wellbeing's cards ---------- */
+
+// How one day went: done (target met, a workout, a clean day), part of an amount, a slip, nothing logged, or off (before the start, still ahead).
+export type DayMark = 'done' | 'part' | 'slip' | 'none' | 'off'
+
+export function dayMark(s: State, h: Habit, d: Date, today: Date): DayMark {
+  if (!started(h, d) || dates.keyOf(d) > dates.keyOf(today)) return 'off'
+  const v = valueOn(s, h, dates.keyOf(d))
+  if (v === SLIP) return 'slip'
+  if (isAmount(h)) return !v ? 'none' : v >= amountTarget(h) ? 'done' : 'part'
+  // A quit or break habit counts a past day clean unless a slip was logged, today once confirmed (as cleanStats).
+  if ((h.type === 'smoking' || h.type === 'break') && dates.keyOf(d) !== dates.keyOf(today)) return 'done'
+  return v === DONE ? 'done' : 'none'
+}
+
+/**
+ * A habit at a glance on Wellbeing: one sentence on where it stands or what to do next, and the one ratio that matters
+ * for a ring (this week's workouts, days on target, the chain, the way to the next health milestone). value: what the
+ * ring shows instead of n/total (the clean days, for quitting smoking and a break).
+ */
+export interface HabitGlance { line: string; n: number; total: number; value?: string }
+
+export function habitGlance(s: State, h: Habit, today: Date): HabitGlance | { line: string; n?: undefined } {
+  const G = W.glance
+  if (!started(h, today)) return { line: waitingText(h, today) }
+  const slipped = valueOn(s, h, dates.keyOf(today)) === SLIP
+  switch (h.type) {
+    case 'gym': {
+      const { week, perWeek } = gymStats(s, h, today)
+      const makeUp = gymMakeUp(s, h, today)
+      const line = week >= perWeek ? G.gymDone : makeUp ? W.gym.rowCatchUp(makeUp) : dueOn(h, today) && valueOn(s, h, dates.keyOf(today)) !== DONE ? G.gymToday : W.next(nextGymDay(h, today))
+      return { line, n: week, total: perWeek }
+    }
+    case 'water': case 'sleep': case 'meditation': case 'reading': {
+      const { target, average } = amountStats(s, { ...h, type: h.type }, today)
+      const onTarget = weekOf(today).filter((d) => dayMark(s, h, d, today) === 'done').length
+      const unit = W.amounts[h.type].unit
+      return { line: average ? G.average(amountText(average), unit, amountText(target)) : G.notYet[h.type], n: onTarget, total: 7 }
+    }
+    case 'smoking': {
+      const st = smokingStats(s, h, today)
+      const since = dates.fmtDay(dates.parseKey(h.start_date!))
+      return { line: slipped ? W.slip.logged : st.next ? G.sinceNext(since, st.next.label) : G.since(since), n: Math.round(st.toNext * 100), total: 100, value: String(st.clean) }
+    }
+    case 'break': {
+      const st = cleanStats(s, h, today)
+      // The ring: the current run against the longest, the clean days inside.
+      return { line: slipped ? W.slip.logged : st.run ? G.cleanRun(st.run, st.best) : G.cleanStart, n: st.run, total: Math.max(st.best, 1), value: String(st.clean) }
+    }
+    case 'build': {
+      const c = chain(s, h, today)
+      const line = c.complete ? W.build.didIt : !c.run ? G.chainStart : c.doneToday ? W.build.chain(c.run, c.target) : G.chainKeep(c.run)
+      return { line, n: Math.min(c.run, c.target), total: c.target }
+    }
+  }
+}
+
+// The first gym day after today, as "Mon".
+function nextGymDay(h: Habit, today: Date) {
+  for (let i = 1; i <= 7; i++) {
+    const d = dates.addDays(today, i)
+    if (h.days.includes(d.getDay())) return t.nav.weekdaysShort[d.getDay()]
+  }
+  return ''
+}
+
+const amountTarget = (h: Habit & { type: AmountType }) => h.custom_data.target ?? AMOUNTS[h.type].target
 
 // What a row's tick writes: an amount fills its target, the rest log the day as done. Unticking clears it.
 export const tickValue = (s: State, h: Habit, today: Date, on: boolean) =>

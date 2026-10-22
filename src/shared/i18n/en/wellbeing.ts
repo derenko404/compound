@@ -98,6 +98,20 @@ export const wellbeing = {
   },
   // The ⋯ on a habit's My day row, which opens its log sheet.
   logAmount: (name: string) => `Log ${name}`,
+  // A habit's line on its Wellbeing card: where it stands, or what to do next.
+  glance: {
+    gymDone: 'This week is done',
+    gymToday: 'A gym day today',
+    average: (n: string, unit: string, target: string) => `${n} ${unit} on average, target ${target}`,
+    notYet: { water: 'No water logged this week', sleep: 'No sleep logged this week', meditation: 'No meditation this week yet', reading: 'No reading this week yet' },
+    since: (date: string) => `Smoke-free since ${date}`,
+    sinceNext: (date: string, next: string) => `Smoke-free since ${date}. Next: ${next}`,
+    cleanRun: (run: number, best: number) => `${plural(run, { one: '# day', other: '# days' })} in a row, best ${best}`,
+    cleanStart: 'Mark today clean to start a run',
+    chainStart: 'Mark today to start the chain',
+    chainKeep: (run: number) => `${plural(run, { one: '# day', other: '# days' })} in a row. Mark today to keep it going`,
+  },
+
   // A habit's value on its My day row, under the name, with a note after it.
   rowValue: {
     amount: (n: string, target: string, unit: string) => `${n}/${target} ${unit}`,

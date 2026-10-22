@@ -1,20 +1,22 @@
 import { useState } from 'react'
-import { habitsOf, habitRow, started, tickValue, HABIT_UI, HabitDetails, HabitLogSheet } from '@/features/habits'
+import { habitGlance, habitsOf, HABIT_UI, HabitLogSheet } from '@/features/habits'
 import type { Habit } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
-import { Check, Header, List, Quote, Row, SortList, Section, RemoveButton, moveTo, useSheet, usePageBar, tone } from '@/shared/ui'
+import { Dial, Header, IconBadge, List, Quote, Row, SortList, Section, RemoveButton, moveTo, useSheet, usePageBar, tone } from '@/shared/ui'
 import { dates } from '@/shared/lib/dates'
 import { t } from '@/shared/i18n'
 import { MoodWidget } from './MoodWidget'
 import { HabitSheet, newHabit } from './HabitSheet'
 
 const W = t.wellbeing
+// Habit rows share the app's colour: topics alone have their own, so a row's colour means a topic. The icon keeps its type's.
+const HABIT_TONE = tone('--primary')
 
 
 export function Wellbeing() {
   const { state, dispatch } = useStore()
   const sheet = useSheet<Habit>()
-  // A habit's ⋯ opens its log sheet, as on My day.
+  // A habit's row opens its log sheet, the one My day's ⋯ opens.
   const logSheet = useSheet<Habit>()
   const today = new Date()
   const k = dates.keyOf(today)
@@ -39,7 +41,7 @@ export function Wellbeing() {
         {edit ? (
           <SortList onMove={reorder}>
             {habits.map((h) => (
-              <Row key={h.id} title={h.name} sub={HABIT_UI[h.type].label} style={tone(HABIT_UI[h.type].color)}
+              <Row key={h.id} title={h.name} sub={HABIT_UI[h.type].label} style={HABIT_TONE}
                 check={<RemoveButton label={t.common.deleteNamed(h.name)} title={t.common.deleteAsk(h.name)} description={W.deleteText}
                   onConfirm={() => { dispatch({ type: 'deleteHabit', id: h.id }) }} />}
                 onOpen={() => sheet.open(h)} sort />
@@ -47,15 +49,18 @@ export function Wellbeing() {
           </SortList>
         ) : habits.length
           ? (
-            /* The same rows as My day's habits: a tap logs today, ⋯ opens the log sheet. Every habit, due or not. */
-            <List dense>
+            /**
+             * My day logs today, Wellbeing looks back: each habit with its type's icon in its colour where My day has
+             * the tick, a sentence (where it stands, what's next) and its one ratio in a ring, as the Lists page's
+             * cards. A tap opens the log sheet.
+             */
+            <List>
               {habits.map((h) => {
-                const r = habitRow(state, h, today)
+                const g = habitGlance(state, h, today)
                 return (
-                  <Row key={h.id} title={<span className="font-normal">{r.title}</span>} sub={r.sub} done={r.done} style={tone(HABIT_UI[h.type].color)} tagInline
-                    tag={<HabitDetails label={t.wellbeing.logAmount(h.name)} onOpen={() => logSheet.open(h)} />}
-                    check={started(h, today) ? <Check on={r.done} label={h.name} progress={r.progress}
-                      onToggle={(on) => dispatch({ type: 'habitLog', habit: h.id, day: k, value: tickValue(state, h, today, on) })} /> : undefined} />
+                  <Row key={h.id} style={HABIT_TONE} title={h.name} sub={g.line} onOpen={() => logSheet.open(h)} tagInline
+                    check={<IconBadge icon={HABIT_UI[h.type].icon} label={HABIT_UI[h.type].label} color={HABIT_UI[h.type].color} />}
+                    tag={g.n != null && <Dial size="sm" n={g.n} total={g.total} value={g.value} />} />
                 )
               })}
             </List>

@@ -93,6 +93,19 @@ export const wellbeing: typeof en['wellbeing'] = {
     reading: { unit: 'стор.', less: 'На 5 сторінок менше', more: 'На 5 сторінок більше' },
   },
   logAmount: (name) => `Записати: ${name}`,
+  glance: {
+    gymDone: 'Тиждень виконано',
+    gymToday: 'Сьогодні день тренування',
+    average: (n, unit, target) => `У середньому ${n} ${unit}, ціль ${target}`,
+    notYet: { water: 'Цього тижня воду ще не записано', sleep: 'Цього тижня сон ще не записано', meditation: 'Цього тижня ще не медитували', reading: 'Цього тижня ще не читали' },
+    since: (date) => `Без цигарок з ${date}`,
+    sinceNext: (date, next) => `Без цигарок з ${date}. Далі: ${next}`,
+    cleanRun: (run, best) => `${plural(run, { one: '# день', few: '# дні', many: '# днів', other: '# дня' })} поспіль, рекорд ${best}`,
+    cleanStart: 'Позначте чистий день, щоб почати серію',
+    chainStart: 'Позначте сьогодні, щоб почати ланцюжок',
+    chainKeep: (run) => `${plural(run, { one: '# день', few: '# дні', many: '# днів', other: '# дня' })} поспіль. Позначте сьогодні, щоб не перервати`,
+  },
+
   rowValue: {
     amount: (n, target, unit) => `${n}/${target} ${unit}`,
     week: (n, of) => `${n}/${of} цього тижня`,

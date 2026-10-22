@@ -224,6 +224,8 @@
   --control-md: 44px; /* buttons, icon buttons: comfortable tap target */
   --control-field: 52px; /* form fields: inputs, selects, list lines */
   --control-lg: 56px; /* big buttons: the ⋯ drawer's actions */
+  --card-pad: var(--space-4); /* inside every card and row: rows, notes, folds, panels, habit cards */
+  --card-pad-tight: var(--space-3); /* top and bottom of small one-line cards: link cards, banners, stats, dense rows */
   --tour-width: 340px; /* the first-run tour's popover */
   --feature-min: 240px; /* the narrowest card in a feature grid */
   --reading: 68ch; /* long text: legal pages */
@@ -342,7 +344,7 @@
 /* Rounded as one block per run of items: the first item's top corners, the last one's bottom (all four when alone). */
 .list > :not(.list-group):first-child, .list > .list-group > .list-label + * { border-top: 0; border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); }
 .list > :not(.list-group):last-child, .list > .list-group > :not(.list-label):last-child { border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg); }
-.panel { padding: var(--space-4); }
+.panel { padding: var(--card-pad); }
 
 /* A topic-coloured strip on the left edge of rows, projects and cards. */
 .row::before {
@@ -382,9 +384,9 @@
 .segment.is-toned[aria-checked="true"] { color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--seg-thumb)); }
 /* A page's own controls between the header and its sections (a project's status): room below. */
 .page-control { margin-bottom: var(--space-6); }
-.list-text { padding: var(--space-4); }
+.list-text { padding: var(--card-pad); }
 /* A page's own buttons at its end (a project's Start): full width, stacked. Empty, it takes no room. */
-.page-actions { display: grid; gap: var(--space-2); margin-top: var(--space-6); }
+.page-actions { display: grid; gap: var(--space-2); margin-bottom: var(--space-5); }
 .page-actions:empty { display: none; }
 /* A setting in a Panel (SettingRow). */
 /* SettingRow: text on the left, controls on the right. When the controls don't fit beside the text (longer labels in Ukrainian), they wrap below it. */
@@ -428,7 +430,7 @@
 .search-clear { position: absolute; right: var(--space-1); top: 50%; transform: translateY(-50%); }
 
 .dot { width: var(--dot); height: var(--dot); border-radius: 50%; background: var(--c); flex: none; }
-.empty { padding: var(--space-4); color: var(--muted-foreground); }
+.empty { padding: var(--card-pad); color: var(--muted-foreground); }
 .muted { color: var(--muted-foreground); }
 
 /* Disclosure chevron that turns when its <details> opens. */
@@ -515,13 +517,13 @@ details > summary::-webkit-details-marker { display: none; }
 .seg-control[data-thumb="set"] .seg-control-thumb { opacity: 1; }
 .seg-control[data-thumb="move"] .seg-control-thumb { opacity: 1; transition: transform var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out); }
 :root[data-reduce-motion] .seg-control-thumb { transition: none !important; }
-.seg-control-item { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-height: var(--control-md); padding: 0 var(--space-4); border: 0; border-radius: calc(var(--radius-lg) - var(--space-1)); background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-body); font-weight: var(--weight-bold); white-space: nowrap; text-decoration: none; cursor: pointer; transition: color var(--dur-fast); }
-.seg-control-item .count { font-weight: normal; font-size: var(--text-small); }
+.seg-control-item { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border: 0; border-radius: calc(var(--radius-lg) - var(--space-1)); background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); white-space: nowrap; text-decoration: none; cursor: pointer; transition: color var(--dur-fast); }
+.seg-control-item .count { font-weight: normal; font-size: var(--text-caption); }
 .seg-control-item[aria-selected="true"], .seg-control-item[data-status="active"] { color: var(--foreground); }
 .seg-control-item:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 
 /* Plan: a topic's progress and pace. */
-.topic-row { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2) var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); color: inherit; text-decoration: none; position: relative; }
+.topic-row { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2) var(--space-3); align-items: center; padding: var(--card-pad-tight) var(--card-pad); border-top: 1px solid var(--border); color: inherit; text-decoration: none; position: relative; }
 .topic-row:first-child { border-top: 0; }
 .topic-row-name { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--weight-bold); }
 .topic-row-count { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
@@ -540,13 +542,13 @@ a.qbtn { color: inherit; text-decoration: none; }
 @media (hover: hover) { button.focus-mark:hover { background: color-mix(in srgb, var(--c) 16%, transparent); } }
 
 /* Topic index cards and the topic page header. */
-.topic-card { display: grid; gap: var(--space-3); padding: var(--space-4); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-lg); color: inherit; text-decoration: none; transition: transform var(--dur-fast), box-shadow var(--dur-fast), border-color var(--dur-fast); }
+.topic-card { display: grid; gap: var(--space-3); padding: var(--card-pad); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-lg); color: inherit; text-decoration: none; transition: transform var(--dur-fast), box-shadow var(--dur-fast), border-color var(--dur-fast); }
 /* The focus topic: tinted with its colour and lifted, so the heavy topic stands out. */
 .topic-card.is-focus { border-color: color-mix(in srgb, var(--c) 55%, var(--border)); background: linear-gradient(135deg, color-mix(in srgb, var(--c) 16%, var(--card)), var(--card) 70%); box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent), var(--shadow-card); }
 /* Becoming the focus: the card ducks, then punches up with a shockwave ring; the crosshair spins in. */
 .topic-card { position: relative; }
-.topic-head { position: relative; border-radius: var(--radius-lg); margin-top: var(--space-4); margin-bottom: var(--space-4); padding-inline: var(--space-5); background: linear-gradient(160deg, color-mix(in srgb, var(--c) 10%, transparent), color-mix(in srgb, var(--c) 2%, transparent) 70%); }
-.topic-head > .day { padding-block: var(--space-5); }
+.topic-head { position: relative; border-radius: var(--radius-lg); margin-top: var(--space-4); margin-bottom: var(--space-4); padding-inline: var(--card-pad); background: linear-gradient(160deg, color-mix(in srgb, var(--c) 10%, transparent), color-mix(in srgb, var(--c) 2%, transparent) 70%); }
+.topic-head > .day { padding-block: var(--card-pad); }
 .topic-head.focus-pop { animation: focus-pop 900ms var(--ease-out); z-index: var(--z-overlay); }
 .topic-head.focus-pop .focus-mark svg { animation: focus-spin 700ms var(--ease-out); }
 @keyframes focus-pop {
@@ -828,7 +830,8 @@ a.qbtn { color: inherit; text-decoration: none; }
 .day-kicker { margin-bottom: var(--space-3); font-size: var(--text-caption); font-weight: var(--weight-bold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted-foreground); }
 .day-kicker b { color: var(--c); }
 /* A page's opening text right under its header, in normal text (a project's goal). */
-.page-intro { margin: 0 0 var(--space-5); max-width: 62ch; }
+.page-intro { display: grid; gap: var(--space-3); margin: 0 0 var(--space-5); max-width: 62ch; }
+.page-intro p { margin: 0; }
 .day-meta { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .day-aside { display: flex; align-items: center; gap: var(--space-2); }
 .day > div { min-width: 0; }
@@ -883,11 +886,11 @@ main section:has(+ .quote) { margin-bottom: var(--space-3); }
 @keyframes pulse { 0% { transform: scale(1); } 35% { transform: scale(1.09); } 100% { transform: scale(1); } }
 
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: var(--space-6); }
-.stat { background: var(--card); padding: var(--space-3) var(--space-4); min-width: 0; }
+.stat { background: var(--card); padding: var(--card-pad-tight) var(--card-pad); min-width: 0; }
 .stat b { display: block; font-family: var(--font-display); font-size: var(--text-stat); font-variant-numeric: tabular-nums; line-height: var(--leading-tight); }
 .stat span { font-size: var(--text-caption); color: var(--muted-foreground); }
 
-.banner { background: var(--card); border: 1px solid var(--border); border-left: var(--space-1) solid var(--c, var(--primary)); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); align-items: center; justify-content: space-between; }
+.banner { background: var(--card); border: 1px solid var(--border); border-left: var(--space-1) solid var(--c, var(--primary)); border-radius: var(--radius-md); padding: var(--card-pad-tight) var(--card-pad); margin-bottom: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); align-items: center; justify-content: space-between; }
 .banner p { margin: 0; min-width: 0; flex: 1 1 260px; }
 .banner-title { display: block; }
 
@@ -955,7 +958,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
    Rows and checks
    ===================================================================== */
 
-.row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-6) var(--space-4); border-top: 1px solid var(--border); position: relative; }
+.row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; padding: var(--card-pad); border-top: 1px solid var(--border); position: relative; }
 .row:first-child { border-top: 0; }
 .row.no-check { grid-template-columns: 1fr auto; }
 .row-body { min-width: 0; }
@@ -988,7 +991,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .row.pop { animation: rowpop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
 @keyframes rowpop { 0% { transform: scale(1); } 40% { transform: scale(1.015); background: color-mix(in srgb, var(--c) 10%, var(--card)); } 100% { transform: scale(1); } }
 /* List dense (My day): one-line rows, the title and the sub line one line each, cut with "…". */
-.list.dense .row { padding-block: var(--space-3); }
+.list.dense .row { padding-block: var(--card-pad-tight); }
 .list.dense .row-title, .list.dense .row-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .list.dense .row-sub { margin-top: 0; }
 
@@ -1007,7 +1010,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
 @keyframes bounce { 0% { transform: scale(0.7); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
 
 /* Notes, ideas and finds: a card per entry inside a .list. */
-.note { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--space-2); padding: var(--space-6) var(--space-4); border-top: 1px solid var(--border); }
+.note { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--space-2); padding: var(--card-pad); border-top: 1px solid var(--border); }
 /* Entry remove: edit mode's ⊖ on the left. */
 .note.has-remove { grid-template-columns: auto minmax(0, 1fr) auto; }
 /* Its ⊖ and › sit centred on the card's height, like edit rows. */
@@ -1060,12 +1063,12 @@ main section.sec-group { margin-bottom: var(--space-6); }
 
 /* Cards that link somewhere: topic cards, skill cards. */
 .card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-.link-card { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-md); color: inherit; text-decoration: none; transition: transform var(--dur-fast), box-shadow var(--dur-fast); }
+.link-card { display: grid; gap: var(--space-1); padding: var(--card-pad-tight) var(--card-pad); background: var(--card); border: 1px solid var(--border); border-left: var(--accent-bar) solid var(--c); border-radius: var(--radius-md); color: inherit; text-decoration: none; transition: transform var(--dur-fast), box-shadow var(--dur-fast); }
 .link-card-title { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--weight-bold); }
 .link-card-sub { font-size: var(--text-small); color: var(--muted-foreground); }
 /* My day's focus card: a round play/pause button in the row's tick slot. */
-.focus-play { display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); flex: none; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--primary) 16%, transparent); color: var(--primary); cursor: pointer; }
-.focus-play svg { width: var(--icon-md); height: var(--icon-md); }
+.focus-play { display: grid; place-items: center; width: var(--control-md); height: var(--control-md); flex: none; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--primary) 16%, transparent); color: var(--primary); cursor: pointer; }
+.focus-play svg { width: var(--icon-lg); height: var(--icon-lg); }
 .focus-play[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
 /* NativeSelect: the system picker dressed as our field, the chevron drawn over it. */
 .native-select { position: relative; display: inline-flex; align-items: center; }
@@ -1089,23 +1092,23 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .res-free { color: var(--good); font-weight: var(--weight-bold); }
 .res-icon { width: var(--icon-sm); height: var(--icon-sm); color: var(--c); flex: none; }
 
-.fold > summary { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-6) var(--space-4); border-left: var(--accent-bar) solid var(--c); }
+.fold > summary { display: flex; align-items: center; gap: var(--space-3); padding: var(--card-pad); border-left: var(--accent-bar) solid var(--c); }
 .fold-title { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); flex: 1; min-width: 0; }
 .fold-meta { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .fold-body { border-top: 1px solid var(--border); }
-/* Rows in a fold (a skill's steps, a resource group) and a project's steps: no strip, the card's edge carries the colour. */
-.fold-body .row::before, .project-steps .row::before { display: none; }
+/* Rows in a fold (a skill's steps, a resource group), a project's steps and a plain list: no strip, the card's edge or the page carries the colour. */
+.fold-body .row::before, .project-steps .row::before, .list.plain .row::before { display: none; }
 /* Fold done: every item inside is ticked. */
 .fold.is-done > summary { background: color-mix(in srgb, var(--c) 10%, transparent); }
 .fold-done { display: grid; place-items: center; width: var(--icon-lg); height: var(--icon-lg); flex: none; border-radius: 50%; background: var(--c); }
 .fold-done svg { width: var(--icon-sm); height: var(--icon-sm); }
 .fold-done path { fill: none; stroke: var(--card); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 /* A skill's intro: a quiet caption under its steps, like a footnote under an iOS group. */
-.fold-intro { margin: 0; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: var(--text-caption); line-height: var(--leading-tight); }
+.fold-intro { margin: 0; padding: var(--card-pad-tight) var(--card-pad); border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: var(--text-caption); line-height: var(--leading-tight); }
 
 .project { border-top: 1px solid var(--border); position: relative; scroll-margin-top: 140px; }
 .project:first-child { border-top: 0; }
-.project-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: center; padding: var(--space-4); }
+.project-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: center; padding: var(--card-pad); }
 .project-code { font-weight: var(--weight-black); font-family: var(--font-display); color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); border-radius: var(--radius-sm); padding: var(--space-half) var(--space-2); cursor: pointer; }
 .project-name { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); text-align: left; font-weight: var(--weight-bold); cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
 .project-body { padding: 0 var(--space-4) var(--space-4); display: grid; gap: var(--space-3); }
@@ -1133,7 +1136,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .widgets { display: grid; gap: var(--space-4); }
 .widget-sub { font-size: var(--text-small); color: var(--muted-foreground); }
 /* A habit card: folded it shows the icon, name, main number, one line and today's action; tapped, the details. */
-.hcard { display: grid; gap: var(--space-3); padding: var(--space-4) var(--space-5); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.hcard { display: grid; gap: var(--space-3); padding: var(--card-pad); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
 .hcard-head { display: flex; align-items: center; gap: var(--space-2); }
 .hcard-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-3); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .hcard-text { display: grid; min-width: 0; }
@@ -1191,7 +1194,8 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .amount-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .amount-row .chips { margin: 0; }
 /* A row's own round button on its right (a habit's ⋯, a list item's review), the same size on every row. on: tinted (--c). */
-.row-btn { flex: none; border: 1px solid var(--border); border-radius: 50%; }
+/* A row's › that is its own button (a habit's log sheet): a full tap target, its chevron lined up with the rows' own ›. */
+.row-btn { flex: none; width: var(--control-md); height: var(--control-md); margin-right: calc((var(--icon-md) - var(--control-md)) / 2); border-radius: 50%; }
 .row-btn svg { width: var(--icon-md); height: var(--icon-md); }
 .row-btn.on { color: var(--c); border-color: color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 10%, transparent); }
 .row-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }

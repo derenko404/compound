@@ -9,7 +9,9 @@ const fmtLong = (d: Date) => {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 const fmtShort = (d: Date) => d.toLocaleDateString(currentLocale(), { day: 'numeric', month: 'short', year: 'numeric' })
+// Day and month in words, for a date inside a sentence ("since 22 October"): no year, no abbreviation dot.
+const fmtDay = (d: Date) => d.toLocaleDateString(currentLocale(), { day: 'numeric', month: 'long' })
 const fmtStamp = (iso: string) =>
   new Date(iso).toLocaleString(currentLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
-export const dates = { keyOf, parseKey, addDays, dayDiff, fmtLong, fmtShort, fmtStamp }
+export const dates = { keyOf, parseKey, addDays, dayDiff, fmtLong, fmtShort, fmtDay, fmtStamp }

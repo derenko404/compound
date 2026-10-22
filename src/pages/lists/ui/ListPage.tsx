@@ -90,14 +90,14 @@ export function ListPage() {
       <SearchField value={query} onChange={setQuery} placeholder={t.lists.page.search(L.name)} />
       {!edit && (
         <ChipsList label={t.lists.page.show}>
-          {(['all', 'todo', 'done'] as Filter[]).map((f) => (
-            <Chip key={f} pressed={filter === f} onClick={() => setFilter(f)}>{t.lists.page.filters[f]}</Chip>
+          {(['todo', 'all', 'done'] as Filter[]).map((f) => (
+            <Chip key={f} pressed={filter === f} onClick={() => setFilter(f)} count={f === 'done' ? n : undefined}>{t.lists.page.filters[f]}</Chip>
           ))}
         </ChipsList>
       )}
       {edit
-        ? <SortList empty={t.lists.page.emptyList} onMove={(from, to) => dispatch({ type: 'putList', list: { ...L, items: moveTo(L.items, from, to) } })}>{rows}</SortList>
-        : <List empty={L.items.length ? t.lists.page.emptyFilter : t.lists.page.emptyList}>{rows}</List>}
+        ? <SortList plain empty={t.lists.page.emptyList} onMove={(from, to) => dispatch({ type: 'putList', list: { ...L, items: moveTo(L.items, from, to) } })}>{rows}</SortList>
+        : <List plain empty={L.items.length ? t.lists.page.emptyFilter : t.lists.page.emptyList}>{rows}</List>}
       {sharing && <ShareSheet open onOpenChange={setSharing} kind="list" name={L.name} data={listSnapshot(L)} />}
       <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={t.common.deleteAsk(L.name)}
         description={t.lists.deleteListText}
