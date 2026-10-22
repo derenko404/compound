@@ -248,18 +248,25 @@
      phone ≤ 560px, compact ≤ 720px (bottom navigation). */
 }
 
+/* Text is sized relative to the root, so it follows the reader's text size. On phones the root grows to iOS's 17px;
+   on iPhone it is iOS's own body size, which follows Settings → Display → Text Size, as native apps do. */
+@media (max-width: 560px) {
+  html { font-size: 106.25%; }
+  @supports (font: -apple-system-body) { html { font: -apple-system-body; line-height: var(--leading-body); } }
+}
+
 @theme inline {
   /* Type scale: the only font sizes in the app. Also available as text-micro … text-dial classes. */
-  --text-micro: 12px;   /* nav labels, tags, tiny meta */
-  --text-caption: 13px; /* meta lines, counters */
-  --text-small: 14px;   /* secondary text, chips */
-  --text-body: 16px;    /* body text */
-  --text-title: 18px;   /* item and group titles */
-  --text-heading: 21px; /* section headings */
-  --text-stat: 24px;    /* numbers in stat tiles */
-  --text-dial: 28px;    /* big counters */
-  --text-page: clamp(30px, 6vw, 46px); /* page titles */
-  --text-hero: clamp(48px, 12vw, 84px); /* the one big number on a tracker */
+  --text-micro: 0.75rem;     /* nav labels, tags, tiny meta (12px at a 16px root) */
+  --text-caption: 0.8125rem; /* meta lines, counters (13) */
+  --text-small: 0.875rem;    /* secondary text, chips (14) */
+  --text-body: 1rem;         /* body text (16) */
+  --text-title: 1.125rem;    /* item and group titles (18) */
+  --text-heading: 1.3125rem; /* section headings (21) */
+  --text-stat: 1.5rem;       /* numbers in stat tiles (24) */
+  --text-dial: 1.75rem;      /* big counters (28) */
+  --text-page: clamp(1.875rem, 6vw, 2.875rem); /* page titles (30–46) */
+  --text-hero: clamp(3rem, 12vw, 5.25rem);     /* the one big number on a tracker (48–84) */
 
   /* Radii. rounded-sm … rounded-xl classes use the same values. */
   --radius-xs: 4px;   /* bars, progress */
@@ -715,7 +722,7 @@ a.qbtn { color: inherit; text-decoration: none; }
   }
   .sheet.form-sheet[data-state="closed"] { animation: search-out var(--dur-fast) var(--ease-out) forwards; }
   /* The header bar runs under the status bar (its margin takes back the page's padding). */
-  .form-sheet .sheet-head { padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px)); }
+  .form-sheet .sheet-head { padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px)); margin-bottom: var(--space-2); }
   .form-sheet .sheet-head::before { display: none; }
   .sheet[data-state="closed"] { animation: sheet-down var(--dur-base) var(--ease-out) forwards; }
   /* iOS/Android sheet: Cancel top-left, title centred, the action top-right; no footer. */
