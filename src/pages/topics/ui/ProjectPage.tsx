@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Pencil, Trash2 } from 'lucide-react'
-import { Check, ConfirmSheet, Dial, Header, List, Row, Section, Segmented, cvar, usePageBar } from '@/shared/ui'
+import { Check, ConfirmSheet, Header, List, Row, Section, Segmented, cvar, usePageBar } from '@/shared/ui'
 import { topicOf } from '@core/domain/content'
 import type { Project, Topic } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
@@ -45,19 +45,18 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
   const { status, set } = useProjectStatus(p)
   const steps = p.steps ?? []
   const done = steps.filter((x) => tick.on(x.id)).length
-  // Under the name: its code, what it trains and its size, one quiet line.
-  const facts = [p.code, p.trains?.join(', '), p.size && t.topics.sizes[p.size].label].filter(Boolean).join(' · ')
+  // Under the name: its code as a chip, then what it trains and its size.
+  const facts = [p.trains?.join(', '), p.size && t.topics.sizes[p.size].label].filter(Boolean).join(' · ')
   return (
     <div style={cvar(ch)}>
-      <Header title={p.name} sub={facts} lead={p.goal ? <Linkify text={p.goal} /> : undefined}>
-        {steps.length > 0 && <Dial size="md" n={done} total={steps.length} />}
-      </Header>
+      <Header title={p.name} lead={p.goal ? <Linkify text={p.goal} /> : undefined}
+        sub={(p.code || facts) && <span className="title-row">{p.code && <span className="project-code">{p.code}</span>}{facts}</span>} />
       <div className="page-control">
         <Segmented label={t.topics.project.statusLabel} value={status} onChange={set}
           options={PROJECT_STATUSES.map((v) => ({ value: v, label: PROJECT_STATUS_LABEL[v], color: PROJECT_STATUS_TONE[v] }))} />
       </div>
       {steps.length > 0 && (
-        <Section group title={t.topics.form.steps}>
+        <Section group title={t.topics.form.steps} aside={`${done}/${steps.length}`}>
           {/* Ticked like a skill's steps; the one My day shows is the first still open. */}
           <List>
             {steps.map((x) => (

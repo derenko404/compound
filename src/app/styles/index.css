@@ -360,6 +360,8 @@
 .btn-tint { background: color-mix(in srgb, var(--tint, var(--primary)) 15%, transparent); color: var(--tint, var(--primary)); }
 /* A project in its topic's list: its code a step smaller beside the name. */
 .project-row .project-code { font-size: var(--text-small); }
+/* Only a button code (the shared preview's) shows a pointer; a code in a row or under a title is a label. */
+.project-row .project-code, .day-sub .project-code { cursor: inherit; }
 /* A project's status under its name: the word in grey, amber while in progress, green when done (--c). */
 .project-title { display: grid; min-width: 0; }
 .project-status { font-size: var(--text-caption); font-weight: normal; color: var(--muted-foreground); }
