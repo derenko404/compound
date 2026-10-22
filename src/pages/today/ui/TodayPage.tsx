@@ -2,7 +2,7 @@ import {
   usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, FocusMark, Header, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
 import { Linkify, TaskSheet } from '@/features/topics'
-import { AmountControl, DONE, HABIT_UI, WaterCount, amountStats, isAmount } from '@/features/habits'
+import { DONE, HABIT_UI, HabitBadge, HabitLogSheet, amountStats, isAmount } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
 import { FocusCard } from './FocusCard'
 import { WeekStrip } from './focus'
@@ -26,6 +26,8 @@ export function Today() {
   const sheet = useSheet<Routine>()
   // A topic's task opens its own form, the same one as on the topic's page.
   const taskSheet = useSheet<{ topic: Topic; task: Task }>()
+  // A habit's badge opens its log sheet, for amounts short of the target and the rest of its details.
+  const logSheet = useSheet<Habit>()
   const today = new Date()
   const tick = useDayTick()
   const k = tick.day
@@ -88,10 +90,8 @@ export function Today() {
         title={it.slot ? <span className="font-normal"><Linkify text={it.title} /></span> : h ? <span className="font-normal">{it.title}</span> : it.title}
         // Rows from the topics stay quiet: the sub line is their own text, what they are sits on the right as muted text.
         sub={it.sub ? <Linkify text={it.sub} /> : undefined}
-        check={<Check on={isDone(it)} label={it.title} onToggle={(on) => (h ? toggleHabit(h, on) : it.step ? togglePlan(it.step, on) : toggleDay(it.id, on))} />}>
-        {h?.type === 'water' && <WaterCount h={h} />}
-        {h && isAmount(h) && h.type !== 'water' && <AmountControl h={{ ...h, type: h.type }} />}
-      </Row>
+        tag={h && it.badge ? <HabitBadge text={it.badge} label={t.wellbeing.logAmount(h.name)} onOpen={() => logSheet.open(h)} /> : undefined}
+        check={<Check on={isDone(it)} label={it.title} progress={it.progress} onToggle={(on) => (h ? toggleHabit(h, on) : it.step ? togglePlan(it.step, on) : toggleDay(it.id, on))} />} />
     )
   }
 
@@ -131,7 +131,7 @@ export function Today() {
       ) : (
         /* One list for the whole day, in labelled groups, so it reads as one set of tasks. */
         <section>
-          <List>
+          <List dense>
             <ListGroup id="today-tasks" label={t.today.goals}>
               {shown.some((it) => !it.slot && !it.habit) ? shown.filter((it) => !it.slot && !it.habit).map(row) : empty(t.today.nothingPlanned)}
             </ListGroup>
@@ -141,13 +141,13 @@ export function Today() {
               </ListGroup>
             )}
             {focus && shown.some(fromFocus) && (
-              <ListGroup id="today-topics" style={cvar(focus.id)} label={<span className="title-row">{focus.name}<FocusMark /></span>}>
+              <ListGroup id="today-topics" style={cvar(focus.id)} label={<span className="title-row"><FocusMark />{focus.name}</span>}>
                 {shown.filter(fromFocus).map(row)}
               </ListGroup>
             )}
             {otherTopics.map((c) => (
               <ListGroup key={c.id} style={cvar(c.id)}
-                label={shown.some((it) => it.slot === 'light' && it.ch === c.id) ? <span className="title-row">{c.name}<FocusMark secondary /></span> : c.name}>{shown.filter((it) => it.slot && it.ch === c.id && !fromFocus(it)).map(row)}</ListGroup>
+                label={shown.some((it) => it.slot === 'light' && it.ch === c.id) ? <span className="title-row"><FocusMark secondary />{c.name}</span> : c.name}>{shown.filter((it) => it.slot && it.ch === c.id && !fromFocus(it)).map(row)}</ListGroup>
             ))}
           </List>
         </section>
@@ -165,6 +165,7 @@ export function Today() {
 
 
       {sheet.value && <RoutineSheet key={sheet.value.id} {...sheet.props} routine={sheet.value} />}
+      {logSheet.value && <HabitLogSheet key={logSheet.value.id} {...logSheet.props} habit={logSheet.value} />}
       {taskSheet.value && <TaskSheet key={taskSheet.value.task.id} {...taskSheet.props} topic={taskSheet.value.topic} task={taskSheet.value.task} />}
     </>
   )
