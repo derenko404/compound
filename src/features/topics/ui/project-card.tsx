@@ -65,22 +65,22 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
       </div>
       {open && hasBody && (
         <div className="project-body">
-          {/* Steps lead and tick like a skill's; the one Today shows is the first still open. */}
-          {p.steps && p.steps.length > 0 && (
-            <div className="project-steps">
-              {p.steps.map((x) => (
-                <Row key={x.id} done={!readOnly && tick.on(x.id)} title={<span className="font-normal"><Linkify text={x.text} /></span>}
-                  check={readOnly ? undefined : <Check on={tick.on(x.id)} label={x.text} onToggle={(v) => tick.set(x.id, v)} />} />
-              ))}
-            </div>
-          )}
-          {/* The rest under the steps, one labelled line each: the goal, when it's done, what it trains, its size. */}
+          {/* What the project is, one labelled line each: the goal, when it's done, what it trains, its size. */}
           {(p.goal || p.done || p.trains?.length || p.size) && (
             <div className="project-notes">
               {p.goal && <p><Kind label={t.topics.form.goal}><Linkify text={p.goal} /></Kind></p>}
               {p.done && <p><Kind label={t.topics.project.doneWhen}><Linkify text={p.done} /></Kind></p>}
               {p.trains?.length ? <p><Kind label={t.topics.project.trains}>{p.trains.join(', ')}</Kind></p> : null}
               {p.size && <p><Kind label={t.topics.project.size}>{`${t.topics.sizes[p.size].label}, ${t.topics.sizes[p.size].means}`}</Kind></p>}
+            </div>
+          )}
+          {/* Then the steps, ticked like a skill's; the one Today shows is the first still open. */}
+          {p.steps && p.steps.length > 0 && (
+            <div className="project-steps">
+              {p.steps.map((x) => (
+                <Row key={x.id} done={!readOnly && tick.on(x.id)} title={<span className="font-normal"><Linkify text={x.text} /></span>}
+                  check={readOnly ? undefined : <Check on={tick.on(x.id)} label={x.text} onToggle={(v) => tick.set(x.id, v)} />} />
+              ))}
             </div>
           )}
           {/* The next step in words: start it, finish it, or take a finished one back up. */}
