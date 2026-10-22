@@ -92,6 +92,7 @@ export const wellbeing: typeof en['wellbeing'] = {
     meditation: { unit: 'хв', less: 'На 5 хвилин менше', more: 'На 5 хвилин більше' },
     reading: { unit: 'стор.', less: 'На 5 сторінок менше', more: 'На 5 сторінок більше' },
   },
+  logAmount: (name) => `Записати: ${name}`,
   badge: {
     amount: (n, target, unit) => `${n}/${target} ${unit}`,
     week: (n, of) => `${n}/${of} цього тижня`,
@@ -100,7 +101,6 @@ export const wellbeing: typeof en['wellbeing'] = {
   },
   amountValue: (n, unit) => `${n} ${unit}`,
   amountAverage: (n, unit) => `У середньому ${n} ${unit} цього тижня`,
-  sleepSlider: 'Скільки ви спали',
   startSession: 'Почати',
   readingAdd: (n) => `+${n}`,
   readingAddLabel: (n) => `Додати ${n} сторінок`,

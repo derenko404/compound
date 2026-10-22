@@ -1159,19 +1159,16 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .count-unit:focus-visible { outline: 2px solid var(--ring); }
 /* Stepper: − value + (water above 10 glasses, the timer's custom minutes). */
 /* Amount trackers' own controls (amount-controls.tsx), in the habit's colour (--c). */
-.sleep-log { display: grid; gap: var(--space-3); }
-.night { position: relative; display: flex; align-items: center; height: var(--control-sm); }
-.night-range { position: relative; z-index: 1; appearance: none; -webkit-appearance: none; width: 100%; height: var(--control-sm); margin: 0; background: transparent; cursor: pointer; }
-.night-range::-webkit-slider-runnable-track { height: var(--space-3); border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 30%, transparent), var(--c)) 0 0 / var(--pct) 100% no-repeat, var(--muted); }
-.night-range::-moz-range-track { height: var(--space-3); border-radius: 999px; background: var(--muted); }
-.night-range::-moz-range-progress { height: var(--space-3); border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 30%, transparent), var(--c)); }
-.night-range::-webkit-slider-thumb { -webkit-appearance: none; width: var(--space-6); height: var(--space-6); margin-top: calc((var(--space-3) - var(--space-6)) / 2); border-radius: 50%; background: var(--card); border: 2px solid var(--c); box-shadow: var(--shadow-card); }
-.night-range::-moz-range-thumb { width: var(--space-6); height: var(--space-6); border-radius: 50%; background: var(--card); border: 2px solid var(--c); box-shadow: var(--shadow-card); }
-.night-range:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 999px; }
-.night-goal { position: absolute; top: var(--space-2); bottom: var(--space-2); left: calc(var(--space-3) + (100% - 2 * var(--space-3)) * var(--goal)); width: 2px; border-radius: 1px; background: var(--foreground); opacity: 0.5; pointer-events: none; }
 /* Meditation and reading: a ring, the main action, and −/+ at the end of the row. */
-.amount-row { display: flex; align-items: center; gap: var(--space-3); }
-.amount-row .chips, .sleep-log .chips { flex-wrap: nowrap; margin: 0; }
+.amount-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.amount-row .chips { margin: 0; }
+/* HabitBadge: a habit's value on its My day row, a pill that opens the log sheet. */
+.habit-badge { display: inline-flex; align-items: center; min-height: var(--control-sm); padding: 0 var(--space-3); flex: none; border: 1px solid var(--border); border-radius: 999px; background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-caption); white-space: nowrap; font-variant-numeric: tabular-nums; cursor: pointer; transition: background var(--dur-fast); }
+.habit-badge b { color: var(--c); }
+.habit-badge:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+/* HabitLogSheet: the value under the title, as big as on the habit's card. */
+.log-sheet-value { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-stat); line-height: var(--leading-tight); color: var(--c); font-variant-numeric: tabular-nums; }
+.log-sheet-value small { font-family: var(--font-body); font-size: var(--text-small); font-weight: normal; color: var(--muted-foreground); }
 .amount-end { display: flex; gap: var(--space-2); margin-left: auto; }
 .amount-step { border: 1px solid var(--border); border-radius: 50%; }
 .count-step { display: flex; align-items: center; gap: var(--space-3); }
@@ -1292,6 +1289,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
   .chbtn:not([aria-pressed="true"]):hover, .qbtn:not([aria-pressed="true"]):hover { border-color: color-mix(in srgb, var(--foreground) 35%, var(--border)); }
   .chbtn[aria-pressed="true"]:hover { opacity: 0.9; }
   a.chip:hover { border-color: color-mix(in srgb, var(--c, var(--foreground)) 50%, var(--border)); }
+  .habit-badge:hover { background: color-mix(in srgb, var(--c) 10%, transparent); }
   .check:not(.on):hover { background: color-mix(in srgb, var(--c) 14%, transparent); }
   .dock-search:hover { color: var(--primary); }
   .bnav:hover, .tab:not([data-status="active"]):hover { color: var(--foreground); }

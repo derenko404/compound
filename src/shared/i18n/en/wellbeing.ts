@@ -97,6 +97,7 @@ export const wellbeing = {
     reading: { unit: 'pages', less: '5 pages less', more: '5 pages more' },
   },
   // The value on a habit's row on My day, a button that opens its log sheet.
+  logAmount: (name: string) => `Log ${name}`,
   badge: {
     amount: (n: string, target: string, unit: string) => `${n}/${target} ${unit}`,
     week: (n: number, of: number) => `${n}/${of} this week`,
@@ -106,7 +107,6 @@ export const wellbeing = {
   amountValue: (n: string, unit: string) => `${n} ${unit}`,
   amountAverage: (n: string, unit: string) => `${n} ${unit} on average this week`,
   // Each amount's own control: sleep's night bar, meditation's ring, reading's quick adds.
-  sleepSlider: 'Hours slept',
   startSession: 'Start',
   readingAdd: (n: number) => `+${n}`,
   readingAddLabel: (n: number) => `Add ${n} pages`,
