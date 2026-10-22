@@ -345,7 +345,7 @@
 .panel { padding: var(--space-4); }
 
 /* A topic-coloured strip on the left edge of rows, projects and cards. */
-.row::before, .project::before {
+.row::before {
   content: ""; position: absolute; left: 0; top: var(--space-3); bottom: var(--space-3);
   width: var(--accent-bar); border-radius: 0 var(--radius-xs) var(--radius-xs) 0; background: var(--c);
 }
@@ -1097,8 +1097,9 @@ main section.sec-group { margin-bottom: var(--space-6); }
 /* A project's steps: full width, a line above and below, so they read as their own block. */
 .project-steps { margin: 0 calc(-1 * var(--space-4)); border-bottom: 1px solid var(--border); }
 .project-steps .row:first-child { border-top: 1px solid var(--border); }
-/* A project's goal and details under its steps: one labelled line each (Kind), in small text. */
-.project-notes { display: grid; gap: var(--space-2); font-size: var(--text-small); }
+/* An open project: its goal as the lead, then when it counts as done in small muted text. */
+.project-goal { color: var(--foreground); }
+.project-done { font-size: var(--text-small); color: var(--muted-foreground); }
 .row.flash { animation: flash 1.6s ease; }
 .project.flash { animation: flash 1.6s ease; }
 @keyframes flash { 0%, 40% { background: color-mix(in srgb, var(--c) 16%, transparent); } 100% { background: transparent; } }

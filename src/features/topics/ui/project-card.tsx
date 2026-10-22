@@ -26,6 +26,12 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
   const stepsDone = p.steps?.filter((x) => tick.on(x.id)).length ?? 0
   const [open, setOpen] = useState(hash === p.code)
   const ref = useRef<HTMLDivElement>(null)
+  // The header's quiet facts after the status: steps ticked, size, what it trains.
+  const facts = [
+    p.steps?.length && !readOnly ? `${stepsDone}/${p.steps.length}` : null,
+    p.size ? t.topics.sizes[p.size].label : null,
+    p.trains?.length ? p.trains.join(', ') : null,
+  ].filter((x): x is string => !!x)
   // Your own projects always open: the status button lives inside.
   const hasBody = !readOnly || !!(p.goal || p.steps?.length || p.done || p.trains?.length || p.size)
   const setStatus = (nx: ProjectStatus) => {
@@ -53,10 +59,10 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
         <button className="project-name" aria-expanded={open} onClick={() => setOpen(!open)}>
           <span className="project-title">
             {p.name}
-            {/* Where it stands, in its colour, then the steps ticked. */}
-            {!readOnly && (
+            {/* One quiet line: where it stands (in its colour), the steps ticked, its size and what it trains. */}
+            {(!readOnly || facts.length > 0) && (
               <span className="project-status" style={{ '--c': `var(${STATUS_TONE[sv]})` } as CSSProperties}>
-                <b>{LABEL[sv]}</b>{p.steps && p.steps.length > 0 && ` · ${stepsDone}/${p.steps.length}`}
+                {[...(readOnly ? [] : [<b key="status">{LABEL[sv]}</b>]), ...facts].flatMap((x, i) => (i ? [' · ', x] : [x]))}
               </span>
             )}
           </span>
@@ -65,15 +71,9 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
       </div>
       {open && hasBody && (
         <div className="project-body">
-          {/* What the project is, one labelled line each: the goal, when it's done, what it trains, its size. */}
-          {(p.goal || p.done || p.trains?.length || p.size) && (
-            <div className="project-notes">
-              {p.goal && <p><Kind label={t.topics.form.goal}><Linkify text={p.goal} /></Kind></p>}
-              {p.done && <p><Kind label={t.topics.project.doneWhen}><Linkify text={p.done} /></Kind></p>}
-              {p.trains?.length ? <p><Kind label={t.topics.project.trains}>{p.trains.join(', ')}</Kind></p> : null}
-              {p.size && <p><Kind label={t.topics.project.size}>{`${t.topics.sizes[p.size].label}, ${t.topics.sizes[p.size].means}`}</Kind></p>}
-            </div>
-          )}
+          {/* What it is: the goal as the lead, then when it counts as done, quieter. */}
+          {p.goal && <p className="project-goal"><Linkify text={p.goal} /></p>}
+          {p.done && <p className="project-done"><Kind label={t.topics.project.doneWhen} color="--foreground"><Linkify text={p.done} /></Kind></p>}
           {/* Then the steps, ticked like a skill's; the one Today shows is the first still open. */}
           {p.steps && p.steps.length > 0 && (
             <div className="project-steps">
