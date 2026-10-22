@@ -49,7 +49,6 @@ export const wellbeing = {
     line: (best: number, slips: number) => `Longest run ${best} · ${plural(slips, { one: '# slip', other: '# slips' })}`,
     run: 'current run',
     best: 'longest run',
-    rowTitle: (name: string) => `${name}: clean today`,
   },
   smoking: {
     line: (saved: string, next?: string) => `${saved} saved${next ? ` · next: ${next}` : ''}`,
@@ -68,8 +67,6 @@ export const wellbeing = {
     chain: (run: number, target: number) => `${run} of ${target} days in a row`,
     mark: 'Mark today done',
     details: (target: number) => `A missed day starts the chain again. After ${target} days in a row the habit counts as built.`,
-    rowBuilt: (n: number) => `Built. ${n}-day streak`,
-    rowDay: (day: number, target: number) => `Day ${day} of ${target}`,
   },
   gym: {
     thisWeek: 'this week',
@@ -78,9 +75,7 @@ export const wellbeing = {
     month: 'this month',
     total: 'in total',
     perWeek: 'days a week',
-    rowCatchUp: (name: string, day: string) => `${name}: catch up on ${day}`,
-    rowMissed: (day: string, week: number, perWeek: number) => `You missed ${day}. Going today still counts for this week (${week} of ${perWeek}).`,
-    rowWeek: (week: number, perWeek: number) => `${week} of ${perWeek} this week`,
+    rowCatchUp: (day: string) => `Catch up on ${day}`,
   },
   water: {
     // The row of glasses (kit CountRow's unit).
@@ -93,9 +88,6 @@ export const wellbeing = {
     glasses: 'glasses',
     bar: (n: number) => `${n} glasses`,
     onTarget: (n: number) => `${n} ${n === 1 ? 'day' : 'days'} on target`,
-    rowTitle: (name: string, n: number, target: number) => `${name}: ${n} of ${target}`,
-    reached: 'Target reached',
-    toGo: (n: number) => `${n} to go`,
   },
   // An amount a day against a target (water, sleep, meditation, reading): the unit, and the stepper's buttons.
   amounts: {
@@ -104,8 +96,13 @@ export const wellbeing = {
     meditation: { unit: 'min', less: '5 minutes less', more: '5 minutes more' },
     reading: { unit: 'pages', less: '5 pages less', more: '5 pages more' },
   },
-  amountRow: (name: string, n: string, target: string, unit: string) => `${name}: ${n} of ${target} ${unit}`,
-  amountToGo: (n: string, unit: string) => `${n} ${unit} to go`,
+  // The value on a habit's row on My day, a button that opens its log sheet.
+  badge: {
+    amount: (n: string, target: string, unit: string) => `${n}/${target} ${unit}`,
+    week: (n: number, of: number) => `${n}/${of} this week`,
+    clean: (n: number) => `${n} d`,
+    chain: (n: number, of: number) => `${n}/${of}`,
+  },
   amountValue: (n: string, unit: string) => `${n} ${unit}`,
   amountAverage: (n: string, unit: string) => `${n} ${unit} on average this week`,
   // Each amount's own control: sleep's night bar, meditation's ring, reading's quick adds.

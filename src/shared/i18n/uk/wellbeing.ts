@@ -48,7 +48,6 @@ export const wellbeing: typeof en['wellbeing'] = {
     line: (best, slips) => `Найдовша серія ${best} · ${plural(slips, { one: '# зрив', few: '# зриви', many: '# зривів', other: '# зриву' })}`,
     run: 'поточна серія',
     best: 'найдовша серія',
-    rowTitle: (name) => `${name}: сьогодні чисто`,
   },
   smoking: {
     line: (saved, next) => `${saved} заощаджено${next ? ` · далі: ${next}` : ''}`,
@@ -67,8 +66,6 @@ export const wellbeing: typeof en['wellbeing'] = {
     chain: (run, target) => `${run} з ${target} днів поспіль`,
     mark: 'Відмітити сьогодні',
     details: (target) => `Пропущений день починає ланцюжок заново. ${plural(target, { one: 'Після # дня', other: 'Після # днів' })} поспіль звичка вважається сформованою.`,
-    rowBuilt: (n) => `Сформовано. ${daysInRow(n)}`,
-    rowDay: (day, target) => `День ${day} з ${target}`,
   },
   gym: {
     thisWeek: 'цього тижня',
@@ -76,9 +73,7 @@ export const wellbeing: typeof en['wellbeing'] = {
     month: 'цього місяця',
     total: 'загалом',
     perWeek: 'днів на тиждень',
-    rowCatchUp: (name, day) => `${name}: надолужте ${day}`,
-    rowMissed: (day, week, perWeek) => `Ви пропустили ${day}. Якщо підете сьогодні, це зарахується в цей тиждень (${week} з ${perWeek}).`,
-    rowWeek: (week, perWeek) => `${week} з ${perWeek} цього тижня`,
+    rowCatchUp: (day) => `Надолужте ${day}`,
   },
   water: {
     unit: {
@@ -90,9 +85,6 @@ export const wellbeing: typeof en['wellbeing'] = {
     glasses: 'склянок',
     bar: (n) => plural(n, { one: '# склянка', few: '# склянки', many: '# склянок', other: '# склянки' }),
     onTarget: (n) => plural(n, { one: 'Ціль виконано # день', few: 'Ціль виконано # дні', many: 'Ціль виконано # днів', other: 'Ціль виконано # дня' }),
-    rowTitle: (name, n, target) => `${name}: ${n} з ${target}`,
-    reached: 'Ціль досягнуто',
-    toGo: (n) => `Залишилося ${n}`,
   },
   amounts: {
     water: { unit: 'склянок', less: 'Прибрати склянку', more: 'Додати склянку' },
@@ -100,8 +92,12 @@ export const wellbeing: typeof en['wellbeing'] = {
     meditation: { unit: 'хв', less: 'На 5 хвилин менше', more: 'На 5 хвилин більше' },
     reading: { unit: 'стор.', less: 'На 5 сторінок менше', more: 'На 5 сторінок більше' },
   },
-  amountRow: (name, n, target, unit) => `${name}: ${n} з ${target} ${unit}`,
-  amountToGo: (n, unit) => `Залишилося ${n} ${unit}`,
+  badge: {
+    amount: (n, target, unit) => `${n}/${target} ${unit}`,
+    week: (n, of) => `${n}/${of} цього тижня`,
+    clean: (n) => `${n} дн.`,
+    chain: (n, of) => `${n}/${of}`,
+  },
   amountValue: (n, unit) => `${n} ${unit}`,
   amountAverage: (n, unit) => `У середньому ${n} ${unit} цього тижня`,
   sleepSlider: 'Скільки ви спали',

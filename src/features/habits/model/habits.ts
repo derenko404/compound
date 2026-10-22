@@ -102,7 +102,11 @@ export function gymMakeUp(s: State, h: Habit, today: Date) {
 
 /* ---------- Today ---------- */
 
-export interface HabitRow { habit: Habit; title: string; sub: string; done: boolean }
+/**
+ * The row's text is the habit's name. sub only says what the badge can't (a day to catch up, a slip), the badge holds
+ * the number (opens the log sheet), and progress (0..1) fills the row's check as a ring.
+ */
+export interface HabitRow { habit: Habit; title: string; sub: string; done: boolean; badge: string; progress: number }
 
 // One row per habit due today. Its tick writes the habit's log, not the day's done list.
 export function habitRows(s: State, today: Date): HabitRow[] {
@@ -110,34 +114,33 @@ export function habitRows(s: State, today: Date): HabitRow[] {
   const rows: HabitRow[] = []
   for (const h of habitsOf(s)) {
     const v = valueOn(s, h, k)
+    const done = v === DONE
     // Gym also shows on a free day to make up a missed one, and stays once ticked.
     const makeUp = h.type === 'gym' && !dueOn(h, today) && started(h, today) ? gymMakeUp(s, h, today) : null
-    if (!dueOn(h, today) && !makeUp && !(h.type === 'gym' && v === DONE)) continue
+    if (!dueOn(h, today) && !makeUp && !(h.type === 'gym' && done)) continue
+    const row = { habit: h, title: h.name, sub: v === SLIP ? W.slip.logged : '', done, progress: done ? 1 : 0 }
     switch (h.type) {
       case 'gym': {
         const { week, perWeek } = gymStats(s, h, today)
-        rows.push({ habit: h, title: makeUp ? W.gym.rowCatchUp(h.name, makeUp) : h.name, sub: makeUp ? W.gym.rowMissed(makeUp, week, perWeek) : W.gym.rowWeek(week, perWeek), done: v === DONE })
+        rows.push({ ...row, sub: makeUp ? W.gym.rowCatchUp(makeUp) : '', badge: W.badge.week(week, perWeek) })
         break
       }
       case 'water': case 'sleep': case 'meditation': case 'reading': {
         const { today: n, target } = amountStats(s, { ...h, type: h.type }, today)
-        const unit = W.amounts[h.type].unit
-        rows.push({ habit: h, title: W.amountRow(h.name, amountText(n), amountText(target), unit), sub: n >= target ? W.water.reached : W.amountToGo(amountText(target - n), unit), done: n >= target })
+        rows.push({ ...row, sub: '', done: n >= target, progress: Math.min(1, n / target), badge: W.badge.amount(amountText(n), amountText(target), W.amounts[h.type].unit) })
         break
       }
-      case 'smoking': {
-        const n = dates.dayDiff(dates.parseKey(h.start_date!), today)
-        rows.push({ habit: h, title: W.smoking.today, sub: v === SLIP ? W.slip.logged : CRAVING_TIPS[n % CRAVING_TIPS.length], done: v === DONE })
+      case 'smoking':
+        rows.push({ ...row, badge: W.badge.clean(smokingStats(s, h, today).clean) })
         break
-      }
+      case 'break':
+        rows.push({ ...row, badge: W.badge.clean(cleanStats(s, h, today).clean) })
+        break
       case 'build': {
         const c = chain(s, h, today)
-        rows.push({ habit: h, title: h.name, sub: c.complete ? W.build.rowBuilt(c.run) : W.build.rowDay(Math.min(c.day, c.target), c.target), done: v === DONE })
+        rows.push({ ...row, badge: c.complete ? W.build.built : W.badge.chain(Math.min(c.day, c.target), c.target) })
         break
       }
-      case 'break':
-        rows.push({ habit: h, title: W.clean.rowTitle(h.name), sub: v === SLIP ? W.slip.logged : h.why ?? '', done: v === DONE })
-        break
     }
   }
   return rows
