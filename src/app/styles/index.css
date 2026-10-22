@@ -358,8 +358,7 @@
 /* A project's status pill: a tinted chip; each tap moves to the next status. */
 /* Button variant tint: a soft background and text in --tint (primary unless set). */
 .btn-tint { background: color-mix(in srgb, var(--tint, var(--primary)) 15%, transparent); color: var(--tint, var(--primary)); }
-/* A project in its topic's list: two lines and its code, so more room than a plain row. */
-.row.project-row { padding-block: var(--space-4); }
+/* A project in its topic's list: its code a step smaller beside the name. */
 .project-row .project-code { font-size: var(--text-small); }
 /* A project's status under its name: the word in grey, amber while in progress, green when done (--c). */
 .project-title { display: grid; min-width: 0; }
@@ -941,7 +940,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
    Rows and checks
    ===================================================================== */
 
-.row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); position: relative; }
+.row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-4); border-top: 1px solid var(--border); position: relative; }
 .row:first-child { border-top: 0; }
 .row.no-check { grid-template-columns: 1fr auto; }
 .row-body { min-width: 0; }
