@@ -41,9 +41,12 @@ export const router = createRouter({
   defaultViewTransition: true,
 })
 router.subscribe('onBeforeNavigate', ({ fromLocation, toLocation }) => fromLocation && pageMotion.set(motionBetween(fromLocation.pathname, toLocation.pathname)))
+// A back or forward swipe (a history move, not a link) is animated by the browser already; ours would play it twice.
+let historyMove = false
+router.history.subscribe(({ action }) => { historyMove = action.type !== 'PUSH' && action.type !== 'REPLACE' })
 // No transition at all unless the page animates: an instant one would still flash both pages for a frame.
 const startTransition = router.startViewTransition
-router.startViewTransition = (fn) => (pageMotion.animates() ? startTransition(fn) : void fn())
+router.startViewTransition = (fn) => (pageMotion.animates() && !historyMove ? startTransition(fn) : void fn())
 
 declare module '@tanstack/react-router' {
   interface Register {
