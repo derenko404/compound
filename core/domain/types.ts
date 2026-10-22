@@ -111,13 +111,13 @@ export interface DayLog {
 /* ---------- Wellbeing habits ---------- */
 
 // Each type is a skin over the same habit: the shape below is shared, the widget, Today row and texts differ.
-export type HabitType = 'gym' | 'water' | 'smoking' | 'build' | 'break'
+export type HabitType = 'gym' | 'water' | 'sleep' | 'meditation' | 'reading' | 'smoking' | 'build' | 'break'
 
 // What only some types use (table column custom_data).
 export interface HabitData {
   per_day?: number // smoking: cigarettes a day before quitting
   price?: number // smoking: price of a pack of 20
-  target?: number // water: glasses a day; build: days in the challenge (21)
+  target?: number // water: glasses a day; sleep: hours a night; meditation: minutes a day; reading: pages a day; build: days in the challenge (21)
 }
 
 // Field names match the table's columns.

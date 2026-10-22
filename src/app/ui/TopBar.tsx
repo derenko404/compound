@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, Search, Timer as TimerIcon, WifiOff } from 'lucide-react'
-import { BarBack, BarMenu, Brand, useBar } from '@/shared/ui'
+import { BarBack, BarMenu, Brand, useBar, type PageBar } from '@/shared/ui'
+import { useBack } from './back'
 import { useSyncStatus, type SyncState } from '@/shared/store/StoreProvider'
 import { clock, remaining, useTimer } from '@/features/timer'
 import { t } from '@/shared/i18n'
@@ -38,13 +39,18 @@ function TimerPill() {
   )
 }
 
+// An inner page's back button: to where you came from (see back.ts).
+function Back({ parent }: { parent: NonNullable<PageBar['back']> }) {
+  return <BarBack {...useBack(parent)} />
+}
+
 // Top-level pages show the brand and sync state; inner pages show only their back link. The right side is the page's ⋯ menu.
 export function TopBar({ sync }: { sync: SyncState }) {
   const bar = useBar()
   return (
     <header className="top">
       <div className="flex min-w-0 items-center gap-2">
-        {bar?.back ? <BarBack {...bar.back} /> : <Link to="/today" className="text-foreground no-underline"><Brand /></Link>}
+        {bar?.back ? <Back parent={bar.back} /> : <Link to="/today" className="text-foreground no-underline"><Brand /></Link>}
         {!bar?.back && <SyncIcon sync={sync} />}
       </div>
       {/* Keeps the bar the same height on pages without a ⋯. */}

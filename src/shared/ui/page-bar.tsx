@@ -48,7 +48,9 @@ export function usePageBar(bar: PageBar) {
   useEffect(() => () => set(null), [set])
 }
 
-export function BarBack({ to, label }: { to: string; label: string }) {
+// The back button: a link to `to`, or with `onClick` a step back through the history (the app chooses which).
+export function BarBack({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) {
+  if (onClick) return <button type="button" className="bar-back" onClick={onClick}><ChevronLeft aria-hidden="true" />{label}</button>
   return <Link to={to} className="bar-back"><ChevronLeft aria-hidden="true" />{label}</Link>
 }
 

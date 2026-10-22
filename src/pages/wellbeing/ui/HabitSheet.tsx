@@ -25,11 +25,14 @@ export function newHabit(s: State): Habit {
 
 // The + picker: ready-made trackers (one each, with their own screens and content), then the ones you name yourself.
 const PICK_GROUPS: { label: string; types: HabitType[] }[] = [
-  { label: W.form.readyMade, types: ['gym', 'water', 'smoking'] },
+  { label: W.form.readyMade, types: ['gym', 'water', 'sleep', 'meditation', 'reading', 'smoking'] },
   { label: W.form.yourOwn, types: ['build', 'break'] },
 ]
 
 const num = (v: string) => (v === '' ? undefined : Number(v))
+
+// The daily target's label for each amount tracker.
+const TARGET_LABEL: Partial<Record<HabitType, string>> = { water: W.form.glassesADay, sleep: W.form.hoursANight, meditation: W.form.minutesADay, reading: W.form.pagesADay }
 
 export function HabitSheet({ habit, ...sheet }: { habit: Habit; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { state, dispatch } = useStore()
@@ -81,7 +84,7 @@ export function HabitSheet({ habit, ...sheet }: { habit: Habit; open: boolean; o
       <TextField label={W.form.why} value={h.why ?? ''} onChange={(why) => set({ why })} placeholder={W.form.whyPlaceholder} full autoFocus={!!HABIT_DEFAULTS[h.type].single} />
       <div className="grid2">
         <TextField label={START_LABEL[h.type]} type="date" value={h.start_date ?? ''} onChange={(start_date) => set({ start_date: start_date || null })} />
-        {h.type === 'water' && <TextField label={W.form.glassesADay} type="number" value={String(h.custom_data.target ?? '')} onChange={(v) => setData({ target: num(v) })} />}
+        {TARGET_LABEL[h.type] && <TextField label={TARGET_LABEL[h.type]!} type="number" value={String(h.custom_data.target ?? '')} onChange={(v) => setData({ target: num(v) })} />}
         {h.type === 'smoking' && <>
           <TextField label={W.form.perDay} type="number" value={String(h.custom_data.per_day ?? '')} onChange={(v) => setData({ per_day: num(v) })} />
           <TextField label={W.form.price} type="number" value={String(h.custom_data.price ?? '')} onChange={(v) => setData({ price: num(v) })} />

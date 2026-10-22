@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-// One choice out of a few, as a single bar split into equal segments (the theme, a view). Same look as WeekdaysField.
+// One choice out of a few, as iOS's segmented control: equal segments on a muted track, the chosen one raised (as WeekdaysField).
 export function Segmented<T extends string>({ value, onChange, options, label }: {
   value: T; onChange: (v: T) => void; options: { value: T; label: ReactNode }[]; label: string
 }) {

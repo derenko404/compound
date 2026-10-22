@@ -17,6 +17,7 @@ import { SearchSheet } from '@/features/search'
 import { pushReminders } from '@/features/reminders'
 import { supabase } from '@/shared/api/backends'
 import { useFirstRunTour } from '@/features/tour'
+import { useTimerMeditation } from '@/features/habits'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
 import { TopTabs } from './TopTabs'
@@ -40,6 +41,7 @@ export function Shell() {
   }, [mode, ready, pathname, nav])
   const seeding = useSeed()
   useFirstRunTour(mode !== 'signin' && ready && !seeding, pathname)
+  useTimerMeditation()
   const fx = useRef<HTMLCanvasElement>(null)
   const stateRef = useRef(state)
   stateRef.current = state

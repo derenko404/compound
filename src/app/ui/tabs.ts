@@ -12,8 +12,7 @@ export type Tab = { to: To; label: string; icon: LucideIcon; sections?: Section[
  * opens by default.
  */
 export const TABS: Tab[] = [
-  // The timer opens from My day's focus card, as an inner page of it.
-  { to: '/today', label: t.nav.tabs.today, icon: Sun, inner: ['/timer'] },
+  { to: '/today', label: t.nav.tabs.today, icon: Sun },
   { to: '/topics', label: t.nav.tabs.topics, icon: Layers },
   { to: '/lists', label: t.nav.tabs.library, icon: Library, lead: t.nav.leads.library, sections: [
     { to: '/lists', label: t.nav.tabs.lists },
@@ -28,6 +27,18 @@ const pathsOf = (tab: Tab) => [...(tab.sections?.map((s) => s.to) ?? [tab.to]), 
 // Which tab a page belongs to (inner pages too: /lists/films is Library), or -1.
 export const tabOf = (pathname: string) => TABS.findIndex((tab) => pathsOf(tab).some((p) => pathname.startsWith(p)))
 
+// Pages any tab opens (the timer, from My day, Wellbeing or anywhere): they stay under the tab you came from.
+const SHARED = ['/timer']
+const isShared = (pathname: string) => SHARED.some((p) => pathname.startsWith(p))
+let lastTab = 0
+
+// The tab the bars light for a page: its own, or for a shared page the one you came from.
+export function tabFor(pathname: string) {
+  const i = tabOf(pathname)
+  if (i >= 0) lastTab = i
+  return i >= 0 ? i : isShared(pathname) ? lastTab : -1
+}
+
 // The tab whose section is exactly this page, for the row of section tabs (inner pages show none).
 export const sectionsAt = (pathname: string) => TABS.find((tab) => tab.sections?.some((s) => s.to === pathname))
 
@@ -41,6 +52,9 @@ export const rememberSection = (tab: Tab, to: To) => void last.set(tab, to)
  * between tabs and sections at once.
  */
 export const motionBetween = (from: string, to: string): MotionDirection => {
+  // A shared page opens over whatever you were on, and closes back to it.
+  if (isShared(to) && !isShared(from)) return 'forward'
+  if (isShared(from) && !isShared(to)) return 'back'
   const depth = (p: string) => p.split('/').filter(Boolean).length + (TABS.some((tab) => tab.inner?.some((x) => p.startsWith(x))) ? 1 : 0)
   if (tabOf(from) < 0 || tabOf(from) !== tabOf(to) || depth(from) === depth(to)) return 'none'
   return depth(to) > depth(from) ? 'forward' : 'back'

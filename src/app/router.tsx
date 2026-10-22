@@ -13,6 +13,7 @@ import { Timer } from '@/pages/timer'
 import { t } from '@/shared/i18n'
 import { Shell } from '@/app/ui/Shell'
 import { motionBetween } from '@/app/ui/tabs'
+import { backStack } from '@/app/ui/back'
 import { pageMotion } from '@/shared/lib/page-motion'
 
 const root = createRootRoute({ component: () => <BarProvider><Shell /></BarProvider> })
@@ -43,7 +44,18 @@ export const router = createRouter({
 router.subscribe('onBeforeNavigate', ({ fromLocation, toLocation }) => fromLocation && pageMotion.set(motionBetween(fromLocation.pathname, toLocation.pathname)))
 // A back or forward swipe (a history move, not a link) is animated by the browser already; ours would play it twice.
 let historyMove = false
-router.history.subscribe(({ action }) => { historyMove = action.type !== 'PUSH' && action.type !== 'REPLACE' })
+// Our back button steps back through the history too, but nothing animates it, so it keeps our transition.
+let backTap = false
+router.history.subscribe(({ action }) => {
+  historyMove = action.type !== 'PUSH' && action.type !== 'REPLACE' && !backTap
+  backTap = false
+})
+backStack.use(() => {
+  backTap = true
+  router.history.back()
+})
+// Which page sits at each step of the history, for back buttons that return where you came from.
+router.subscribe('onResolved', ({ toLocation }) => backStack.record((toLocation.state as { __TSR_index?: number }).__TSR_index ?? 0, toLocation.pathname))
 // No transition at all unless the page animates: an instant one would still flash both pages for a frame.
 const startTransition = router.startViewTransition
 router.startViewTransition = (fn) => (pageMotion.animates() && !historyMove ? startTransition(fn) : void fn())

@@ -2,7 +2,7 @@
 import type { State } from './types'
 import { matchesWhen, topics } from './content'
 import { days } from './days'
-import { DONE, SLIP, dueOn, gymMissedDay, habitsOf, started, valueOn, waterStats } from './habits'
+import { DONE, SLIP, amountStats, dueOn, gymMissedDay, habitsOf, isAmount, started, valueOn } from './habits'
 
 // Evening reminders repeat every 2 hours from the chosen hour until this one.
 export const LAST_HOUR = 22
@@ -36,7 +36,7 @@ function wallClock(now: Date, timeZone: string) {
 }
 
 /**
- * Your own tasks and habits today: how many, and the ones still open by name (water with its glasses:
+ * Your own tasks and habits today: how many, and the ones still open by name (an amount with its count:
  * "Water 3/8"). Topic tasks count too; the rows built from the topics are suggestions and never do. Matches the
  * Today page's task and habit rows.
  */
@@ -54,9 +54,9 @@ function ownToday(s: State, today: Date) {
     const makeUp = h.type === 'gym' && !dueOn(h, today) && started(h, today) && !!gymMissedDay(s, h, today)
     if (!dueOn(h, today) && !makeUp) continue
     total++
-    if (h.type === 'water') {
-      const w = waterStats(s, h, today)
-      if (w.today < w.target) left.push(`${h.name} ${w.today}/${w.target}`)
+    if (isAmount(h)) {
+      const a = amountStats(s, h, today)
+      if (a.today < a.target) left.push(`${h.name} ${a.today}/${a.target}`)
     } else {
       // A logged slip (quit smoking, break a habit) is an answer for the day too.
       const v = valueOn(s, h, k)

@@ -1,15 +1,18 @@
 // Wellbeing habits: the maths every skin shares, and each type's Today row. No UI here.
 import type { Habit, HabitData, HabitType, State } from '@core/domain/types'
-import { DONE, SLIP, dueOn, gymMissedDay, gymStats, habitsOf, logOf, started, valueOn, waterStats } from '@core/domain/habits'
+import { AMOUNTS, DONE, SLIP, amountStats, dueOn, gymMissedDay, gymStats, habitsOf, logOf, started, valueOn } from '@core/domain/habits'
 import { dates } from '@/shared/lib/dates'
-import { t } from '@/shared/i18n'
+import { currentLocale, t } from '@/shared/i18n'
 
 // The maths with no words lives in core, so the worker's reminders use it too.
-export { DONE, SLIP, dueOn, gymStats, habitsOf, logOf, started, valueOn, waterStats } from '@core/domain/habits'
+export { AMOUNTS, DONE, SLIP, amountStats, dueOn, gymStats, habitsOf, isAmount, logOf, started, valueOn, type AmountType } from '@core/domain/habits'
 
 const W = t.wellbeing
 
 export const NEW_HABIT_DAYS = 21
+
+// An amount as shown (sleep's 7.5 h, in the reader's own decimals).
+export const amountText = (n: number) => n.toLocaleString(currentLocale(), { maximumFractionDigits: 1 })
 
 // Quit smoking: health milestones by minutes since the quit day (their words are in the dictionary, same order), and tips shown on Today.
 const DAY = 60 * 24
@@ -18,12 +21,15 @@ export const MILESTONES = W.milestones.map((m, i) => ({ ...m, mins: MINS[i] }))
 
 export const CRAVING_TIPS = W.cravingTips
 
-// What a fresh habit of each type starts with. Gym, water and smoking are one per account.
+// What a fresh habit of each type starts with. The ready-made ones (all but build and break) are one per account.
 export const HABIT_DEFAULTS: Record<HabitType, { name: string; days: number[]; data: HabitData; single?: boolean }> = {
   gym: {
     name: W.types.gym.label, days: [1, 3, 5], single: true, data: {},
   },
-  water: { name: W.types.water.label, days: [], data: { target: 8 }, single: true },
+  water: { name: W.types.water.label, days: [], data: { target: AMOUNTS.water.target }, single: true },
+  sleep: { name: W.types.sleep.label, days: [], data: { target: AMOUNTS.sleep.target }, single: true },
+  meditation: { name: W.types.meditation.label, days: [], data: { target: AMOUNTS.meditation.target }, single: true },
+  reading: { name: W.types.reading.label, days: [], data: { target: AMOUNTS.reading.target }, single: true },
   smoking: { name: W.types.smoking.label, days: [], data: { per_day: 10, price: 100 }, single: true },
   build: { name: '', days: [], data: { target: NEW_HABIT_DAYS } },
   break: { name: '', days: [], data: {} },
@@ -113,9 +119,10 @@ export function habitRows(s: State, today: Date): HabitRow[] {
         rows.push({ habit: h, title: makeUp ? W.gym.rowCatchUp(h.name, makeUp) : h.name, sub: makeUp ? W.gym.rowMissed(makeUp, week, perWeek) : W.gym.rowWeek(week, perWeek), done: v === DONE })
         break
       }
-      case 'water': {
-        const { today: n, target } = waterStats(s, h, today)
-        rows.push({ habit: h, title: W.water.rowTitle(h.name, n, target), sub: n >= target ? W.water.reached : W.water.toGo(target - n), done: n >= target })
+      case 'water': case 'sleep': case 'meditation': case 'reading': {
+        const { today: n, target } = amountStats(s, { ...h, type: h.type }, today)
+        const unit = W.amounts[h.type].unit
+        rows.push({ habit: h, title: W.amountRow(h.name, amountText(n), amountText(target), unit), sub: n >= target ? W.water.reached : W.amountToGo(amountText(target - n), unit), done: n >= target })
         break
       }
       case 'smoking': {

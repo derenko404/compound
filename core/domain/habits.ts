@@ -38,11 +38,25 @@ export function gymMissedDay(s: State, h: Habit, today: Date) {
   return scheduled.find((d) => log[days.keyOf(d)] !== DONE) ?? null
 }
 
-/* ---------- Water: glasses today against a target ---------- */
+/* ---------- An amount a day against a target: water, sleep, meditation, reading ---------- */
 
-export function waterStats(s: State, h: Habit, today: Date) {
+export type AmountType = 'water' | 'sleep' | 'meditation' | 'reading'
+
+// Each amount's default target and the step its stepper moves by (water counts glasses one by one).
+export const AMOUNTS: Record<AmountType, { target: number; step: number }> = {
+  water: { target: 8, step: 1 },
+  sleep: { target: 8, step: 0.5 },
+  meditation: { target: 10, step: 5 },
+  reading: { target: 10, step: 5 },
+}
+
+export const isAmount = (h: Habit): h is Habit & { type: AmountType } => h.type in AMOUNTS
+
+export function amountStats(s: State, h: Habit & { type: AmountType }, today: Date) {
   const log = logOf(s, h)
-  const target = h.custom_data.target ?? 8
+  const target = h.custom_data.target ?? AMOUNTS[h.type].target
+  const logged = Object.entries(log).filter(([, v]) => v > 0)
+  const recent = logged.filter(([d]) => d > days.keyOf(days.addDays(today, -7)) && d <= days.keyOf(today))
   const monday = days.addDays(today, -((today.getDay() + 6) % 7))
   return {
     today: log[days.keyOf(today)] ?? 0,
@@ -52,5 +66,8 @@ export function waterStats(s: State, h: Habit, today: Date) {
       return { day: d, value: log[days.keyOf(d)] ?? 0, future: d > today }
     }),
     onTarget: Object.values(log).filter((v) => v >= target).length,
+    // The average over the logged days of the last week (sleep's "7.2 h a night").
+    average: recent.length ? recent.reduce((n, [, v]) => n + v, 0) / recent.length : 0,
+    total: logged.reduce((n, [, v]) => n + v, 0),
   }
 }

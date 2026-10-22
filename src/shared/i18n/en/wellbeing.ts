@@ -7,7 +7,7 @@ export const wellbeing = {
   quoteOfDay: 'Quote of the day',
   habits: 'Habits',
   add: 'Add a tracker',
-  empty: 'No habits yet. Tap + to add a tracker: gym, water, quitting smoking, or a habit of your own.',
+  empty: 'No habits yet. Tap + to add a tracker: gym, water, sleep, meditation, reading, quitting smoking, or a habit of your own.',
   deleteText: "Its history goes with it. This can't be undone.",
   mood: {
     // Mood 1 to 5.
@@ -22,12 +22,15 @@ export const wellbeing = {
   types: {
     gym: { label: 'Gym', pitch: 'Workouts on your days, counted each week.' },
     water: { label: 'Water', pitch: 'Glasses a day against a target.' },
+    sleep: { label: 'Sleep', pitch: 'Hours a night against a goal, with your weekly average.' },
+    meditation: { label: 'Meditation', pitch: 'Minutes a day. Sessions on the timer count by themselves.' },
+    reading: { label: 'Reading', pitch: 'Pages a day against a goal.' },
     smoking: { label: 'Quit smoking', pitch: 'Clean days, money saved and health milestones.' },
     build: { label: 'New habit', pitch: '21 days in a row. A missed day starts again.' },
     break: { label: 'Break a habit', pitch: 'Clean days since you stopped. Log a slip and keep going.' },
   },
   // The start date's label per type.
-  start: { smoking: 'Quit day', break: 'First clean day', build: 'Day 1', gym: 'First week from', water: 'Start' },
+  start: { smoking: 'Quit day', break: 'First clean day', build: 'Day 1', gym: 'First week from', water: 'Start', sleep: 'Start', meditation: 'Start', reading: 'Start' },
   waiting: (label: string, date: string, n: number) => `${label} ${date}, in ${n} days`,
   notStarted: 'Not started',
   // Weekdays from Sunday, as in "Catch up on Friday" (t.nav.weekdays is the plain form, this one fits these phrases).
@@ -94,6 +97,22 @@ export const wellbeing = {
     reached: 'Target reached',
     toGo: (n: number) => `${n} to go`,
   },
+  // An amount a day against a target (water, sleep, meditation, reading): the unit, and the stepper's buttons.
+  amounts: {
+    water: { unit: 'glasses', less: 'Remove a glass', more: 'Add a glass' },
+    sleep: { unit: 'h', less: 'Half an hour less', more: 'Half an hour more' },
+    meditation: { unit: 'min', less: '5 minutes less', more: '5 minutes more' },
+    reading: { unit: 'pages', less: '5 pages less', more: '5 pages more' },
+  },
+  amountRow: (name: string, n: string, target: string, unit: string) => `${name}: ${n} of ${target} ${unit}`,
+  amountToGo: (n: string, unit: string) => `${n} ${unit} to go`,
+  amountValue: (n: string, unit: string) => `${n} ${unit}`,
+  amountAverage: (n: string, unit: string) => `${n} ${unit} on average this week`,
+  // Each amount's own control: sleep's night bar, meditation's ring, reading's quick adds.
+  sleepSlider: 'Hours slept',
+  startSession: 'Start',
+  readingAdd: (n: number) => `+${n}`,
+  readingAddLabel: (n: number) => `Add ${n} pages`,
   // Quit smoking: health milestones in the order of lib/habits.ts MILESTONES, and tips shown on Today.
   milestones: [
     { label: '20 minutes', text: 'Heart rate and blood pressure drop' },
@@ -126,6 +145,9 @@ export const wellbeing = {
     why: 'Why',
     whyPlaceholder: 'What gets better when you keep it (optional)',
     glassesADay: 'Glasses a day',
+    hoursANight: 'Hours a night',
+    minutesADay: 'Minutes a day',
+    pagesADay: 'Pages a day',
     perDay: 'Cigarettes a day, before',
     price: 'Price of a pack of 20',
   },

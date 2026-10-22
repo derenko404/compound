@@ -39,6 +39,8 @@ export const nav = {
   updating: 'Updating the app…',
   // Top bar
   bar: {
+    // A back button to an inner page it can't name.
+    back: 'Back',
     edit: 'Edit',
     done: 'Done',
   },

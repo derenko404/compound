@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { t } from '@/shared/i18n'
-import { TABS, tabOf, tabTarget } from './tabs'
+import { TABS, tabFor, tabTarget } from './tabs'
 
 /**
  * Wider screens: every view in one row of equal tabs under the header, icon over a small label, with the same
@@ -9,7 +9,7 @@ import { TABS, tabOf, tabTarget } from './tabs'
  */
 export function TopTabs() {
   const { pathname } = useLocation()
-  const slot = tabOf(pathname)
+  const slot = tabFor(pathname)
   return (
     <nav className="tabs" aria-label={t.nav.views} style={{ '--n': TABS.length } as CSSProperties}>
       {slot >= 0 && <span className="nav-thumb" style={{ '--i': slot } as CSSProperties} aria-hidden="true" />}

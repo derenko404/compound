@@ -2,7 +2,7 @@ import {
   usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, FocusMark, Header, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
 import { Linkify, TaskSheet } from '@/features/topics'
-import { DONE, HABIT_UI, WaterCount, waterStats } from '@/features/habits'
+import { AmountControl, DONE, HABIT_UI, WaterCount, amountStats, isAmount } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
 import { FocusCard } from './FocusCard'
 import { WeekStrip } from './focus'
@@ -45,7 +45,7 @@ export function Today() {
 
   // A habit row's tick goes to the habit's log. Water's tick fills the day's target.
   const toggleHabit = (h: Habit, on: boolean) => {
-    const value = on ? (h.type === 'water' ? waterStats(state, h, today).target : DONE) : null
+    const value = on ? (isAmount(h) ? amountStats(state, h, today).target : DONE) : null
     dispatch({ type: 'habitLog', habit: h.id, day: k, value })
     if (on) cheer(reduce(state, { type: 'habitLog', habit: h.id, day: k, value }))
   }
@@ -90,6 +90,7 @@ export function Today() {
         sub={it.sub ? <Linkify text={it.sub} /> : undefined}
         check={<Check on={isDone(it)} label={it.title} onToggle={(on) => (h ? toggleHabit(h, on) : it.step ? togglePlan(it.step, on) : toggleDay(it.id, on))} />}>
         {h?.type === 'water' && <WaterCount h={h} />}
+        {h && isAmount(h) && h.type !== 'water' && <AmountControl h={{ ...h, type: h.type }} />}
       </Row>
     )
   }

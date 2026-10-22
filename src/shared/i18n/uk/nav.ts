@@ -33,6 +33,7 @@ export const nav: typeof en['nav'] = {
   appUpdated: 'Застосунок оновлено.',
   updating: 'Оновлюємо застосунок…',
   bar: {
+    back: 'Назад',
     edit: 'Змінити',
     done: 'Готово',
   },

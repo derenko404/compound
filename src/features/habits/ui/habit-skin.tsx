@@ -3,8 +3,9 @@ import { Dial, Fold, Stats } from '@/shared/ui'
 import { dates } from '@/shared/lib/dates'
 import type { Habit, State } from '@core/domain/types'
 import { t } from '@/shared/i18n'
-import { chain, cleanStats, dueOn, gymMakeUp, gymStats, smokingStats, waterStats } from '../model/habits'
+import { amountStats, amountText, chain, cleanStats, dueOn, gymMakeUp, gymStats, smokingStats } from '../model/habits'
 import { GymWeek, HabitDone, SlipButton, WaterCount } from './habit-log'
+import { AmountControl } from './amount-controls'
 
 const W = t.wellbeing
 const WEEKDAYS_SHORT = t.nav.weekdaysShort
@@ -75,12 +76,9 @@ export function skinOf(s: State, h: Habit, today: Date): Skin {
       const makeUp = gymMakeUp(s, h, today)
       return {
         value: <>{st.week}/{st.perWeek}<small> {W.gym.thisWeek}</small></>,
-        line: (
-          <span className="gym-line">
-            <GymWeek h={h} />
-            {!dueOn(h, today) && !makeUp && <span>{W.next(nextGymDay(h, today))}</span>}
-          </span>
-        ),
+        line: !dueOn(h, today) && !makeUp ? W.next(nextGymDay(h, today)) : undefined,
+        // The week's days across the card, like the other trackers' controls.
+        done: <GymWeek h={h} />,
         details: <Stats items={[
           { value: st.month, label: W.gym.month },
           { value: st.total, label: W.gym.total },
@@ -88,21 +86,23 @@ export function skinOf(s: State, h: Habit, today: Date): Skin {
         ]} />,
       }
     }
-    case 'water': {
-      const st = waterStats(s, h, today)
+    case 'water': case 'sleep': case 'meditation': case 'reading': {
+      const amount = { ...h, type: h.type }
+      const st = amountStats(s, amount, today)
+      const unit = W.amounts[h.type].unit
       return {
-        value: <>{st.today}/{st.target}<small> {W.water.glasses}</small></>,
-        done: <WaterCount h={h} />,
+        value: <>{amountText(st.today)}/{amountText(st.target)}<small> {unit}</small></>,
+        done: amount.type === 'water' ? <WaterCount h={h} /> : <AmountControl h={{ ...h, type: amount.type }} />,
         details: <>
           <div className="bars">
             {st.week.map((d) => (
               <div key={dates.keyOf(d.day)} className={d.future ? 'future' : undefined}>
-                <i style={{ '--pct': `${Math.min(1, d.value / st.target) * 100}%` } as CSSProperties} aria-label={W.water.bar(d.value)} />
+                <i style={{ '--pct': `${Math.min(1, d.value / st.target) * 100}%` } as CSSProperties} aria-label={W.amountValue(amountText(d.value), unit)} />
                 <span>{WEEKDAYS_SHORT[d.day.getDay()]}</span>
               </div>
             ))}
           </div>
-          <div className="widget-sub">{W.water.onTarget(st.onTarget)}</div>
+          <div className="widget-sub">{W.water.onTarget(st.onTarget)}{h.type !== 'water' && st.average > 0 && <> · {W.amountAverage(amountText(st.average), unit)}</>}</div>
         </>,
       }
     }

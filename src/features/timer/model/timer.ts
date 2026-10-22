@@ -88,10 +88,26 @@ function tick() {
 }
 
 /**
+ * Sessions that ran to the end, in minutes, for whoever logs them (the meditation tracker). One that ended while the
+ * app was closed waits here until a listener comes.
+ */
+const doneListeners = new Set<(minutes: number) => void>()
+let unclaimed = 0
+export function onTimerDone(listener: (minutes: number) => void) {
+  doneListeners.add(listener)
+  if (unclaimed) listener(unclaimed)
+  unclaimed = 0
+  return () => void doneListeners.delete(listener)
+}
+
+/**
  * Time's up: back to the full length, paused. Loud: a fanfare, confetti and a notification for when the app is
  * in the background.
  */
 function finish(loud: boolean) {
+  const minutes = settings[state.length]
+  if (doneListeners.size) doneListeners.forEach((l) => l(minutes))
+  else unclaimed += minutes
   set({ ...state, endsAt: null, left: lengthOf(state.length) })
   if (!loud) return
   playFanfare()

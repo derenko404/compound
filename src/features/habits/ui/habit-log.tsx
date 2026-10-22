@@ -1,4 +1,4 @@
-// Logging a habit: today's tick, a slip, water's glasses and the gym's days.
+// Logging a habit: today's tick, a slip, water's glasses and the gym's days (other amounts: amount-controls.tsx).
 import { GlassWater } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
 import { CountRow, DoneButton } from '@/shared/ui'
@@ -8,7 +8,7 @@ import { dates } from '@/shared/lib/dates'
 import type { Habit } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
-import { DONE, SLIP, gymStats, valueOn, waterStats, weekOf } from '../model/habits'
+import { DONE, SLIP, amountStats, gymStats, valueOn, weekOf } from '../model/habits'
 
 const W = t.wellbeing
 
@@ -39,7 +39,7 @@ export function SlipButton({ h }: { h: Habit }) {
 export function WaterCount({ h }: { h: Habit }) {
   const { state } = useStore()
   const log = useHabitLog(h)
-  const { today: n, target } = waterStats(state, h, new Date())
+  const { today: n, target } = amountStats(state, { ...h, type: 'water' }, new Date())
   return <CountRow n={n} target={target} onSet={(v) => log.set(v || null)} icon={GlassWater} unit={W.water.unit} />
 }
 
