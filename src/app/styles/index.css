@@ -1088,7 +1088,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
 
 .project { border-top: 1px solid var(--border); position: relative; scroll-margin-top: 140px; }
 .project:first-child { border-top: 0; }
-.project-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); }
+.project-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: center; padding: var(--space-4); }
 .project-code { font-weight: var(--weight-black); font-family: var(--font-display); color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); border-radius: var(--radius-sm); padding: var(--space-half) var(--space-2); cursor: pointer; }
 .project-name { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); text-align: left; font-weight: var(--weight-bold); cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
 .project-body { padding: 0 var(--space-4) var(--space-4); display: grid; gap: var(--space-3); }

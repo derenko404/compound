@@ -71,9 +71,9 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
       </div>
       {open && hasBody && (
         <div className="project-body">
-          {/* What it is: the goal and when it counts as done, each a small pill label with its text under it. */}
+          {/* What it is: the goal and when it counts as done, each under a neutral pill label. */}
           {p.goal && <div className="project-fact"><Badge>{t.topics.form.goal}</Badge><Linkify text={p.goal} /></div>}
-          {p.done && <div className="project-fact"><Badge color="--good">{t.topics.project.doneWhen}</Badge><Linkify text={p.done} /></div>}
+          {p.done && <div className="project-fact"><Badge>{t.topics.project.doneWhen}</Badge><Linkify text={p.done} /></div>}
           {/* Then the steps, ticked like a skill's; the one Today shows is the first still open. */}
           {p.steps && p.steps.length > 0 && (
             <div className="project-steps">
