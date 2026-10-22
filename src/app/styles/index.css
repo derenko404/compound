@@ -356,6 +356,8 @@
 .icon-badge { padding: var(--space-1); }
 .icon-badge svg { width: var(--icon-sm); height: var(--icon-sm); }
 /* A project's status pill: a tinted chip; each tap moves to the next status. */
+/* Button variant tint: a soft background and text in --tint (primary unless set). */
+.btn-tint { background: color-mix(in srgb, var(--tint, var(--primary)) 15%, transparent); color: var(--tint, var(--primary)); }
 /* A project's status under its name: the word in grey, amber while in progress, green when done (--c). */
 .project-title { display: grid; min-width: 0; }
 .project-status { font-size: var(--text-caption); font-weight: normal; color: var(--muted-foreground); }
@@ -1299,6 +1301,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
   .chbtn:not([aria-pressed="true"]):hover, .qbtn:not([aria-pressed="true"]):hover { border-color: color-mix(in srgb, var(--foreground) 35%, var(--border)); }
   .chbtn[aria-pressed="true"]:hover { opacity: 0.9; }
   a.chip:hover { border-color: color-mix(in srgb, var(--c, var(--foreground)) 50%, var(--border)); }
+  .btn-tint:hover { background: color-mix(in srgb, var(--tint, var(--primary)) 25%, transparent); }
   .row-btn:hover { background: color-mix(in srgb, var(--c) 10%, transparent); color: var(--c); }
   .check:not(.on):hover { background: color-mix(in srgb, var(--c) 14%, transparent); }
   .dock-search:hover { color: var(--primary); }

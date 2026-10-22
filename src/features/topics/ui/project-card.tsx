@@ -83,7 +83,10 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
             </div>
           )}
           {/* The next step in words: start it, finish it, or take a finished one back up. */}
-          {!readOnly && <Button variant={sv === 'done' ? 'outline' : 'tint'} onClick={() => setStatus(NEXT[sv])}>{NEXT_LABEL[sv]}</Button>}
+          {!readOnly && (
+            // In the colour of the state it moves to: amber to start, green to finish, amber to take it back up.
+            <Button variant="tint" style={{ '--tint': `var(${STATUS_TONE[NEXT[sv]]})` } as CSSProperties} onClick={() => setStatus(NEXT[sv])}>{NEXT_LABEL[sv]}</Button>
+          )}
         </div>
       )}
     </div>
