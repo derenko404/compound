@@ -4,7 +4,8 @@ import { Check as CheckIcon, Pencil, Play, RotateCcw, Trash2 } from 'lucide-reac
 import { Badge, Check, ConfirmSheet, Header, List, Row, Section, cvar, usePageBar } from '@/shared/ui'
 import { Button } from '@/shared/ui/primitives/button'
 import { celebrate } from '@/shared/lib/celebrate'
-import { topicOf } from '@core/domain/content'
+import { playUntick } from '@/shared/lib/sound'
+import { projectStatus, topicOf } from '@core/domain/content'
 import type { Project, Topic } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
@@ -14,7 +15,7 @@ const route = getRouteApi('/topics/$ch/projects/$project')
 
 /**
  * A project's own page, pushed from its topic's Projects tab (as iOS lists open a detail page): the goal, the steps to
- * tick (they set its status), and when it counts as done. Edit and Delete are in the ⋯ menu.
+ * tick (they set its status), and when it counts as done. Edit, Undo start and Delete are in the ⋯ menu.
  */
 export function ProjectPage() {
   const { ch, project } = route.useParams()
@@ -26,10 +27,14 @@ export function ProjectPage() {
   const save = useTopicSave()
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const { dispatch } = useStore()
+  // Started by hand, nothing ticked yet: the way back sits in the ⋯ menu. Once a step is ticked, the ticks decide.
+  const canUndoStart = !!p?.steps?.length && !p.steps.some((x) => state.plan[x.id]) && projectStatus(state, p) === 'doing'
   usePageBar({
     back: { to: `/topics/${ch}#projects`, label: c?.name ?? t.topics.page.back },
     actions: p ? [
       { label: t.common.edit, icon: Pencil, onSelect: () => setEditing(true) },
+      ...(canUndoStart ? [{ label: t.topics.project.unstart, icon: RotateCcw, onSelect: () => { dispatch({ type: 'project', projectId: p.id, status: 'todo' }); playUntick() } }] : []),
       { label: t.common.delete, icon: Trash2, danger: true, onSelect: () => setDeleting(true) },
     ] : undefined,
   })
@@ -89,10 +94,6 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
             {status === 'todo' ? <Play aria-hidden="true" /> : status === 'doing' ? <CheckIcon aria-hidden="true" /> : <RotateCcw aria-hidden="true" />}
             {PROJECT_NEXT_LABEL[status]}
           </Button>
-        )}
-        {/* Started by hand but nothing ticked yet: a quiet way back. Once a step is ticked, the ticks decide. */}
-        {steps.length > 0 && done === 0 && status === 'doing' && (
-          <Button variant="outline" onClick={() => set('todo')}><RotateCcw aria-hidden="true" />{t.topics.project.unstart}</Button>
         )}
       </div>
       {editing && <ProjectSheet open onOpenChange={setEditing} topic={topic} project={p} />}
