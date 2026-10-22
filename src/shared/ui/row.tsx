@@ -12,7 +12,7 @@ import { List } from './list'
  * to drag it to a new place inside a SortList. Leave out check while editing: ticks are off.
  * With a check, a tap anywhere on the row (outside its links and buttons) presses it, sound and burst included.
  */
-export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onOpen, chevron = true, sort, children, style }: {
+export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onOpen, chevron = true, sort, children, style, className }: {
   // An anchor for links to this row (a search result scrolls to it).
   id?: string
   ch?: TopicId | null
@@ -28,6 +28,7 @@ export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onO
   sort?: boolean
   children?: ReactNode
   style?: CSSProperties
+  className?: string // a variant of the row's pattern, styled in index.css (project-row)
 }) {
   const reorder = useContext(SortCtx)
   const ref = useRef<HTMLDivElement>(null)
@@ -42,7 +43,7 @@ export function Row({ id, ch, done, check, title, sub, note, tag, tagInline, onO
     was.current = done
   }, [done])
   return (
-    <div ref={ref} id={id} className={`row${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}${onOpen ? ' is-openable' : ''}${check && !onOpen ? ' is-tappable' : ''}`}
+    <div ref={ref} id={id} className={`row${className ? ` ${className}` : ''}${done ? ' is-done' : ''}${check ? '' : ' no-check'}${tagInline ? ' tag-inline' : ''}${onOpen ? ' is-openable' : ''}${check && !onOpen ? ' is-tappable' : ''}`}
       style={{ ...(ch ? cvar(ch) : {}), ...style }}
       {...(check && !onOpen && { onClick: (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('button, a, input')) ref.current?.querySelector<HTMLElement>(':scope > .check')?.click() } })}
       {...(onOpen && { role: 'button', tabIndex: 0, onClick: (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('button, a')) onOpen() }, onKeyDown: (e: KeyboardEvent) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen() } } })}>

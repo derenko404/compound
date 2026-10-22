@@ -22,7 +22,7 @@ export function ProjectRow({ ch, p }: { ch: TopicId; p: Project }) {
     void nav({ to: '/topics/$ch/projects/$project', params: { ch, project: p.code || p.id } })
   }
   return (
-    <Row ch={ch} id={p.code || p.id} onOpen={open}
+    <Row ch={ch} id={p.code || p.id} className="project-row" onOpen={open}
       title={<span className="title-row">{p.code && <span className="project-code">{p.code}</span>}{p.name}</span>}
       sub={<span className="project-status" style={{ '--c': `var(${PROJECT_STATUS_TONE[status]})` } as CSSProperties}>
         {[<b key="status">{PROJECT_STATUS_LABEL[status]}</b>, ...facts].flatMap((x, i) => (i ? [' · ', x] : [x]))}

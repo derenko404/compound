@@ -358,6 +358,9 @@
 /* A project's status pill: a tinted chip; each tap moves to the next status. */
 /* Button variant tint: a soft background and text in --tint (primary unless set). */
 .btn-tint { background: color-mix(in srgb, var(--tint, var(--primary)) 15%, transparent); color: var(--tint, var(--primary)); }
+/* A project in its topic's list: two lines and its code, so more room than a plain row. */
+.row.project-row { padding-block: var(--space-4); }
+.project-row .project-code { font-size: var(--text-small); }
 /* A project's status under its name: the word in grey, amber while in progress, green when done (--c). */
 .project-title { display: grid; min-width: 0; }
 .project-status { font-size: var(--text-caption); font-weight: normal; color: var(--muted-foreground); }
