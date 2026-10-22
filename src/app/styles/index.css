@@ -228,7 +228,7 @@
   --glass-bg: color-mix(in srgb, var(--card) 78%, transparent); /* floating glass controls: the tab bar, top bar buttons */
   --glass-blur: blur(16px) saturate(1.4);
   --dock-h: 56px;     /* the phone's floating tab bar and search button */
-  --dock-h-compact: 46px; /* the same while scrolling down */
+  --dock-compact: 0.86; /* the dock's scale while scrolling down */
   --header-h: 60px;   /* the sticky app header, without the safe area */
   --dot: 9px;
   --accent-bar: 3px; /* topic colour strip on rows, cards and folds */
@@ -654,8 +654,8 @@ a.qbtn { color: inherit; text-decoration: none; }
 :root[data-reduce-motion] .nav-thumb { transition: none; }
 
 /* Phones: iOS 26's floating tab bar. A glass capsule of tab icons across the width (the current one on a tinted
-   capsule that slides between them), Search split out into a round button beside it; both shrink while scrolling
-   down (data-compact, set by BottomNav). */
+   capsule that slides between them), Search split out into a round button beside it. While scrolling down the dock
+   scales down from its bottom edge (data-compact, set by BottomNav): a transform, so it stays smooth. */
 .bottom-dock { display: none; }
 @media (max-width: 720px) {
   .tabs { display: none; }
@@ -666,12 +666,12 @@ a.qbtn { color: inherit; text-decoration: none; }
     /* Tucked into the home indicator's area, as iOS 26 does; 8px off the edge where there is none. */
     left: var(--gutter); right: var(--gutter); bottom: max(var(--space-2), calc(env(safe-area-inset-bottom, 0px) - var(--space-3))); pointer-events: none;
   }
-  .bottom-dock[data-compact] { --h: var(--dock-h-compact); }
+  .bottom-dock { transform-origin: 50% 100%; transition: transform var(--dur-base) var(--ease-out); will-change: transform; }
+  .bottom-dock[data-compact] { transform: scale(var(--dock-compact)); }
 }
 .bottom-nav, .dock-search {
   box-sizing: border-box; height: var(--h); pointer-events: auto; border-radius: 999px; box-shadow: 0 0 0 1px var(--border), var(--shadow-card);
   background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
-  transition: height var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out);
 }
 .bottom-nav { flex: 1; position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: var(--space-1); }
 .bottom-nav .nav-thumb { top: var(--space-1); bottom: var(--space-1); left: var(--space-1); width: calc((100% - 2 * var(--space-1)) / var(--n)); border-radius: 999px; }
