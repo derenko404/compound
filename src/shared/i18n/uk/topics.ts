@@ -77,7 +77,7 @@ export const topics: typeof en['topics'] = {
   },
   project: {
     status: { todo: 'Не розпочато', doing: 'У роботі', done: 'Готово' },
-    changeStatus: (name, status) => `${name}: ${status}. Змінити статус`,
+    statusOf: (name) => `Статус: ${name}`,
     doneWhen: 'Готово, коли',
     trains: 'Тренує',
     size: 'Розмір',

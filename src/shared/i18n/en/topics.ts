@@ -79,7 +79,7 @@ export const topics = {
   },
   project: {
     status: { todo: 'Not started', doing: 'In progress', done: 'Done' },
-    changeStatus: (name: string, status: string) => `${name}: ${status}. Change status`,
+    statusOf: (name: string) => `${name}'s status`,
     doneWhen: 'Done when',
     trains: 'Trains',
     size: 'Size',

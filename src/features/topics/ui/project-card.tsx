@@ -5,7 +5,7 @@ import type { TopicId, Project, ProjectStatus } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { burst, celebrate } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
-import { Check, Row, cvar } from '@/shared/ui'
+import { Check, ChipMenu, Row, cvar } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 import { useTick } from '../model/use-tick'
 import { Linkify } from './linkify'
@@ -13,7 +13,7 @@ import { Linkify } from './linkify'
 const LABEL: Record<ProjectStatus, string> = t.topics.project.status
 // The badge in a project's header: grey, amber while in progress, green when done.
 const STATUS_TONE: Record<ProjectStatus, string> = { todo: '--muted-foreground', doing: '--warn', done: '--good' }
-const NEXT: Record<ProjectStatus, ProjectStatus> = { todo: 'doing', doing: 'done', done: 'todo' }
+const STATUSES: ProjectStatus[] = ['todo', 'doing', 'done']
 
 // readOnly: no status button (someone else's shared topic); ch can be left out and the colour comes from around it.
 export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; readOnly?: boolean }) {
@@ -52,11 +52,11 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
           {hasBody && <ChevronDown className="chev" style={open ? { transform: 'rotate(180deg)' } : undefined} aria-hidden="true" />}
         </button>
         {readOnly ? null : (
-          // The status pill is the switch: each tap moves to the next state.
-          <button type="button" className="chip tint status-pill" style={{ '--c': `var(${STATUS_TONE[sv]})` } as CSSProperties}
-            aria-label={t.topics.project.changeStatus(p.name, LABEL[sv])} onClick={() => setStatus(NEXT[sv])}>
-            {LABEL[sv]}
-          </button>
+          // The status is a pop-up chip: a tap shows the three states to pick from, the current one ticked.
+          <span className="status-pill" style={{ '--c': `var(${STATUS_TONE[sv]})` } as CSSProperties}>
+            <ChipMenu label={t.topics.project.statusOf(p.name)} value={sv} onChange={setStatus}
+              groups={[{ options: STATUSES.map((v) => ({ value: v, label: LABEL[v] })) }]} />
+          </span>
         )}
       </div>
       {open && hasBody && (
