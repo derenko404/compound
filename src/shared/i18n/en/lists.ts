@@ -23,13 +23,7 @@ export const lists = {
     titleFirst: 'Give it a title first.',
     title: 'Title',
     details: 'Details',
-    deleteText: "Its tick and note go with it. This can't be undone.",
-  },
-  review: {
-    label: 'Your review',
-    placeholder: 'Thoughts, rating, when and where',
-    write: (title: string) => `Review ${title}`,
-    edit: (title: string) => `Edit your review of ${title}`,
+    deleteText: "Its tick goes with it. This can't be undone.",
   },
   page: {
     gone: 'This list no longer exists.',

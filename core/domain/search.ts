@@ -1,6 +1,6 @@
 /**
- * Searching the loaded state: topics with their skills, steps, tasks, resources and projects, lists with their items and
- * reviews, routines and habits. Notes aren't in the state and are searched by the note repository. Matching ignores
+ * Searching the loaded state: topics with their skills, steps, tasks, resources and projects, lists with their items,
+ * routines and habits. Notes aren't in the state and are searched by the note repository. Matching ignores
  * case and accents. Every word of the query must appear, in the item or in where it lives, and at least one in the
  * item itself: "films" finds the Films list, not each of its films, while "films godfather" finds the film.
  */
@@ -60,8 +60,7 @@ function inState(s: State, query: string, kinds?: SearchKind[]): SearchHit[] {
   for (const l of s.lists) {
     if (want('list') && matches(ws, l.name, l.title)) hits.push({ kind: 'list', id: l.id, title: l.name, detail: l.title, listId: l.id })
     for (const it of l.items) {
-      const review = s.listProgress[l.id]?.[it.id]?.note
-      if (want('listItem') && within(ws, [it.title, it.sub, review], [l.name])) hits.push({ kind: 'listItem', id: it.id, title: it.title, detail: [l.name, it.sub].filter(Boolean).join(' · '), listId: l.id })
+      if (want('listItem') && within(ws, [it.title, it.sub], [l.name])) hits.push({ kind: 'listItem', id: it.id, title: it.title, detail: [l.name, it.sub].filter(Boolean).join(' · '), listId: l.id })
     }
   }
   for (const r of s.routines)

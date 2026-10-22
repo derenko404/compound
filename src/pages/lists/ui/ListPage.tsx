@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
-import { Share2, Star, Trash2 } from 'lucide-react'
+import { Share2, Trash2 } from 'lucide-react'
 import { usePageBar, Check, Chip, ChipsList, Header, List, Dial, Row, SortList, SearchField, ConfirmSheet, RemoveButton, moveTo, useSheet } from '@/shared/ui'
 import { listSnapshot, uid } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
@@ -10,7 +10,6 @@ import { celebrate } from '@/shared/lib/celebrate'
 import { t } from '@/shared/i18n'
 import { ListSheet } from './ListSheet'
 import { ItemSheet } from './ItemSheet'
-import { ReviewSheet } from './ReviewSheet'
 import { doneIn } from './done-in'
 
 type Filter = 'all' | 'todo' | 'done'
@@ -37,7 +36,6 @@ export function ListPage() {
   const [edit, setEdit] = useState(false)
   const listSheet = useSheet<ListDef>()
   const itemSheet = useSheet<ListDefItem>()
-  const reviewSheet = useSheet<ListDefItem>()
   const [deleting, setDeleting] = useState(false)
   const [sharing, setSharing] = useState(false)
   usePageBar({
@@ -69,24 +67,18 @@ export function ListPage() {
     const p = items[it.id] ?? {}
     const on = !!p.done_at
     if (!edit && ((filter === 'done' && !on) || (filter === 'todo' && on))) return null
-    const note = p.note ?? ''
     // Search only outside edit mode: dragging needs every row in place.
-    if (!edit && q && !`${it.title} ${it.sub ?? ''} ${note}`.toLowerCase().includes(q)) return null
+    if (!edit && q && !`${it.title} ${it.sub ?? ''}`.toLowerCase().includes(q)) return null
     return (
       <Row key={it.id} id={`item-${it.id}`} done={on} style={{ '--c': 'var(--primary)' } as CSSProperties}
         title={<><span className="font-normal tabular-nums text-muted-foreground">{idx + 1}.</span> {it.title}</>}
-        sub={it.sub} note={note} tagInline={!edit}
+        sub={it.sub} tagInline={!edit}
         check={edit
           ? <RemoveButton label={t.common.deleteNamed(it.title)} title={t.common.deleteAsk(it.title)} description={t.lists.item.deleteText}
               onConfirm={() => dispatch({ type: 'putList', list: { ...L, items: L.items.filter((x) => x.id !== it.id) } })} />
           : <Check on={on} label={it.title} onToggle={(v) => toggle(it.id, v)} />}
-        // Tapping the row (not its tick) opens your review. In edit mode it opens the item itself.
-        onOpen={edit ? () => itemSheet.open(it) : () => reviewSheet.open(it)} chevron={edit} sort={edit}
-        // Your review (the item's note): a round star button, tinted once there is one.
-        tag={edit ? undefined
-          : <button type="button" className={`icon-btn row-btn${note ? ' on' : ''}`} aria-label={note ? t.lists.review.edit(it.title) : t.lists.review.write(it.title)} onClick={() => reviewSheet.open(it)}>
-              <Star aria-hidden="true" />
-            </button>} />
+        // A tap on the row ticks it. In edit mode it opens the item itself.
+        onOpen={edit ? () => itemSheet.open(it) : undefined} sort={edit} />
     )
   }).filter(Boolean)
 
@@ -115,7 +107,6 @@ export function ListPage() {
         }} />
       {listSheet.value && <ListSheet key={listSheet.value.id} {...listSheet.props} list={listSheet.value} onSaved={() => {}} />}
       {itemSheet.value && <ItemSheet key={itemSheet.value.id} {...itemSheet.props} list={L} item={itemSheet.value} />}
-      {reviewSheet.value && <ReviewSheet key={reviewSheet.value.id} {...reviewSheet.props} list={L} item={reviewSheet.value} />}
     </>
   )
 }

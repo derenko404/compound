@@ -20,7 +20,7 @@ export function Lists() {
   const [edit, setEdit] = useState(false)
   const [query, setQuery] = useState('')
   const openHit = useOpenHit()
-  // Typing searches every list and its items (and your reviews of them) instead of showing the cards.
+  // Typing searches every list and its items instead of showing the cards.
   const hits = search.inState(state, query, ['list', 'listItem'])
   usePageBar({ add: { label: t.lists.newList, onClick: () => listSheet.open(blankList(lists)) }, edit: lists.length ? () => setEdit(true) : undefined, done: edit ? () => setEdit(false) : undefined })
   const reorder = (from: number, to: number) => {
