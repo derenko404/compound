@@ -1096,8 +1096,8 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .fold-title { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); flex: 1; min-width: 0; }
 .fold-meta { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .fold-body { border-top: 1px solid var(--border); }
-/* Rows in a fold (a skill's steps, a resource group), a project's steps and a plain list: no strip, the card's edge or the page carries the colour. */
-.fold-body .row::before, .project-steps .row::before, .list.plain .row::before { display: none; }
+/* Rows in a fold (a skill's steps, a resource group), a project's steps and a plain list: no strip, the card's edge or the page carries the colour. A habit's row has none either: its icon says what it is. */
+.fold-body .row::before, .project-steps .row::before, .list.plain .row::before, .row.habit-row::before { display: none; }
 /* Fold done: every item inside is ticked. */
 .fold.is-done > summary { background: color-mix(in srgb, var(--c) 10%, transparent); }
 .fold-done { display: grid; place-items: center; width: var(--icon-lg); height: var(--icon-lg); flex: none; border-radius: 50%; background: var(--c); }

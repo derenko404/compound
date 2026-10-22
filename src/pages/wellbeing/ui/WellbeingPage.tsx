@@ -41,7 +41,7 @@ export function Wellbeing() {
         {edit ? (
           <SortList onMove={reorder}>
             {habits.map((h) => (
-              <Row key={h.id} title={h.name} sub={HABIT_UI[h.type].label} style={HABIT_TONE}
+              <Row key={h.id} title={h.name} sub={HABIT_UI[h.type].label} style={HABIT_TONE} className="habit-row"
                 check={<RemoveButton label={t.common.deleteNamed(h.name)} title={t.common.deleteAsk(h.name)} description={W.deleteText}
                   onConfirm={() => { dispatch({ type: 'deleteHabit', id: h.id }) }} />}
                 onOpen={() => sheet.open(h)} sort />
@@ -58,7 +58,7 @@ export function Wellbeing() {
               {habits.map((h) => {
                 const g = habitGlance(state, h, today)
                 return (
-                  <Row key={h.id} style={HABIT_TONE} title={h.name} sub={g.line} onOpen={() => logSheet.open(h)} tagInline
+                  <Row key={h.id} style={HABIT_TONE} className="habit-row" title={h.name} sub={g.line} onOpen={() => logSheet.open(h)} tagInline
                     check={<IconBadge icon={HABIT_UI[h.type].icon} label={HABIT_UI[h.type].label} color={HABIT_UI[h.type].color} />}
                     tag={g.n != null && <Dial size="sm" n={g.n} total={g.total} value={g.value} />} />
                 )

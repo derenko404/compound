@@ -84,7 +84,7 @@ export function Today() {
   const row = (it: DayItem) => {
     const h = it.habit
     return (
-      <Row key={it.id} ch={it.ch} done={isDone(it)} style={h ? tone('--primary') : undefined} tagInline
+      <Row key={it.id} ch={it.ch} done={isDone(it)} style={h ? tone('--primary') : undefined} className={h ? 'habit-row' : undefined} tagInline
         /**
          * Own tasks lead: habit rows and the topics' suggestions keep a normal-weight title, as steps in a skill do.
          * A habit's name follows its type's icon in the type's colour, as on Wellbeing. The row itself stays blue.
