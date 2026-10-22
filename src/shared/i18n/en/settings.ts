@@ -8,6 +8,8 @@ export const settings = {
     signedIn: 'Signed in',
     syncs: 'Your data syncs to your account on every device.',
     signOut: 'Sign Out',
+    signOutAsk: 'Sign Out?',
+    signOutText: 'Your data stays in your account. Sign in again to see it here.',
     // Signing out while changes made offline haven't reached the account.
     unsynced: (n: number) => plural(n, { one: "# change hasn't synced yet", other: "# changes haven't synced yet" }),
     unsyncedText: 'Signing out removes them from this device. Connect to the internet first to keep them.',
