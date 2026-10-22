@@ -12,9 +12,9 @@ export const pageMotion = {
   set(dir: MotionDirection) {
     document.documentElement.dataset.motion = dir
   },
-  // Whether the next page change should animate.
+  // Whether the next page change should animate: pushes and pops on touch devices (phones, tablets); with a mouse at once.
   animates() {
     const dir = document.documentElement.dataset.motion
-    return (dir === 'forward' || dir === 'back') && !motion.reduced()
+    return (dir === 'forward' || dir === 'back') && !motion.reduced() && matchMedia('(pointer: coarse)').matches
   },
 }
