@@ -18,7 +18,6 @@ export function SkillFolds({ ch, skills, current, itemsLabel = t.topics.skills.s
         const done = k.steps.filter((t) => tick.on(t.id)).length
         return (
           <Fold key={k.id} ch={ch} done={!readOnly && k.steps.length > 0 && done === k.steps.length} open={k.id === current || undefined} title={k.id === current ? t.topics.skills.now(k.name) : k.name} meta={readOnly ? t.common.steps(k.steps.length) : `${done}/${k.steps.length}`}>
-            {k.intro && <p className="fold-intro"><Linkify text={k.intro} /></p>}
             {/* The steps as a labelled group, the same piece as Today's groups. */}
             {k.steps.length > 0 && (
               <ListGroup label={itemsLabel}>
@@ -29,6 +28,8 @@ export function SkillFolds({ ch, skills, current, itemsLabel = t.topics.skills.s
               </ListGroup>
             )}
             {!k.steps.length && <div className="empty">{t.topics.empty.steps}</div>}
+            {/* The intro comes last, a quiet note under the steps, so the steps lead. */}
+            {k.intro && <p className="fold-intro"><Linkify text={k.intro} /></p>}
           </Fold>
         )
       })}
