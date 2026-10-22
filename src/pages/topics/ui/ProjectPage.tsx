@@ -6,7 +6,7 @@ import { topicOf } from '@core/domain/content'
 import type { Project, Topic } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
-import { Linkify, PROJECT_STATUSES, PROJECT_STATUS_LABEL, ProjectSheet, useProjectStatus, useTick, useTopicSave } from '@/features/topics'
+import { Linkify, PROJECT_STATUSES, PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, ProjectSheet, useProjectStatus, useTick, useTopicSave } from '@/features/topics'
 
 const route = getRouteApi('/topics/$ch/projects/$project')
 
@@ -46,14 +46,16 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
   const steps = p.steps ?? []
   const done = steps.filter((x) => tick.on(x.id)).length
   // Under the name: its code, what it trains and its size, one quiet line.
-  const facts = [p.code, p.trains?.join(', '), p.size && `${t.topics.sizes[p.size].label}, ${t.topics.sizes[p.size].means}`].filter(Boolean).join(' · ')
+  const facts = [p.code, p.trains?.join(', '), p.size && t.topics.sizes[p.size].label].filter(Boolean).join(' · ')
   return (
     <div style={cvar(ch)}>
       <Header title={p.name} sub={facts} lead={p.goal ? <Linkify text={p.goal} /> : undefined}>
         {steps.length > 0 && <Dial size="md" n={done} total={steps.length} />}
       </Header>
-      <Segmented label={t.topics.project.statusLabel} value={status} onChange={set}
-        options={PROJECT_STATUSES.map((v) => ({ value: v, label: PROJECT_STATUS_LABEL[v] }))} />
+      <div className="page-control">
+        <Segmented label={t.topics.project.statusLabel} value={status} onChange={set}
+          options={PROJECT_STATUSES.map((v) => ({ value: v, label: PROJECT_STATUS_LABEL[v], color: PROJECT_STATUS_TONE[v] }))} />
+      </div>
       {steps.length > 0 && (
         <Section group title={t.topics.form.steps}>
           {/* Ticked like a skill's steps; the one My day shows is the first still open. */}
@@ -67,7 +69,7 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
       )}
       {p.done && (
         <Section group title={t.topics.project.doneWhen}>
-          <List><Row title={<span className="font-normal"><Linkify text={p.done} /></span>} /></List>
+          <List><p className="list-text"><Linkify text={p.done} /></p></List>
         </Section>
       )}
       {editing && <ProjectSheet open onOpenChange={setEditing} topic={topic} project={p} />}

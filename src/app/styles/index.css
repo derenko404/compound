@@ -376,6 +376,10 @@
 .segment { height: calc(var(--control-field) - 2 * var(--space-half)); min-width: 0; padding: 0 var(--space-2); border: 0; border-radius: calc(var(--radius-md) - var(--space-half)); background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast); }
 .segment[aria-pressed="true"], .segment[aria-checked="true"] { background: var(--seg-thumb); color: var(--foreground); box-shadow: var(--shadow-card); }
 .segment:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.segment.is-toned[aria-checked="true"] { color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--seg-thumb)); }
+/* A page's own controls between the header and its sections (a project's status): room below. */
+.page-control { margin-bottom: var(--space-6); }
+.list-text { padding: var(--space-4); }
 /* A setting in a Panel (SettingRow). */
 /* SettingRow: text on the left, controls on the right. When the controls don't fit beside the text (longer labels in Ukrainian), they wrap below it. */
 .setting-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-4); padding-block: var(--space-3); border-top: 1px solid var(--border); }
