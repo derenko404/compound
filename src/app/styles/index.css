@@ -935,25 +935,24 @@ main section.sec-group { margin-bottom: var(--space-6); }
    Rows and checks
    ===================================================================== */
 
-.row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: start; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); position: relative; }
+.row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); position: relative; }
 .row:first-child { border-top: 0; }
-.row.no-check { grid-template-columns: 1fr auto; align-items: center; }
+.row.no-check { grid-template-columns: 1fr auto; }
 .row-body { min-width: 0; }
 .row-title { font-weight: var(--weight-bold); overflow-wrap: anywhere; transition: color var(--dur-base); }
 .row-sub { color: var(--muted-foreground); font-size: var(--text-small); margin-top: var(--space-half); overflow-wrap: anywhere; }
 .row-note { margin-top: var(--space-1); font-size: var(--text-small); font-style: italic; overflow-wrap: anywhere; }
 .row.is-done .row-title { color: var(--muted-foreground); text-decoration: line-through; text-decoration-color: var(--c); text-decoration-thickness: 2px; }
-.row-tag { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-micro); color: var(--muted-foreground); white-space: nowrap; padding-top: var(--space-1); }
+.row-tag { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-micro); color: var(--muted-foreground); white-space: nowrap; }
 /* No tag, no cell: on phones an empty one would add a line under the row. */
 .row-tag:empty { display: none; }
 /* A topic row's kind on Today: a muted icon, its name in the tooltip. */
 /* Edit mode, as on iOS (Row onOpen, sort): the whole row opens its form, with › and a ≡ handle on the right. */
-.row.is-openable { cursor: pointer; align-items: center; }
+.row.is-openable { cursor: pointer; }
 .row.is-tappable { cursor: pointer; }
 /* What something is, at the start of a line (Kind in src/shared/ui/kind.tsx). */
 .kind { font-weight: var(--weight-bold); color: var(--c); }
 .row.is-openable:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
-.row.is-openable .row-tag { padding-top: 0; }
 .row-chev { width: var(--icon-md); height: var(--icon-md); color: var(--muted-foreground); }
 .row-remove { display: grid; place-items: center; width: var(--control-sm); height: var(--control-sm); margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-1)); border: 0; background: none; cursor: pointer; }
 .row-remove svg { width: var(--icon-lg); height: var(--icon-lg); padding: var(--space-half); border-radius: 50%; background: var(--destructive); color: var(--on-destructive); stroke-width: 3; }
@@ -969,10 +968,9 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .row.pop { animation: rowpop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
 @keyframes rowpop { 0% { transform: scale(1); } 40% { transform: scale(1.015); background: color-mix(in srgb, var(--c) 10%, var(--card)); } 100% { transform: scale(1); } }
 /* List dense (My day): one-line rows, the title and the sub line one line each, cut with "…". */
-.list.dense .row { align-items: center; padding-block: var(--space-3); }
+.list.dense .row { padding-block: var(--space-3); }
 .list.dense .row-title, .list.dense .row-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .list.dense .row-sub { margin-top: 0; }
-.list.dense .row-tag { padding-top: 0; }
 
 .check { position: relative; width: var(--check-size); height: var(--check-size); border-radius: 50%; border: var(--check-stroke) solid var(--c); background: transparent; display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; transition: background var(--dur-base), transform var(--dur-fast); }
 .check svg { width: var(--icon-sm); height: var(--icon-sm); }
@@ -1076,8 +1074,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .fold-title { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); flex: 1; min-width: 0; }
 .fold-meta { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .fold-body { border-top: 1px solid var(--border); }
-/* Rows in a fold (a skill's steps, a resource group) and a project's steps look like My day's: centred, no strip. */
-.fold-body .row, .project-steps .row { align-items: center; }
+/* Rows in a fold (a skill's steps, a resource group) and a project's steps: no strip, the card's edge carries the colour. */
 .fold-body .row::before, .project-steps .row::before { display: none; }
 /* Fold done: every item inside is ticked. */
 .fold.is-done > summary { background: color-mix(in srgb, var(--c) 10%, transparent); }
