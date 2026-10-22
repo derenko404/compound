@@ -66,6 +66,13 @@ export const today = {
     label: 'Focus',
     none: 'No focus topic yet. Pick one on Topics: it gets the study sessions and the weekend project.',
   },
+  // The focus timer's card: start or pause here, the row opens the timer.
+  timer: {
+    title: 'Focus',
+    ready: (length: string, minutes: number) => `${length} · ${minutes} min`,
+    left: (time: string) => `${time} left`,
+    paused: (time: string) => `Paused · ${time} left`,
+  },
   week: {
     upcoming: 'Upcoming',
     doneOf: (done: number, total: number) => `${done} of ${total} done`,

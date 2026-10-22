@@ -4,6 +4,7 @@ import {
 import { Linkify, TaskSheet } from '@/features/topics'
 import { DONE, HABIT_UI, WaterCount, waterStats } from '@/features/habits'
 import { InstallBanner } from '@/features/install-app'
+import { FocusCard } from './FocusCard'
 import { WeekStrip } from './focus'
 import { RoutineSheet } from './RoutineSheet'
 import { celebrate } from '@/shared/lib/celebrate'
@@ -158,6 +159,8 @@ export function Today() {
       <Section id="today-week" group title={t.today.thisWeek} aside={run ? <span className="today-streak on"><Flame aria-hidden="true" />{t.today.streak(run)}</span> : undefined}>
         <WeekStrip />
       </Section>
+
+      {!edit && <Section id="today-focus" group title={t.nav.tabs.timer}><FocusCard /></Section>}
 
 
       {sheet.value && <RoutineSheet key={sheet.value.id} {...sheet.props} routine={sheet.value} />}

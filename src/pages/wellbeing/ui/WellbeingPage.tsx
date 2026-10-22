@@ -1,4 +1,3 @@
-import { Timer as TimerIcon } from 'lucide-react'
 import { useState } from 'react'
 import { habitsOf, HABIT_UI, HabitCard } from '@/features/habits'
 import type { Habit } from '@core/domain/types'
@@ -18,8 +17,6 @@ export function Wellbeing() {
   const habits = habitsOf(state)
   const [edit, setEdit] = useState(false)
   usePageBar({
-    // The focus timer opens from here, as an inner page.
-    link: { to: '/timer', label: t.nav.tabs.timer, icon: TimerIcon },
     add: { label: W.add, onClick: () => sheet.open(newHabit(state)) },
     edit: habits.length ? () => setEdit(true) : undefined,
     done: edit ? () => setEdit(false) : undefined,

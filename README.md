@@ -41,10 +41,10 @@ Small steps, done daily, add up.
 
 | | |
 |---|---|
-| ☀️ **My day** | One short list: your routines, your habits and the next step from what you're learning. A streak counts the days you finish. |
+| ☀️ **My day** | One short list: your routines, your habits and the next step from what you're learning. A streak counts the days you finish, and a focus timer starts in one tap. |
 | 📚 **Topics** | Break a skill into steps. Keep resources and projects next to it, pick one topic as your focus and watch your pace. |
 | 📖 **Library** | Your lists (films to watch, books to read, anything you tick off, with a note on each) and the Notebook: notes, ideas and links. Send notes to the Telegram bot and an AI files them under the right topic with tags. |
-| 💚 **Wellbeing** | Gym, water, quitting smoking, any habit you build or break, a daily mood, and a focus timer. |
+| 💚 **Wellbeing** | Gym, water, quitting smoking, any habit you build or break, and a daily mood. |
 | 🔔 **Reminders** | A "Good morning" push and an evening nudge, only while something is left. Works with the app closed. |
 | 🤖 **Works with AI** | A personal token lets Claude (or any MCP client) build topics and lists for you. |
 

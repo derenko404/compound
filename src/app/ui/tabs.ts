@@ -12,14 +12,14 @@ export type Tab = { to: To; label: string; icon: LucideIcon; sections?: Section[
  * opens by default.
  */
 export const TABS: Tab[] = [
-  { to: '/today', label: t.nav.tabs.today, icon: Sun },
+  // The timer opens from My day's focus card, as an inner page of it.
+  { to: '/today', label: t.nav.tabs.today, icon: Sun, inner: ['/timer'] },
   { to: '/topics', label: t.nav.tabs.topics, icon: Layers },
   { to: '/lists', label: t.nav.tabs.library, icon: Library, lead: t.nav.leads.library, sections: [
     { to: '/lists', label: t.nav.tabs.lists },
     { to: '/notebook', label: t.nav.tabs.notebook },
   ] },
-  // The timer opens from Wellbeing's top bar, as an inner page of it.
-  { to: '/wellbeing', label: t.nav.tabs.wellbeing, icon: Heart, inner: ['/timer'] },
+  { to: '/wellbeing', label: t.nav.tabs.wellbeing, icon: Heart },
   { to: '/settings', label: t.nav.tabs.settings, icon: SettingsIcon },
 ]
 

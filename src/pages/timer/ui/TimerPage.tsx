@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Pause, Play, RotateCcw, Settings2 } from 'lucide-react'
 import { Button } from '@/shared/ui/primitives/button'
 import { usePageBar, Dial, Header, Segmented, Stepper } from '@/shared/ui'
-import { requestPermission, supported } from '@/shared/lib/reminders'
 import type { Ambient } from '@/shared/lib/sound'
 import {
   CUSTOM_MAX, LENGTH_LABEL, TimerSettingsSheet, customStep, clock, lengthOf, remaining, timer, useTimer, type Length,
@@ -22,18 +21,14 @@ const SOUNDS: { value: Ambient; label: string }[] = [
 export function Timer() {
   const { state, settings, now } = useTimer()
   const [editing, setEditing] = useState(false)
-  usePageBar({ back: { to: '/wellbeing', label: t.nav.tabs.wellbeing }, actions: [{ label: t.timer.settings, icon: Settings2, onSelect: () => setEditing(true) }] })
+  usePageBar({ back: { to: '/today', label: t.nav.tabs.today }, actions: [{ label: t.timer.settings, icon: Settings2, onSelect: () => setEditing(true) }] })
   const total = lengthOf(state.length)
   const left = remaining(state, now)
   const running = !!state.endsAt
   const idle = !running && left === total
   const custom = settings.custom
   const setCustom = (m: number) => timer.settings({ ...settings, custom: m })
-  const start = () => {
-    // The first start asks once for notifications, so time's up reaches you on another tab or app.
-    if (supported() && Notification.permission === 'default') void requestPermission()
-    timer.start()
-  }
+  const start = timer.begin
 
   return (
     <>

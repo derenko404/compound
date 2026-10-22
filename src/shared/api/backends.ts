@@ -76,9 +76,9 @@ export const cloudBackend = (db: SupabaseClient, userId: string): Backend => {
   const server = SupabaseRepositories.create(db)
   const outbox = new LocalOutboxRepository(`roadmap-outbox-${userId}`)
   const sync = new SyncService(outbox, async (p) => {
-    // Refreshes an expired session first; without one the change waits.
+    // Refreshes an expired session first; without one, or as another account now, the change waits (never cross accounts).
     const { data } = await db.auth.getSession()
-    if (!data.session) throw new Error('No session')
+    if (data.session?.user.id !== userId) throw new Error('Not signed in as this account')
     // A settings op carries the whole settings (see SyncService.record), so the state it leads to is its own.
     await new StateService(SupabaseRepositories.create(db, undefined, p.at)).apply(p.op, reduce(emptyState(), p.op))
   }, refused)

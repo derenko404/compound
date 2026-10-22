@@ -6,7 +6,7 @@
 import { useSyncExternalStore } from 'react'
 import { celebrate } from '@/shared/lib/celebrate'
 import { playAmbient, playFanfare, type Ambient } from '@/shared/lib/sound'
-import { show } from '@/shared/lib/reminders'
+import { requestPermission, show, supported } from '@/shared/lib/reminders'
 import { t } from '@/shared/i18n'
 
 export type Length = 'short' | 'long' | 'custom'
@@ -107,6 +107,11 @@ else set(state)
 
 export const timer = {
   start: () => state.endsAt || set({ ...state, endsAt: Date.now() + state.left }),
+  // Start from a button: the first time it asks once for notifications, so time's up reaches you in another app.
+  begin: () => {
+    if (supported() && Notification.permission === 'default') void requestPermission()
+    timer.start()
+  },
   pause: () => state.endsAt && set({ ...state, endsAt: null, left: remaining(state) }),
   reset: () => set({ ...state, endsAt: null, left: lengthOf(state.length) }),
   // Picking a length stops the clock at that length.

@@ -11,10 +11,30 @@ export const soundOn = () => {
 }
 export const setSoundOn = (on: boolean) => localStorage.setItem(KEY, on ? 'on' : 'off')
 
+// The timer sound waiting for audio to unlock (a timer still running after a reload).
+let waiting: Ambient | null = null
+
+/**
+ * Browsers only let audio start after a tap or key press, so the context is made and resumed on one. When it starts
+ * running, a sound that was waiting for it plays.
+ */
+function unlock() {
+  if (!ac) {
+    ac = new AudioContext()
+    ac.addEventListener('statechange', () => {
+      if (ac?.state !== 'running' || !waiting) return
+      const kind = waiting
+      waiting = null
+      playAmbient(kind)
+    })
+  }
+  if (ac.state !== 'running') void ac.resume()
+}
+for (const type of ['pointerdown', 'keydown']) addEventListener(type, unlock, { capture: true, passive: true })
+
 function ctx() {
   if (!soundOn()) return null
-  ac ??= new AudioContext()
-  if (ac.state === 'suspended') void ac.resume()
+  unlock()
   return ac
 }
 
@@ -111,14 +131,16 @@ function ambientBuffer(a: AudioContext, kind: Exclude<Ambient, 'off'>) {
 
 /**
  * Plays (or switches) the timer's background sound. It's chosen on the timer page, so it plays even with the
- * app's tick sounds turned off in Settings.
+ * app's tick sounds turned off in Settings. Until audio is unlocked (a reload while the timer runs) it waits for it.
  */
 export function playAmbient(kind: Ambient) {
   if (ambient?.kind === kind) return
   stopAmbient()
   if (kind === 'off') return
-  ac ??= new AudioContext()
-  if (ac.state === 'suspended') void ac.resume()
+  if (ac?.state !== 'running') {
+    waiting = kind
+    return
+  }
   const src = ac.createBufferSource()
   src.buffer = ambientBuffer(ac, kind)
   src.loop = true
@@ -138,6 +160,7 @@ export function playAmbient(kind: Ambient) {
 }
 
 export function stopAmbient() {
+  waiting = null
   if (!ambient || !ac) return
   const { src, gain } = ambient
   gain.gain.cancelScheduledValues(ac.currentTime)

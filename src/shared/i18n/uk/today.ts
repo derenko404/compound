@@ -60,6 +60,12 @@ export const today: typeof en['today'] = {
     label: 'Фокус',
     none: 'Фокус-теми ще немає. Виберіть її в розділі «Теми»: на неї підуть навчальні сесії та проєкт на вихідні.',
   },
+  timer: {
+    title: 'Зосередження',
+    ready: (length, minutes) => `${length} · ${minutes} хв`,
+    left: (time) => `Залишилось ${time}`,
+    paused: (time) => `Пауза · залишилось ${time}`,
+  },
   week: {
     upcoming: 'Попереду',
     doneOf: (done, total) => `Виконано ${done} з ${total}`,
