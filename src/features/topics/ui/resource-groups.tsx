@@ -26,12 +26,13 @@ function ResourceRow({ ch, r, onEdit, onRemove, readOnly }: { ch?: TopicId; r: R
       check={onRemove ? <RemoveButton label={t.common.deleteNamed(r.title)} title={t.common.deleteAsk(r.title)} onConfirm={() => onRemove(r)} /> : readOnly || onEdit ? undefined : <Check on={tick.on(r.id)} label={r.title} onToggle={(v) => tick.set(r.id, v)} />}
       // The last word and the ↗ never split, so the icon can't wrap onto a line of its own.
       title={r.url && !onEdit ? <a href={r.url} target="_blank" rel="noopener" className="res-title">{words.length ? `${words.join(' ')} ` : ''}<span className="whitespace-nowrap">{last}<ExternalLink className="res-ext" aria-label={t.topics.resources.newTab} /></span></a> : r.title}
-      // The note on its own line, then where it lives and whether it's free.
+      // One quiet line: Free first when it is, then the note, or else the site. The full note is in the form.
       sub={(r.note || r.url || r.free) ? (
-        <>
-          {r.note && <span className="block"><Linkify text={r.note} /></span>}
-          {(r.url || r.free) && <span className="res-meta">{r.url && <span className="res-host">{links.hostOf(r.url)}</span>}{r.free && <span className="res-free">{t.topics.resources.free}</span>}</span>}
-        </>
+        <span className="res-line">
+          {r.free && <span className="res-free">{t.topics.resources.free}</span>}
+          {r.free && (r.note || r.url) && ' · '}
+          {r.note ? <Linkify text={r.note} /> : r.url && links.hostOf(r.url)}
+        </span>
       ) : undefined}
     />
   )
