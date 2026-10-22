@@ -5,7 +5,7 @@
 export function HabitBadge({ text, label, onOpen }: { text: string; label: string; onOpen: () => void }) {
   const [, num = '', rest = text] = /^([\d.,]+)(.*)$/.exec(text) ?? []
   return (
-    <button type="button" className="habit-badge" aria-label={label} onClick={onOpen}>
+    <button type="button" className="habit-badge" aria-label={`${label}, ${text}`} onClick={onOpen}>
       {/* One span, so the space after the number survives the button's flex layout. */}
       <span>{num && <b>{num}</b>}{rest}</span>
     </button>

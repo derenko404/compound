@@ -9,6 +9,7 @@ import { playTick, playUntick } from '@/shared/lib/sound'
 export function Check({ on, label, onToggle, progress }: { on: boolean; label: string; onToggle: (on: boolean) => void; progress?: number }) {
   const ref = useRef<HTMLButtonElement>(null)
   const justOn = useRef(false)
+  const partial = !on && progress !== undefined && progress > 0 && progress < 1
   // The bounce class is added after React has applied the new className, or it would be wiped.
   useEffect(() => {
     const el = ref.current
@@ -21,7 +22,7 @@ export function Check({ on, label, onToggle, progress }: { on: boolean; label: s
   return (
     <button
       ref={ref}
-      className={`check${on ? ' on' : ''}`}
+      className={`check${on ? ' on' : ''}${partial ? ' has-progress' : ''}`}
       aria-pressed={on}
       aria-label={label}
       onClick={() => {
@@ -38,7 +39,7 @@ export function Check({ on, label, onToggle, progress }: { on: boolean; label: s
         onToggle(next)
       }}
     >
-      {!on && progress !== undefined && progress > 0 && progress < 1 && (
+      {partial && (
         <svg className="check-ring" viewBox="0 0 28 28" aria-hidden="true">
           <circle cx="14" cy="14" r="13" pathLength={1} style={{ strokeDasharray: `${progress} 1` }} />
         </svg>

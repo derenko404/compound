@@ -106,7 +106,7 @@ export const wellbeing = {
   },
   amountValue: (n: string, unit: string) => `${n} ${unit}`,
   amountAverage: (n: string, unit: string) => `${n} ${unit} on average this week`,
-  // Each amount's own control: sleep's night bar, meditation's ring, reading's quick adds.
+  // Each amount's own control: sleep's chips, meditation's start, reading's quick adds.
   startSession: 'Start',
   readingAdd: (n: number) => `+${n}`,
   readingAddLabel: (n: number) => `Add ${n} pages`,

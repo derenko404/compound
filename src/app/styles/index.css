@@ -956,11 +956,11 @@ main section.sec-group { margin-bottom: var(--space-6); }
 :root[data-reduce-motion] .is-sorting > .row { transition: none; }
 .row.pop { animation: rowpop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
 @keyframes rowpop { 0% { transform: scale(1); } 40% { transform: scale(1.015); background: color-mix(in srgb, var(--c) 10%, var(--card)); } 100% { transform: scale(1); } }
-/* List dense (My day): lighter rows, the title and the sub line one line each, cut with "…". */
+/* List dense (My day): no card around it, each row on its own background, plain text group titles; lighter rows, the title and the sub line one line each, cut with "…". */
 .list.dense { background: none; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
 .list.dense .list-label, .list.dense .list-group + .list-group > .list-label { padding: var(--space-4) var(--space-4) var(--space-1); border: 0; background: none; color: var(--muted-foreground); }
 .list.dense .list-group:first-child > .list-label { padding-top: 0; }
-.list.dense .row { align-items: center; padding-block: var(--space-2); }
+.list.dense .row { align-items: center; padding-block: var(--space-2); background: var(--card); }
 .list.dense .row-title, .list.dense .row-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .list.dense .row-sub { margin-top: 0; }
 .list.dense .row-tag { padding-top: 0; }
@@ -971,6 +971,8 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .check.on { background: var(--c); }
 /* Check progress: how far a habit is today, an arc over the ring from 12 o'clock. */
 .check .check-ring { position: absolute; inset: calc(-1 * var(--check-stroke)); width: var(--check-size); height: var(--check-size); transform: rotate(-90deg); pointer-events: none; }
+/* The ring under the arc fades to a track, so the arc shows how far it is. */
+.check.has-progress { border-color: color-mix(in srgb, var(--c) 30%, transparent); }
 .check-ring circle { fill: none; stroke: var(--c); stroke-width: var(--check-stroke); stroke-linecap: round; transition: stroke-dasharray var(--dur-base) var(--ease-out); }
 :root[data-reduce-motion] .check-ring circle { transition: none; }
 .check.on path { stroke-dashoffset: 0; }
