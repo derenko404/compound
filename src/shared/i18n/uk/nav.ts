@@ -1,23 +1,29 @@
 import type { en } from '@/shared/i18n/en'
+import { plural } from '@/shared/i18n/plural'
 
 export const nav: typeof en['nav'] = {
   tabs: {
     today: 'Мій день',
     topics: 'Теми',
     notebook: 'Нотатник',
+    library: 'Бібліотека',
     lists: 'Списки',
     wellbeing: 'Самопочуття',
     timer: 'Таймер',
     settings: 'Налаштування',
   },
   views: 'Розділи',
-  more: 'Ще',
-  otherViews: 'Інші розділи',
+  sectionsOf: (tab: string) => `Розділи: ${tab}`,
+  leads: {
+    library: 'Списки, а ще нотатки, ідеї й посилання. Нотатки можна надсилати й боту в Telegram.',
+  },
   sync: {
     loading: 'Завантаження…',
     loadError: 'Не вдалося завантажити дані',
     saving: 'Збереження…',
     saveError: 'Не вдалося зберегти',
+    offline: 'Офлайн. Зміни збережено на цьому пристрої',
+    waiting: (n: number) => plural(n, { one: 'Офлайн. # зміна синхронізується пізніше', few: 'Офлайн. # зміни синхронізуються пізніше', many: 'Офлайн. # змін синхронізуються пізніше', other: 'Офлайн. # зміни синхронізуються пізніше' }),
     synced: 'Синхронізовано',
     local: 'Збережено лише на цьому пристрої',
   },

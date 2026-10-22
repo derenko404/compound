@@ -1,4 +1,5 @@
 import { driver, type DriveStep } from 'driver.js'
+import { motion } from '@/shared/lib/motion'
 import 'driver.js/dist/driver.css'
 import { t } from '@/shared/i18n'
 
@@ -26,7 +27,7 @@ const steps = (): DriveStep[] => {
     ['.top .plus-btn', tx.addTitle, tx.add],
     ['.top .bar-text', tx.editTitle, tx.edit],
     [phone ? '.bottom-nav' : '.tabs', tx.navTitle, tx.nav],
-    [phone ? '.bottom-nav .bnav:last-child' : '.bar-search', tx.searchTitle, phone ? tx.search : tx.searchKeys],
+    [phone ? '.dock-search' : '.bar-search', tx.searchTitle, phone ? tx.search : tx.searchKeys],
   ]
   return list.flatMap(([selector, title, description]) => {
     if (!selector) return [{ popover: { title, description } }]
@@ -39,7 +40,7 @@ const steps = (): DriveStep[] => {
 export function runTour(onEnd: () => void) {
   const d = driver({
     steps: steps(),
-    animate: !matchMedia('(prefers-reduced-motion: reduce)').matches,
+    animate: !motion.reduced(),
     popoverClass: 'tour',
     overlayColor: 'black',
     overlayOpacity: 0.45,
@@ -55,7 +56,7 @@ export function runTour(onEnd: () => void) {
     // Back to the top, where the install banner shows next.
     onDestroyed: () => {
       onEnd()
-      scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+      scrollTo({ top: 0, behavior: motion.reduced() ? 'auto' : 'smooth' })
     },
   })
   d.drive()

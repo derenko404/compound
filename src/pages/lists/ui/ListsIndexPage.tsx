@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { usePageBar, Header, LinkCard, List, Dial, Row, SearchField, SortList, RemoveButton, empty, moveTo, useSheet } from '@/shared/ui'
+import { usePageBar, LinkCard, List, Dial, Row, SearchField, SortList, RemoveButton, empty, moveTo, useSheet } from '@/shared/ui'
 import { search } from '@core/domain/search'
 import { SearchResults, useOpenHit } from '@/features/search'
 import { byPosition, nextPosition } from '@core/domain/content'
@@ -29,7 +29,6 @@ export function Lists() {
   }
   return (
     <>
-      <Header title={t.lists.title} lead={t.lists.lead} />
       {!edit && lists.length > 0 && <SearchField value={query} onChange={setQuery} placeholder={t.search.listsPlaceholder} />}
       {!edit && query.trim() ? (
         hits.length ? <SearchResults hits={hits} onPick={(h) => void openHit(h)} /> : empty(t.search.nothing)
@@ -46,8 +45,8 @@ export function Lists() {
           {lists.map((l) => {
             const n = doneIn(state, l)
             return (
-              <LinkCard key={l.id} to="/lists/$id" params={{ id: l.id }} title={l.name}
-                sub={<span className="grid gap-2"><span>{l.title}</span><Dial size="sm" n={n} total={l.items.length} /></span>} />
+              <LinkCard key={l.id} to="/lists/$id" params={{ id: l.id }} title={l.name} sub={l.title}
+                aside={<Dial size="sm" n={n} total={l.items.length} />} />
             )
           })}
         </div>

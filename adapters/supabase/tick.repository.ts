@@ -12,7 +12,7 @@ export class SupabaseTickRepository extends SupabaseTable implements TickReposit
   }
 
   async set(itemId: string, doneAt: string | null) {
-    if (doneAt) this.check(await this.from().upsert(this.mine({ task_id: itemId, done_at: doneAt })))
-    else this.check(await this.own(this.from().delete().eq('task_id', itemId)))
+    if (doneAt) await this.write({ task_id: itemId }, { done_at: doneAt })
+    else await this.drop({ task_id: itemId })
   }
 }

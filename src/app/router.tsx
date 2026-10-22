@@ -12,6 +12,8 @@ import { Today } from '@/pages/today'
 import { Timer } from '@/pages/timer'
 import { t } from '@/shared/i18n'
 import { Shell } from '@/app/ui/Shell'
+import { motionBetween } from '@/app/ui/tabs'
+import { pageMotion } from '@/shared/lib/page-motion'
 
 const root = createRootRoute({ component: () => <BarProvider><Shell /></BarProvider> })
 const page = <P extends string>(path: P, component: () => React.ReactNode) => createRoute({ getParentRoute: () => root, path, component })
@@ -32,7 +34,16 @@ const routeTree = root.addChildren([
   page('/share/$id', SharePage),
 ])
 
-export const router = createRouter({ routeTree, defaultNotFoundComponent: () => <div className="empty">{t.nav.notFound}</div> })
+export const router = createRouter({
+  routeTree,
+  defaultNotFoundComponent: () => <div className="empty">{t.nav.notFound}</div>,
+  // Inner pages push in and pop out as on iOS (pageMotion); everything else changes at once.
+  defaultViewTransition: true,
+})
+router.subscribe('onBeforeNavigate', ({ fromLocation, toLocation }) => fromLocation && pageMotion.set(motionBetween(fromLocation.pathname, toLocation.pathname)))
+// No transition at all unless the page animates: an instant one would still flash both pages for a frame.
+const startTransition = router.startViewTransition
+router.startViewTransition = (fn) => (pageMotion.animates() ? startTransition(fn) : void fn())
 
 declare module '@tanstack/react-router' {
   interface Register {

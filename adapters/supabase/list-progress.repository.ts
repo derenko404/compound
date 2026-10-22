@@ -13,7 +13,8 @@ export class SupabaseListProgressRepository extends SupabaseTable implements Lis
   }
 
   async set(listId: string, itemId: string, p: ListItem) {
-    if (p.done_at || p.note) this.check(await this.from().upsert(this.mine({ list_id: listId, item_id: itemId, done_at: p.done_at ?? null, note: p.note ?? null })))
-    else this.check(await this.own(this.from().delete().eq('list_id', listId).eq('item_id', itemId)))
+    const key = { list_id: listId, item_id: itemId }
+    if (p.done_at || p.note) await this.write(key, { done_at: p.done_at ?? null, note: p.note ?? null })
+    else await this.drop(key)
   }
 }

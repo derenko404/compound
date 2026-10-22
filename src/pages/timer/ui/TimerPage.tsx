@@ -22,7 +22,7 @@ const SOUNDS: { value: Ambient; label: string }[] = [
 export function Timer() {
   const { state, settings, now } = useTimer()
   const [editing, setEditing] = useState(false)
-  usePageBar({ actions: [{ label: t.timer.settings, icon: Settings2, onSelect: () => setEditing(true) }] })
+  usePageBar({ back: { to: '/wellbeing', label: t.nav.tabs.wellbeing }, actions: [{ label: t.timer.settings, icon: Settings2, onSelect: () => setEditing(true) }] })
   const total = lengthOf(state.length)
   const left = remaining(state, now)
   const running = !!state.endsAt

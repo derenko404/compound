@@ -1,4 +1,5 @@
 import { playFanfare } from './sound'
+import { motion } from './motion'
 
 // Confetti on a fixed canvas. Module-level so any view can call it.
 interface Particle {
@@ -6,7 +7,7 @@ interface Particle {
   color: string; rot: number; vr: number; shape: number; slow?: boolean
 }
 
-const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
+const reduced = () => motion.reduced()
 let canvas: HTMLCanvasElement | null = null
 let ctx: CanvasRenderingContext2D | null = null
 let parts: Particle[] = []

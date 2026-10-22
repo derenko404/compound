@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
-import { CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, Search, Timer as TimerIcon } from 'lucide-react'
+import { CloudAlert, CloudCheck, CloudDownload, CloudOff, CloudUpload, Search, Timer as TimerIcon, WifiOff } from 'lucide-react'
 import { BarBack, BarMenu, Brand, useBar } from '@/shared/ui'
-import { type SyncState } from '@/shared/store/StoreProvider'
+import { useSyncStatus, type SyncState } from '@/shared/store/StoreProvider'
 import { clock, remaining, useTimer } from '@/features/timer'
 import { t } from '@/shared/i18n'
 import { searchSheet } from '@/features/search'
 
 function SyncIcon({ sync }: { sync: SyncState }) {
   const state = sync === 'loadError' || sync === 'saveError' ? 'error' : sync
-  const tipText = t.nav.sync[sync]
-  const Icon = { loading: CloudDownload, saving: CloudUpload, error: CloudAlert, synced: CloudCheck, local: CloudOff }[state]
+  const { pending } = useSyncStatus()
+  const tipText = sync === 'offline' && pending ? t.nav.sync.waiting(pending) : t.nav.sync[sync]
+  const Icon = { loading: CloudDownload, saving: CloudUpload, error: CloudAlert, offline: WifiOff, synced: CloudCheck, local: CloudOff }[state]
   const [tip, setTip] = useState(false)
   useEffect(() => {
     if (!tip) return
@@ -19,7 +20,7 @@ function SyncIcon({ sync }: { sync: SyncState }) {
   }, [tip])
   // Tap shows the tooltip on phones; hover and focus show it elsewhere.
   return (
-    <button type="button" className={`sync${tip ? ' tip-open' : ''}`} data-state={state} data-tip={tipText} aria-label={tipText} onClick={() => setTip(true)}>
+    <button type="button" className={`sync tip-start${tip ? ' tip-open' : ''}`} data-state={state} data-tip={tipText} aria-label={tipText} onClick={() => setTip(true)}>
       <Icon aria-hidden="true" />
     </button>
   )
@@ -47,9 +48,9 @@ export function TopBar({ sync }: { sync: SyncState }) {
         {!bar?.back && <SyncIcon sync={sync} />}
       </div>
       {/* Keeps the bar the same height on pages without a ⋯. */}
-      <div className="flex min-h-(--control-md) min-w-0 items-center gap-1">
+      <div className="flex min-h-(--control-md) min-w-0 items-center gap-2">
         <TimerPill />
-        {/* Wider screens only: phones open search from More. ⌘K works everywhere. */}
+        {/* Wider screens only: phones have Search beside the tab bar. ⌘K works everywhere. */}
         <button type="button" className="icon-btn bar-search" aria-label={t.search.open} title={`${t.search.open} (⌘K)`} onClick={searchSheet.open}><Search aria-hidden="true" /></button>
         <BarMenu bar={bar} />
       </div>

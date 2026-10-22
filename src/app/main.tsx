@@ -6,10 +6,12 @@ import { registerSW } from 'virtual:pwa-register'
 import { router } from '@/app/router'
 import { StoreProvider } from '@/shared/store/StoreProvider'
 import { applyTheme } from '@/shared/lib/theme'
+import { motion } from '@/shared/lib/motion'
 import { t } from '@/shared/i18n'
 import '@/app/styles/index.css'
 
 applyTheme()
+motion.watch()
 // The update overlay lives in index.html, so its text is set here.
 const updating = document.querySelector('#updating .splash-text')
 if (updating) updating.textContent = t.nav.updating

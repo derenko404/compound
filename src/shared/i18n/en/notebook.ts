@@ -1,7 +1,6 @@
 // Notebook: the page, the entry sheet and the entry cards.
 export const notebook = {
   title: 'Notebook',
-  lead: 'Notes, ideas and links in one place. Add them here, or send them to your Telegram bot.',
   add: 'Add a note, idea or link',
   searchLabel: 'Search your notebook',
   searchPlaceholder: 'Search by text, link or #tag',

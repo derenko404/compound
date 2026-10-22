@@ -8,6 +8,7 @@ import { useStore } from '@/shared/store/StoreProvider'
 import type { State } from '@core/domain/types'
 import { dates } from '@/shared/lib/dates'
 import { ConfirmSheet, SettingRow } from '@/shared/ui'
+import { network } from '@/shared/lib/network'
 import { t } from '@/shared/i18n'
 
 const count = (s: State) => s.topics.length + s.routines.length + s.lists.length + s.habits.length + s.notes.length
@@ -41,7 +42,7 @@ export function BackupRows() {
     <>
       <SettingRow title={t.settings.backup.title} sub={t.settings.backup.sub}>
         <div className="flex gap-2">
-          <Button variant="outline" disabled={!backend} onClick={() => void download().catch(() => toast.error(t.settings.backup.exportFailed))}><Download aria-hidden="true" />{t.settings.backup.export}</Button>
+          <Button variant="outline" disabled={!backend} onClick={() => (backend?.kind === 'cloud' && !network.required()) || void download().catch(() => toast.error(t.settings.backup.exportFailed))}><Download aria-hidden="true" />{t.settings.backup.export}</Button>
           <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload aria-hidden="true" />{t.settings.backup.import}</Button>
         </div>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => void readFile(e.target.files?.[0])} />
@@ -49,7 +50,7 @@ export function BackupRows() {
       <ConfirmSheet open={!!incoming} onOpenChange={(o) => !o && setIncoming(null)} confirm={t.settings.backup.import}
         title={t.settings.backup.importAsk} description={incoming ? t.settings.backup.importSub(count(incoming)) : ''}
         onConfirm={async () => {
-          if (!incoming || !backend) return
+          if (!incoming || !backend || (backend.kind === 'cloud' && !network.required())) return
           try {
             await importFile(backend, state, incoming)
             await qc.invalidateQueries({ queryKey: ['state'] })

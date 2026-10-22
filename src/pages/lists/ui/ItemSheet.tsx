@@ -13,7 +13,7 @@ export function ItemSheet({ list, item, open, onOpenChange }: { list: ListDef; i
       onSubmit={() => {
         if (!it.title.trim()) return fail(t.lists.item.titleFirst)
         const next = { ...it, title: it.title.trim(), sub: it.sub?.trim() || undefined }
-        dispatch({ type: 'putList', list: { ...list, items: isNew ? [...list.items, next] : list.items.map((x) => (x.id === it.id ? next : x)) } })
+        dispatch({ type: 'putList', list: { ...list, items: isNew ? [next, ...list.items] : list.items.map((x) => (x.id === it.id ? next : x)) } })
       }}>
       <TextField label={t.lists.item.title} value={it.title} onChange={(title) => setIt({ ...it, title })} required full autoFocus />
       <TextField label={list.sub_label || t.lists.item.details} value={it.sub ?? ''} onChange={(sub) => setIt({ ...it, sub })} full />

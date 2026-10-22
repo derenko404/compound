@@ -5,7 +5,7 @@ import type { TopicId, Note } from '@core/domain/types'
 import { useNotes, useStore } from '@/shared/store/StoreProvider'
 import { useLoadMore } from '@/shared/lib/useLoadMore'
 import { NoteCard, NoteSheet } from '@/features/notes'
-import { usePageBar, Chip, ChipsList, Header, List, SearchField, useDebouncedValue } from '@/shared/ui'
+import { usePageBar, Chip, ChipsList, List, SearchField, useDebouncedValue } from '@/shared/ui'
 import { t } from '@/shared/i18n'
 
 
@@ -43,7 +43,6 @@ export function Notebook() {
 
   return (
     <>
-      <Header title={t.notebook.title} lead={t.notebook.lead} />
       <SearchField label={t.notebook.searchLabel} value={query} onChange={setQuery} placeholder={t.notebook.searchPlaceholder} />
       <ChipsList label={t.notebook.filter}>
         <Chip pressed={!topic} onClick={() => setTopic(null)}>{t.notebook.all}</Chip>

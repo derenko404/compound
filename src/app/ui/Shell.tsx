@@ -20,6 +20,7 @@ import { useFirstRunTour } from '@/features/tour'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
 import { TopTabs } from './TopTabs'
+import { SectionTabs } from './SectionTabs'
 
 export function Shell() {
   const { mode, sync, ready, state } = useStore()
@@ -92,7 +93,7 @@ export function Shell() {
             <TopBar sync={sync} />
             <TopTabs />
             <TopicColors topics={state.topics} />
-            <main>{ready && !seeding ? <Outlet /> : <div className="empty">{t.nav.loadingProgress}</div>}</main>
+            <main>{ready && !seeding ? <><SectionTabs /><Outlet /></> : <div className="empty">{t.nav.loadingProgress}</div>}</main>
             <BottomNav />
             <SearchSheet />
           </>

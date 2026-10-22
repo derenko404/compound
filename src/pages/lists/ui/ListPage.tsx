@@ -22,7 +22,7 @@ export function ListPage() {
   const { state, dispatch } = useStore()
   const nav = useNavigate()
   const L = state.lists.find((l) => l.id === id)
-  const [filter, setFilter] = useState<Filter>('all')
+  const [filter, setFilter] = useState<Filter>('todo')
   const [query, setQuery] = useState('')
   const { hash } = useLocation()
   // Arriving from search (#item-<id>) scrolls to the item and flashes it.
@@ -92,8 +92,9 @@ export function ListPage() {
 
   return (
     <>
-      <Header title={L.name} lead={L.title} action={edit ? { label: t.lists.page.editDetails(L.name), onClick: () => listSheet.open(L) } : undefined} />
-      <div className="mb-4"><Dial size="sm" n={n} total={L.items.length} /></div>
+      <Header title={L.name} lead={L.title} action={edit ? { label: t.lists.page.editDetails(L.name), onClick: () => listSheet.open(L) } : undefined}>
+        <Dial size="md" n={n} total={L.items.length} />
+      </Header>
       <SearchField value={query} onChange={setQuery} placeholder={t.lists.page.search(L.name)} />
       {!edit && (
         <ChipsList label={t.lists.page.show}>

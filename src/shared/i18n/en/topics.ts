@@ -17,6 +17,8 @@ export const topics = {
   },
   focus: 'Focus',
   setFocus: 'Set focus',
+  // The light topic of the week on My day, next to the focus.
+  secondary: 'Secondary',
   goals: 'Goals',
   goalsBy: (month: string) => `Where you'll be by ${month}`,
 

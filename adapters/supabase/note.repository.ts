@@ -21,12 +21,12 @@ export class SupabaseNoteRepository extends SupabaseTable implements NoteReposit
     return this.check(await this.filter(this.own(this.from().select('id', { count: 'exact', head: true })), f)).count ?? 0
   }
 
-  async put(note: Note) {
-    this.check(await this.from().upsert(this.mine(note)))
+  async put({ id, ...note }: Note) {
+    await this.write({ id }, note)
   }
 
   async remove(id: string) {
-    this.check(await this.own(this.from().delete().eq('id', id)))
+    await this.drop({ id })
   }
 
   // The Notebook's filters as a Supabase query.

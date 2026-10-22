@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/primitives/button'
 import { toast } from '@/shared/lib/toast'
 import { supabase, apiTokens, createApiToken, revokeApiToken, type ApiToken } from '@/shared/api/backends'
 import { ConfirmSheet, CopyButton, FormSheet, SettingRow, TextField, fail } from '@/shared/ui'
+import { network } from '@/shared/lib/network'
 import { t, currentLocale } from '@/shared/i18n'
 
 const fmtDay = (iso: string) => new Date(iso).toLocaleDateString(currentLocale(), { day: 'numeric', month: 'short', year: 'numeric' })
@@ -36,6 +37,7 @@ export function AiAccessRows() {
       <FormSheet open={naming} onOpenChange={setNaming} title={t.settings.ai.newToken} submit={t.settings.ai.makeToken}
         onSubmit={() => {
           if (!name.trim()) return fail(t.settings.ai.nameFirst)
+          if (!network.required()) return
           void createApiToken(supabase!, name.trim()).then((tk) => {
             setMade(tk)
             void qc.invalidateQueries({ queryKey: ['api-tokens'] })

@@ -8,6 +8,7 @@ import { Label } from '@/shared/ui/primitives/label'
 import { toast } from '@/shared/lib/toast'
 import { SHARE_DAYS, createShare, supabase, type ShareKind } from '@/shared/api/backends'
 import { useStore } from '@/shared/store/StoreProvider'
+import { network } from '@/shared/lib/network'
 import { t } from '@/shared/i18n'
 import type { Topic, ListDef } from '@core/domain/types'
 import { FormSheet, CopyButton } from '@/shared/ui'
@@ -21,6 +22,7 @@ export function ShareSheet({ kind, name, data, open, onOpenChange }: {
   const [link, setLink] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const make = async () => {
+    if (!network.required()) return
     setBusy(true)
     try {
       const id = await createShare(supabase!, kind, name, data)

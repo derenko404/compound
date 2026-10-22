@@ -2,7 +2,6 @@ import type { en } from '@/shared/i18n/en'
 
 export const notebook: typeof en['notebook'] = {
   title: 'Нотатник',
-  lead: 'Нотатки, ідеї й посилання в одному місці. Додавайте їх тут або надсилайте своєму боту в Telegram.',
   add: 'Додати нотатку, ідею чи посилання',
   searchLabel: 'Пошук у нотатнику',
   searchPlaceholder: 'Шукайте за текстом, посиланням або #тегом',

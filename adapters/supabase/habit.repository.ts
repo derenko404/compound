@@ -10,11 +10,11 @@ export class SupabaseHabitRepository extends SupabaseTable implements HabitRepos
     return (await this.rows(this.own(this.from().select('id, type, name, why, start_date, days, position, custom_data, created_at')))) as Habit[]
   }
 
-  async put(h: Habit) {
-    this.check(await this.from().upsert(this.mine({ ...h, updated_at: this.now() })))
+  async put({ id, ...h }: Habit) {
+    await this.write({ id }, h)
   }
 
   async remove(id: string) {
-    this.check(await this.own(this.from().delete().eq('id', id)))
+    await this.drop({ id })
   }
 }

@@ -11,6 +11,7 @@ export { BackupService } from './backup.service'
 export { ShareService } from './share.service'
 export { TelegramConnectService } from './telegram-connect.service'
 export { StateService } from './state.service'
+export { SyncService, type SyncStatus } from './sync.service'
 export { ReminderService, type ReminderPayload } from './reminder.service'
 export type * from './inputs'
 

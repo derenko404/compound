@@ -16,10 +16,10 @@ export class SupabaseJsonCollectionRepository<T extends { id: string; position: 
   }
 
   async put(item: T) {
-    this.check(await this.from().upsert(this.mine({ id: item.id, data: item, updated_at: this.now() })))
+    await this.write({ id: item.id }, { data: item })
   }
 
   async remove(id: string) {
-    this.check(await this.own(this.from().delete().eq('id', id)))
+    await this.drop({ id })
   }
 }

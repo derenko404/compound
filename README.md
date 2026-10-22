@@ -33,7 +33,7 @@ Small steps, done daily, add up.
 - 🎉 **Ticks feel good.** A pop and a particle burst on every tick, confetti and a fanfare when the day is complete.
 - 🔍 **Search everything** with <kbd>⌘</kbd> <kbd>K</kbd>: topics, steps, notes, lists, tasks and habits.
 - 🔗 **Share by link.** Send a topic or list to a friend, who can copy it into their own account in one tap.
-- 📱 **A real app on your phone.** Installs to the Home Screen, opens full screen and works offline.
+- 📱 **A real app on your phone.** Installs to the Home Screen, opens full screen and works offline: changes made without a connection sync when you're back.
 - 🌙 **Light and dark**, 🇬🇧 English and 🇺🇦 Українська.
 - 🔒 **Yours.** No ads, no tracking. Export everything any time, or use it with no account and keep it all on your device.
 
@@ -43,12 +43,10 @@ Small steps, done daily, add up.
 |---|---|
 | ☀️ **My day** | One short list: your routines, your habits and the next step from what you're learning. A streak counts the days you finish. |
 | 📚 **Topics** | Break a skill into steps. Keep resources and projects next to it, pick one topic as your focus and watch your pace. |
-| 📝 **Notebook** | Notes, ideas and links. Send them to the Telegram bot and an AI files them under the right topic with tags. |
-| 💚 **Wellbeing** | Gym, water, quitting smoking, any habit you build or break, and a daily mood. |
-| ✅ **Lists** | Films to watch, books to read, anything you tick off, with a note on each. |
+| 📖 **Library** | Your lists (films to watch, books to read, anything you tick off, with a note on each) and the Notebook: notes, ideas and links. Send notes to the Telegram bot and an AI files them under the right topic with tags. |
+| 💚 **Wellbeing** | Gym, water, quitting smoking, any habit you build or break, a daily mood, and a focus timer. |
 | 🔔 **Reminders** | A "Good morning" push and an evening nudge, only while something is left. Works with the app closed. |
 | 🤖 **Works with AI** | A personal token lets Claude (or any MCP client) build topics and lists for you. |
-| ⏱️ **Timer** | Short, long or custom focus sessions with optional background sound. |
 
 ## Screenshots
 

@@ -18,6 +18,8 @@ export const common = {
   nothingMatches: 'Nothing matches.',
   cantUndo: "This can't be undone.",
   copyFailed: "Couldn't copy. Select it and copy by hand.",
+  // Something that needs the server (sharing, tokens, backup import) tried offline.
+  needsConnection: "You're offline. Connect to the internet and try again.",
   saveFailed: "Couldn't save. Check your connection and try again.",
   linkExists: 'This link is already in your notebook.',
   noTopic: 'No topic',

@@ -2,7 +2,6 @@ import type { en } from '@/shared/i18n/en'
 
 export const lists: typeof en['lists'] = {
   title: 'Списки',
-  lead: 'Книжки до прочитання, фільми до перегляду, місця для подорожей.',
   empty: 'Списків поки немає. Створіть перший через +.',
   newList: 'Новий список',
   deleteList: 'Видалити список',

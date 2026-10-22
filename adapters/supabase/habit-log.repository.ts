@@ -12,7 +12,7 @@ export class SupabaseHabitLogRepository extends SupabaseTable implements HabitLo
   }
 
   async set(habitId: string, day: string, value: number | null) {
-    if (value == null) this.check(await this.own(this.from().delete().eq('habit_id', habitId).eq('day', day)))
-    else this.check(await this.from().upsert(this.mine({ habit_id: habitId, day, value })))
+    if (value == null) await this.drop({ habit_id: habitId, day })
+    else await this.write({ habit_id: habitId, day }, { value })
   }
 }

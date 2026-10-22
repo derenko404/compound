@@ -4,8 +4,8 @@ import { plural } from '@/shared/i18n/plural'
 const daysInRow = (n: number) => plural(n, { one: '# день поспіль', few: '# дні поспіль', many: '# днів поспіль', other: '# дня поспіль' })
 
 export const wellbeing: typeof en['wellbeing'] = {
-  title: 'Самопочуття',
   lead: 'Ваш настрій і звички, які ви формуєте чи кидаєте.',
+  title: 'Самопочуття',
   quoteOfDay: 'Цитата дня',
   habits: 'Звички',
   add: 'Додати трекер',

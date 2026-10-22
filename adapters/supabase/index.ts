@@ -12,21 +12,24 @@ import { SupabaseProjectStatusRepository } from './project-status.repository'
 import { SupabaseSettingsRepository } from './settings.repository'
 import { SupabaseTickRepository } from './tick.repository'
 
-/** Builds every Supabase repository for one client, scoped to `userId` when the client bypasses RLS (worker). */
+/**
+ * Builds every Supabase repository for one client, scoped to `userId` when the client bypasses RLS (worker).
+ * `at` replays a change made at that time on the device: it's written only over older rows (latest edit wins).
+ */
 export class SupabaseRepositories {
-  static create(db: SupabaseClient, userId?: string): Repositories {
+  static create(db: SupabaseClient, userId?: string, at?: string): Repositories {
     return {
-      topics: new SupabaseJsonCollectionRepository<Topic>('topics', db, userId),
-      lists: new SupabaseListRepository(db, userId),
-      routines: new SupabaseJsonCollectionRepository<Routine>('routines', db, userId),
-      listProgress: new SupabaseListProgressRepository(db, userId),
-      habits: new SupabaseHabitRepository(db, userId),
-      habitLogs: new SupabaseHabitLogRepository(db, userId),
-      days: new SupabaseDayRepository(db, userId),
-      ticks: new SupabaseTickRepository(db, userId),
-      projects: new SupabaseProjectStatusRepository(db, userId),
-      settings: new SupabaseSettingsRepository(db, userId),
-      notes: new SupabaseNoteRepository(db, userId),
+      topics: new SupabaseJsonCollectionRepository<Topic>('topics', db, userId, at),
+      lists: new SupabaseListRepository(db, userId, at),
+      routines: new SupabaseJsonCollectionRepository<Routine>('routines', db, userId, at),
+      listProgress: new SupabaseListProgressRepository(db, userId, at),
+      habits: new SupabaseHabitRepository(db, userId, at),
+      habitLogs: new SupabaseHabitLogRepository(db, userId, at),
+      days: new SupabaseDayRepository(db, userId, at),
+      ticks: new SupabaseTickRepository(db, userId, at),
+      projects: new SupabaseProjectStatusRepository(db, userId, at),
+      settings: new SupabaseSettingsRepository(db, userId, at),
+      notes: new SupabaseNoteRepository(db, userId, at),
     }
   }
 }

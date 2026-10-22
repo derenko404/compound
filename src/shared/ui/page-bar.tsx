@@ -9,10 +9,12 @@ import { t } from '@/shared/i18n'
 export interface BarAction { label: string; icon?: LucideIcon; onSelect: () => void; danger?: boolean }
 
 /**
- * What a page puts in the top bar: a back link (inner pages), `add` for a + (the page's create action), `edit` for an
- * Edit button, its other actions in the ⋯ menu, and `done` while it is in edit mode, which swaps them all for Done (as on iOS).
+ * What a page puts in the top bar: a back link (inner pages), `link` for an icon that opens a related page (Wellbeing's
+ * timer), `add` for a + (the page's create action), `edit` for an Edit button, its other actions in the ⋯ menu, and
+ * `done` while it is in edit mode, which swaps them all for Done (as on iOS).
  */
-export interface PageBar { back?: { to: string; label: string }; add?: { label: string; onClick: () => void }; edit?: () => void; actions?: BarAction[]; done?: () => void }
+export interface BarLink { to: string; label: string; icon: LucideIcon }
+export interface PageBar { back?: { to: string; label: string }; link?: BarLink; add?: { label: string; onClick: () => void }; edit?: () => void; actions?: BarAction[]; done?: () => void }
 
 const BarCtx = createContext<{ bar: PageBar | null; set: (b: PageBar | null) => void } | null>(null)
 
@@ -31,11 +33,12 @@ export function usePageBar(bar: PageBar) {
   const { set } = useContext(BarCtx)!
   const latest = useRef(bar)
   useEffect(() => { latest.current = bar })
-  const shape = JSON.stringify({ back: bar.back, add: bar.add?.label, edit: !!bar.edit, actions: bar.actions?.map((a) => [a.label, !!a.danger]), done: !!bar.done })
+  const shape = JSON.stringify({ back: bar.back, link: bar.link && [bar.link.to, bar.link.label], add: bar.add?.label, edit: !!bar.edit, actions: bar.actions?.map((a) => [a.label, !!a.danger]), done: !!bar.done })
   useEffect(() => {
     const b = latest.current
     set({
       back: b.back,
+      link: b.link,
       add: b.add && { label: b.add.label, onClick: () => latest.current.add?.onClick() },
       edit: b.edit ? () => latest.current.edit?.() : undefined,
       actions: b.actions?.map((a, i) => ({ label: a.label, icon: a.icon, danger: a.danger, onSelect: () => latest.current.actions?.[i]?.onSelect() })),
@@ -57,13 +60,14 @@ const usePhone = () => useSyncExternalStore(
 )
 
 /**
- * Right side of the top bar, as on iOS: ⋯ with the page's other actions, the page's +, then Edit as plain text at the
+ * Right side of the top bar, as on iOS: a page's link icon, ⋯ with its other actions, the page's +, then Edit as plain text at the
  * far right, which turns into a bold Done in the same place while editing.
  */
 export function BarMenu({ bar }: { bar: PageBar | null }) {
   if (bar?.done) return <button type="button" className="bar-text is-done" onClick={bar.done}>{t.nav.bar.done}</button>
   return (
     <>
+      {bar?.link && <Link to={bar.link.to} className="bar-more" aria-label={bar.link.label} title={bar.link.label}><bar.link.icon aria-hidden="true" /></Link>}
       <BarMore actions={bar?.actions ?? []} />
       {bar?.add && <PlusButton label={bar.add.label} onClick={bar.add.onClick} />}
       {bar?.edit && <button type="button" className="bar-text" onClick={bar.edit}>{t.nav.bar.edit}</button>}

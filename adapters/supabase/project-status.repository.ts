@@ -13,6 +13,6 @@ export class SupabaseProjectStatusRepository extends SupabaseTable implements Pr
   }
 
   async set(projectId: string, status: ProjectStatus) {
-    this.check(await this.from().upsert(this.mine({ project_id: projectId, status })))
+    await this.write({ project_id: projectId }, { status })
   }
 }

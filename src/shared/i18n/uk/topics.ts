@@ -17,6 +17,7 @@ export const topics: typeof en['topics'] = {
   },
   focus: 'Фокус',
   setFocus: 'Сфокусуватись',
+  secondary: 'Другорядна',
   goals: 'Цілі',
   goalsBy: (month) => `Цілі на ${month}`,
 

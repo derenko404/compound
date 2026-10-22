@@ -1,7 +1,6 @@
 // Lists: the index, one list's page and its sheets.
 export const lists = {
   title: 'Lists',
-  lead: 'Books to read, films to watch, places to go.',
   empty: 'No lists yet. Start one with +.',
   newList: 'New list',
   deleteList: 'Delete list',

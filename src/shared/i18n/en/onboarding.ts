@@ -22,7 +22,7 @@ export const onboarding = {
     editTitle: 'Edit',
     edit: 'Reorder, change or delete. Tap Done when you finish.',
     navTitle: 'Everything else',
-    nav: 'Topics hold what you learn. The Notebook keeps notes and links. Wellbeing tracks habits and mood.',
+    nav: 'Topics hold what you learn. The Library keeps lists, notes and links. Wellbeing tracks habits and mood, and has a focus timer.',
     searchTitle: 'Search',
     search: 'Find any topic, note, list item or task.',
     searchKeys: 'Find any topic, note, list item or task. ⌘K opens it too.',

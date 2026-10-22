@@ -13,6 +13,6 @@ export class SupabaseDayRepository extends SupabaseTable implements DayRepositor
   }
 
   async put(day: string, log: DayLog) {
-    this.check(await this.from().upsert(this.mine({ day, done: log.done, mood: log.mood ?? null })))
+    await this.write({ day }, { done: log.done, mood: log.mood ?? null })
   }
 }

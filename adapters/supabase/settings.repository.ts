@@ -12,6 +12,6 @@ export class SupabaseSettingsRepository extends SupabaseTable implements Setting
   }
 
   async setProgram(program: Program | undefined) {
-    this.check(await this.from().upsert(this.mine({ program: program ?? null, updated_at: this.now() })))
+    await this.write({}, { program: program ?? null })
   }
 }

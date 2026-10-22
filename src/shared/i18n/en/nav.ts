@@ -1,23 +1,34 @@
 // The app shell (tabs, top bar, sync state) and the shared components in src/shared/ui.
+import { plural } from '@/shared/i18n/plural'
+
 export const nav = {
   tabs: {
     today: 'My day',
     topics: 'Topics',
     notebook: 'Notebook',
+    // Lists and Notebook together.
+    library: 'Library',
     lists: 'Lists',
     wellbeing: 'Wellbeing',
     timer: 'Timer',
     settings: 'Settings',
   },
   views: 'Views',
-  more: 'More',
-  otherViews: 'Other views',
+  // A tab's sections (Library: Lists and Notebook).
+  sectionsOf: (tab: string) => `${tab} sections`,
+  // The lines under a grouped tab's title.
+  leads: {
+    library: 'Lists to work through, and notes, ideas and links. Send notes to your Telegram bot too.',
+  },
   // The sync icon's tooltip. StoreProvider's `sync` text uses these too.
   sync: {
     loading: 'Loading…',
     loadError: "Couldn't load your data",
     saving: 'Saving…',
     saveError: "Couldn't save",
+    offline: 'Offline. Changes are kept on this device',
+    // Offline (or the server can't be reached) with changes waiting.
+    waiting: (n: number) => plural(n, { one: 'Offline. # change will sync later', other: 'Offline. # changes will sync later' }),
     synced: 'Synced',
     local: 'Saved on this device only',
   },
