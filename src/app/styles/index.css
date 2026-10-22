@@ -1007,7 +1007,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
 @keyframes bounce { 0% { transform: scale(0.7); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
 
 /* Notes, ideas and finds: a card per entry inside a .list. */
-.note { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--space-2); padding: var(--space-4); border-top: 1px solid var(--border); }
+.note { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: var(--space-2); padding: var(--space-6) var(--space-4); border-top: 1px solid var(--border); }
 /* Entry remove: edit mode's ⊖ on the left. */
 .note.has-remove { grid-template-columns: auto minmax(0, 1fr) auto; }
 /* Its ⊖ and › sit centred on the card's height, like edit rows. */
@@ -1089,7 +1089,7 @@ main section.sec-group { margin-bottom: var(--space-6); }
 .res-free { color: var(--good); font-weight: var(--weight-bold); }
 .res-icon { width: var(--icon-sm); height: var(--icon-sm); color: var(--c); flex: none; }
 
-.fold > summary { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-left: var(--accent-bar) solid var(--c); }
+.fold > summary { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-6) var(--space-4); border-left: var(--accent-bar) solid var(--c); }
 .fold-title { font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-title); flex: 1; min-width: 0; }
 .fold-meta { font-size: var(--text-caption); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
 .fold-body { border-top: 1px solid var(--border); }
