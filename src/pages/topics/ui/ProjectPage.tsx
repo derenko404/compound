@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Check as CheckIcon, Pencil, Play, RotateCcw, Trash2 } from 'lucide-react'
 import { Badge, Check, ConfirmSheet, Header, List, Row, Section, cvar, usePageBar } from '@/shared/ui'
 import { Button } from '@/shared/ui/primitives/button'
 import { celebrate } from '@/shared/lib/celebrate'
@@ -83,14 +83,16 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
       )}
       <div className="page-actions">
         {/* By hand only what the steps can't say: starting, and for a project without steps, finishing and back. */}
+        {/* ▶ to start (the app's blue), ✓ to finish (green), ↺ to go back (outlined). */}
         {(!steps.length || status === 'todo') && (
-          <Button variant="tint" style={{ '--tint': `var(${PROJECT_STATUS_TONE[PROJECT_NEXT[status]]})` } as CSSProperties} onClick={() => set(PROJECT_NEXT[status])}>
+          <Button variant={status === 'done' ? 'outline' : 'tint'} style={status === 'doing' ? { '--tint': 'var(--good)' } as CSSProperties : undefined} onClick={() => set(PROJECT_NEXT[status])}>
+            {status === 'todo' ? <Play aria-hidden="true" /> : status === 'doing' ? <CheckIcon aria-hidden="true" /> : <RotateCcw aria-hidden="true" />}
             {PROJECT_NEXT_LABEL[status]}
           </Button>
         )}
         {/* Started by hand but nothing ticked yet: a quiet way back. Once a step is ticked, the ticks decide. */}
         {steps.length > 0 && done === 0 && status === 'doing' && (
-          <Button variant="outline" onClick={() => set('todo')}>{t.topics.project.unstart}</Button>
+          <Button variant="outline" onClick={() => set('todo')}><RotateCcw aria-hidden="true" />{t.topics.project.unstart}</Button>
         )}
       </div>
       {editing && <ProjectSheet open onOpenChange={setEditing} topic={topic} project={p} />}
