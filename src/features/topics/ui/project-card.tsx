@@ -65,8 +65,7 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
       </div>
       {open && hasBody && (
         <div className="project-body">
-          {p.goal && <p><Linkify text={p.goal} /></p>}
-          {/* Steps tick like a skill's; the one Today shows is the first still open. */}
+          {/* Steps lead and tick like a skill's; the one Today shows is the first still open. */}
           {p.steps && p.steps.length > 0 && (
             <div className="project-steps">
               {p.steps.map((x) => (
@@ -75,15 +74,16 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
               ))}
             </div>
           )}
-          <dl>
-            {p.done && <><dt>{t.topics.project.doneWhen}</dt><dd><Linkify text={p.done} /></dd></>}
-            {p.trains?.length ? <><dt>{t.topics.project.trains}</dt><dd>{p.trains.join(', ')}</dd></> : null}
-            {p.size && <><dt>{t.topics.project.size}</dt><dd>{`${t.topics.sizes[p.size].label}, ${t.topics.sizes[p.size].means}`}</dd></>}
-          </dl>
-          {/* The next step in words: start it, finish it, or take a finished one back up. */}
-          {!readOnly && (
-            <Button variant={sv === 'done' ? 'outline' : 'default'} onClick={() => setStatus(NEXT[sv])}>{NEXT_LABEL[sv]}</Button>
+          {/* The rest is a quiet note under the steps: the goal, when it's done, what it trains and its size. */}
+          {(p.goal || p.done || p.trains?.length || p.size) && (
+            <div className="project-notes">
+              {p.goal && <p><Linkify text={p.goal} /></p>}
+              {p.done && <p><b>{t.topics.project.doneWhen}</b> <Linkify text={p.done} /></p>}
+              {(p.trains?.length || p.size) && <p>{[p.trains?.join(', '), p.size && t.topics.sizes[p.size].label].filter(Boolean).join(' · ')}</p>}
+            </div>
           )}
+          {/* The next step in words: start it, finish it, or take a finished one back up. */}
+          {!readOnly && <Button variant="outline" onClick={() => setStatus(NEXT[sv])}>{NEXT_LABEL[sv]}</Button>}
         </div>
       )}
     </div>
