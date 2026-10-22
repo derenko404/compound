@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { getRouteApi, useLocation, useNavigate } from '@tanstack/react-router'
-import { PenLine, Share2, Trash2 } from 'lucide-react'
+import { Share2, Star, Trash2 } from 'lucide-react'
 import { usePageBar, Check, Chip, ChipsList, Header, List, Dial, Row, SortList, SearchField, ConfirmSheet, RemoveButton, moveTo, useSheet } from '@/shared/ui'
 import { listSnapshot, uid } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
@@ -82,10 +82,10 @@ export function ListPage() {
           : <Check on={on} label={it.title} onToggle={(v) => toggle(it.id, v)} />}
         // Tapping the row (not its tick) opens your review. In edit mode it opens the item itself.
         onOpen={edit ? () => itemSheet.open(it) : () => reviewSheet.open(it)} chevron={edit} sort={edit}
-        // Your review (the item's note): a round pen button, tinted once there is one.
+        // Your review (the item's note): a round star button, tinted once there is one.
         tag={edit ? undefined
           : <button type="button" className={`icon-btn row-btn${note ? ' on' : ''}`} aria-label={note ? t.lists.review.edit(it.title) : t.lists.review.write(it.title)} onClick={() => reviewSheet.open(it)}>
-              <PenLine aria-hidden="true" />
+              <Star aria-hidden="true" />
             </button>} />
     )
   }).filter(Boolean)
