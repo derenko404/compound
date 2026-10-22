@@ -15,6 +15,12 @@ export function applyTheme(t: Theme = getTheme()) {
   const el = document.documentElement
   if (t === 'system') el.removeAttribute('data-theme')
   else el.setAttribute('data-theme', t)
+  // A forced theme gives the browser's bar (Safari's tab, Android) its background; System keeps the light/dark pair.
+  const bg = getComputedStyle(el).getPropertyValue('--background').trim()
+  for (const m of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    m.dataset.system ??= m.content
+    m.content = t === 'system' || !bg ? m.dataset.system : bg
+  }
 }
 
 export function setTheme(t: Theme) {

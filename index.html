@@ -23,6 +23,15 @@
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <script>
+      // The installed iPhone app paints its status bar itself. In dark, let the page draw under it (the header's
+      // colour shows through); black-translucent always uses white text, so light keeps the default bar.
+      try {
+        var t = localStorage.getItem('roadmap-theme')
+        var dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').setAttribute('content', 'black-translucent')
+      } catch (e) {}
+    </script>
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
