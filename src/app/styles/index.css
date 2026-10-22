@@ -1239,6 +1239,8 @@ main section.sec-group { margin-bottom: var(--space-5); }
 /* The bars show live, not as fading snapshots, so their own thumbs slide to the new view. */
 ::view-transition-old(top-bar), ::view-transition-old(top-tabs), ::view-transition-old(bottom-nav) { display: none; }
 ::view-transition-new(top-bar), ::view-transition-new(top-tabs), ::view-transition-new(bottom-nav) { animation: none; }
+/* Nor do they morph between the old and new size (a back button appearing squashed the top bar). */
+::view-transition-group(top-bar), ::view-transition-group(top-tabs), ::view-transition-group(bottom-nav) { animation: none; }
 /* Push: the new page slides in opaque from the right over the old, which drifts left and dims; pop reverses it.
    No blending, so the overlap never brightens. */
 ::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; animation-duration: var(--dur-push); animation-timing-function: var(--ease-push); animation-fill-mode: both; }
