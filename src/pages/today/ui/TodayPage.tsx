@@ -1,5 +1,5 @@
 import {
-  usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, FocusMark, Header, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
+  usePageBar, RemoveButton, moveTo, useSheet, Check, Dial, Header, LinkCard, List, ListGroup, Row, SortList, Section, cvar, empty, tone, useDoneLastOnOpen,
 } from '@/shared/ui'
 import { Linkify, TaskSheet } from '@/features/topics'
 import { DONE, HABIT_UI, HabitBadge, HabitLogSheet, amountStats, isAmount } from '@/features/habits'
@@ -141,13 +141,13 @@ export function Today() {
               </ListGroup>
             )}
             {focus && shown.some(fromFocus) && (
-              <ListGroup id="today-topics" style={cvar(focus.id)} label={<span className="title-row"><FocusMark />{focus.name}</span>}>
+              <ListGroup id="today-topics" style={cvar(focus.id)} label={t.today.markedGroup(t.topics.focus, focus.name)}>
                 {shown.filter(fromFocus).map(row)}
               </ListGroup>
             )}
             {otherTopics.map((c) => (
               <ListGroup key={c.id} style={cvar(c.id)}
-                label={shown.some((it) => it.slot === 'light' && it.ch === c.id) ? <span className="title-row"><FocusMark secondary />{c.name}</span> : c.name}>{shown.filter((it) => it.slot && it.ch === c.id && !fromFocus(it)).map(row)}</ListGroup>
+                label={shown.some((it) => it.slot === 'light' && it.ch === c.id) ? t.today.markedGroup(t.topics.secondary, c.name) : c.name}>{shown.filter((it) => it.slot && it.ch === c.id && !fromFocus(it)).map(row)}</ListGroup>
             ))}
           </List>
         </section>

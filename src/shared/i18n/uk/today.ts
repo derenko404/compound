@@ -9,6 +9,7 @@ export const today: typeof en['today'] = {
   noRoutines: 'Рутин ще немає. Додайте першу через +.',
   nothingPlanned: 'На сьогодні нічого не заплановано. Додайте завдання через +.',
   fromHabits: 'Звички',
+  markedGroup: (mark, name) => `${mark} · ${name}`,
   thisWeek: 'Цей тиждень',
   streak: (n) => plural(n, { one: '# день поспіль', few: '# дні поспіль', many: '# днів поспіль', other: '# дня поспіль' }),
   countsForStreak: ', рахується для серії',

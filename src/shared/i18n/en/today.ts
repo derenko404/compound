@@ -10,6 +10,8 @@ export const today = {
   noRoutines: 'No routines yet. Add one with +.',
   nothingPlanned: 'Nothing planned today. Add a task with +.',
   fromHabits: 'Habits',
+  // A topic's group on My day with its mark first: "Focus · English".
+  markedGroup: (mark: string, name: string) => `${mark} · ${name}`,
   thisWeek: 'This week',
   streak: (n: number) => plural(n, { one: '# day in a row', other: '# days in a row' }),
   countsForStreak: ', counts for the streak',
