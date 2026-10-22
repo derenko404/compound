@@ -5,7 +5,7 @@ import type { TopicId, Project, ProjectStatus } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { burst, celebrate } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
-import { Check, Kind, Row, cvar } from '@/shared/ui'
+import { Badge, Check, Row, cvar } from '@/shared/ui'
 import { Button } from '@/shared/ui/primitives/button'
 import { t } from '@/shared/i18n'
 import { useTick } from '../model/use-tick'
@@ -71,9 +71,9 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
       </div>
       {open && hasBody && (
         <div className="project-body">
-          {/* What it is: the goal as the lead, then when it counts as done, quieter. */}
-          {p.goal && <p className="project-goal"><Linkify text={p.goal} /></p>}
-          {p.done && <p className="project-done"><Kind label={t.topics.project.doneWhen} color="--foreground"><Linkify text={p.done} /></Kind></p>}
+          {/* What it is: the goal and when it counts as done, each a small pill label with its text under it. */}
+          {p.goal && <div className="project-fact"><Badge>{t.topics.form.goal}</Badge><Linkify text={p.goal} /></div>}
+          {p.done && <div className="project-fact"><Badge color="--good">{t.topics.project.doneWhen}</Badge><Linkify text={p.done} /></div>}
           {/* Then the steps, ticked like a skill's; the one Today shows is the first still open. */}
           {p.steps && p.steps.length > 0 && (
             <div className="project-steps">
