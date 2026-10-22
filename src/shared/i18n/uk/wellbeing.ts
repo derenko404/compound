@@ -110,6 +110,7 @@ export const wellbeing: typeof en['wellbeing'] = {
     amount: (n, target, unit) => `${n}/${target} ${unit}`,
     of: (n, of) => `${n}/${of}`,
     days: (n) => `${n} дн.`,
+    withNote: (value, note) => `${value} · ${note}`,
   },
   amountValue: (n, unit) => `${n} ${unit}`,
   amountAverage: (n, unit) => `У середньому ${n} ${unit} цього тижня`,

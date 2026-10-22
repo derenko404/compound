@@ -141,7 +141,6 @@ export interface DayItem {
   step?: string // set when the row ticks a step in the topic's progress (a project's step) instead of the day's log
   slot?: Slot // set on the rows from the topics
   habit?: Habit // set on wellbeing habit rows
-  value?: string // a habit's value today, in the pill that opens its log sheet
   done?: boolean // set when the tick isn't in the day's done list (habit rows)
   progress?: number // how far a habit is today (0..1), shown as a ring in its check
 }
@@ -179,7 +178,7 @@ export function todayItems(s: State, today: Date): DayItem[] {
   if (fc && cu) items.push({ id: 'slot-catchup', ch: fc.id, slot: 'catchup', title: cu.step.text, sub: cu.why })
 
   // Wellbeing habits due today. Their tick lives in the habit's log, so `done` comes with the row.
-  for (const r of habitRows(s, today)) items.push({ id: `habit:${r.habit.id}`, ch: null, title: r.title, sub: r.sub, value: r.value, habit: r.habit, done: r.done, progress: r.progress })
+  for (const r of habitRows(s, today)) items.push({ id: `habit:${r.habit.id}`, ch: null, title: r.title, sub: r.sub, habit: r.habit, done: r.done, progress: r.progress })
   return items
 }
 
