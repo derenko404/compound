@@ -497,14 +497,14 @@ details > summary::-webkit-details-marker { display: none; }
 /* SegBar, as iOS's segmented control: a muted track, a raised thumb that slides to the current segment (SegBar
    measures it into --thumb-x and --thumb-w). Segments share the width and grow with their labels; past the screen
    the track scrolls sideways. */
-.seg-control { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(max-content, 1fr); gap: var(--space-half); padding: var(--space-half); border-radius: var(--radius-md); background: var(--muted); overflow-x: auto; scrollbar-width: none; }
+.seg-control { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(max-content, 1fr); gap: var(--space-half); padding: var(--space-1); border-radius: var(--radius-lg); background: var(--muted); overflow-x: auto; scrollbar-width: none; }
 .seg-control::-webkit-scrollbar { display: none; }
-.seg-control-thumb { position: absolute; top: var(--space-half); bottom: var(--space-half); left: 0; width: var(--thumb-w, 0); border-radius: calc(var(--radius-md) - var(--space-half)); background: var(--seg-thumb); box-shadow: var(--shadow-card); transform: translateX(var(--thumb-x, 0)); opacity: 0; pointer-events: none; }
+.seg-control-thumb { position: absolute; top: var(--space-1); bottom: var(--space-1); left: 0; width: var(--thumb-w, 0); border-radius: calc(var(--radius-lg) - var(--space-1)); background: var(--seg-thumb); box-shadow: var(--shadow-card); transform: translateX(var(--thumb-x, 0)); opacity: 0; pointer-events: none; }
 .seg-control[data-thumb="set"] .seg-control-thumb { opacity: 1; }
 .seg-control[data-thumb="move"] .seg-control-thumb { opacity: 1; transition: transform var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out); }
 :root[data-reduce-motion] .seg-control-thumb { transition: none !important; }
-.seg-control-item { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-height: var(--control-sm); padding: 0 var(--space-3); border: 0; border-radius: calc(var(--radius-md) - var(--space-half)); background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-small); font-weight: var(--weight-bold); white-space: nowrap; text-decoration: none; cursor: pointer; transition: color var(--dur-fast); }
-.seg-control-item .count { font-weight: normal; font-size: var(--text-caption); }
+.seg-control-item { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-height: var(--control-md); padding: 0 var(--space-4); border: 0; border-radius: calc(var(--radius-lg) - var(--space-1)); background: none; color: var(--muted-foreground); font: inherit; font-size: var(--text-body); font-weight: var(--weight-bold); white-space: nowrap; text-decoration: none; cursor: pointer; transition: color var(--dur-fast); }
+.seg-control-item .count { font-weight: normal; font-size: var(--text-small); }
 .seg-control-item[aria-selected="true"], .seg-control-item[data-status="active"] { color: var(--foreground); }
 .seg-control-item:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
 
