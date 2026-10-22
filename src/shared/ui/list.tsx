@@ -3,8 +3,8 @@ import type { TopicId } from '@core/domain/types'
 import { cvar } from './lib/cvar'
 import { empty } from './lib/empty'
 
-// A card of rows (Row, Entry, ProjectCard…), with a message when there's nothing in it.
-export function List({ children, empty: emptyText, ch }: { children?: ReactNode; empty?: string; ch?: TopicId | null }) {
+// A card of rows (Row, Entry, ProjectCard…), with a message when there's nothing in it. dense: lighter one-line rows (My day).
+export function List({ children, empty: emptyText, ch, dense }: { children?: ReactNode; empty?: string; ch?: TopicId | null; dense?: boolean }) {
   const has = Array.isArray(children) ? children.some(Boolean) : !!children
-  return <div className="list" style={ch ? cvar(ch) : undefined}>{has ? children : emptyText ? empty(emptyText) : null}</div>
+  return <div className={dense ? 'list dense' : 'list'} style={ch ? cvar(ch) : undefined}>{has ? children : emptyText ? empty(emptyText) : null}</div>
 }

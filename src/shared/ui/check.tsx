@@ -2,8 +2,11 @@ import { useEffect, useRef } from 'react'
 import { burst } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
 
-// Round tick button. Plays the bounce, row pop and particle burst when turned on.
-export function Check({ on, label, onToggle }: { on: boolean; label: string; onToggle: (on: boolean) => void }) {
+/**
+ * Round tick button. Plays the bounce, row pop and particle burst when turned on.
+ * progress (0..1): how far it is while not ticked, an arc over the ring (a habit's amount today).
+ */
+export function Check({ on, label, onToggle, progress }: { on: boolean; label: string; onToggle: (on: boolean) => void; progress?: number }) {
   const ref = useRef<HTMLButtonElement>(null)
   const justOn = useRef(false)
   // The bounce class is added after React has applied the new className, or it would be wiped.
@@ -35,6 +38,11 @@ export function Check({ on, label, onToggle }: { on: boolean; label: string; onT
         onToggle(next)
       }}
     >
+      {!on && progress !== undefined && progress > 0 && progress < 1 && (
+        <svg className="check-ring" viewBox="0 0 28 28" aria-hidden="true">
+          <circle cx="14" cy="14" r="13" pathLength={1} style={{ strokeDasharray: `${progress} 1` }} />
+        </svg>
+      )}
       <svg viewBox="0 0 16 16" aria-hidden="true">
         <path d="M3.5 8.5l3 3 6-7" />
       </svg>
