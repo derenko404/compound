@@ -5,7 +5,8 @@ import type { TopicId, Project, ProjectStatus } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { burst, celebrate } from '@/shared/lib/celebrate'
 import { playTick, playUntick } from '@/shared/lib/sound'
-import { Check, ChipMenu, Row, cvar } from '@/shared/ui'
+import { Check, Row, cvar } from '@/shared/ui'
+import { Button } from '@/shared/ui/primitives/button'
 import { t } from '@/shared/i18n'
 import { useTick } from '../model/use-tick'
 import { Linkify } from './linkify'
@@ -13,7 +14,8 @@ import { Linkify } from './linkify'
 const LABEL: Record<ProjectStatus, string> = t.topics.project.status
 // The badge in a project's header: grey, amber while in progress, green when done.
 const STATUS_TONE: Record<ProjectStatus, string> = { todo: '--muted-foreground', doing: '--warn', done: '--good' }
-const STATUSES: ProjectStatus[] = ['todo', 'doing', 'done']
+const NEXT: Record<ProjectStatus, ProjectStatus> = { todo: 'doing', doing: 'done', done: 'doing' }
+const NEXT_LABEL: Record<ProjectStatus, string> = t.topics.project.next
 
 // readOnly: no status button (someone else's shared topic); ch can be left out and the colour comes from around it.
 export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; readOnly?: boolean }) {
@@ -24,7 +26,8 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
   const stepsDone = p.steps?.filter((x) => tick.on(x.id)).length ?? 0
   const [open, setOpen] = useState(hash === p.code)
   const ref = useRef<HTMLDivElement>(null)
-  const hasBody = !!(p.goal || p.steps?.length || p.done || p.trains?.length || p.size)
+  // Your own projects always open: the status button lives inside.
+  const hasBody = !readOnly || !!(p.goal || p.steps?.length || p.done || p.trains?.length || p.size)
   const setStatus = (nx: ProjectStatus) => {
     if (nx === sv) return
     dispatch({ type: 'project', projectId: p.id, status: nx })
@@ -48,16 +51,17 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
       <div className="project-head">
         <button className="project-code" aria-expanded={open} onClick={() => setOpen(!open)}>{p.code || '•'}</button>
         <button className="project-name" aria-expanded={open} onClick={() => setOpen(!open)}>
-          <span>{p.name}{p.steps && p.steps.length > 0 && !readOnly && <span className="muted text-caption project-count">{`${stepsDone}/${p.steps.length}`}</span>}</span>
+          <span className="project-title">
+            {p.name}
+            {/* Where it stands, in its colour, then the steps ticked. */}
+            {!readOnly && (
+              <span className="project-status" style={{ '--c': `var(${STATUS_TONE[sv]})` } as CSSProperties}>
+                <b>{LABEL[sv]}</b>{p.steps && p.steps.length > 0 && ` · ${stepsDone}/${p.steps.length}`}
+              </span>
+            )}
+          </span>
           {hasBody && <ChevronDown className="chev" style={open ? { transform: 'rotate(180deg)' } : undefined} aria-hidden="true" />}
         </button>
-        {readOnly ? null : (
-          // The status is a pop-up chip: a tap shows the three states to pick from, the current one ticked.
-          <span className="status-pill" style={{ '--c': `var(${STATUS_TONE[sv]})` } as CSSProperties}>
-            <ChipMenu label={t.topics.project.statusOf(p.name)} value={sv} onChange={setStatus}
-              groups={[{ options: STATUSES.map((v) => ({ value: v, label: LABEL[v] })) }]} />
-          </span>
-        )}
       </div>
       {open && hasBody && (
         <div className="project-body">
@@ -76,6 +80,10 @@ export function ProjectCard({ ch, p, readOnly }: { ch?: TopicId; p: Project; rea
             {p.trains?.length ? <><dt>{t.topics.project.trains}</dt><dd>{p.trains.join(', ')}</dd></> : null}
             {p.size && <><dt>{t.topics.project.size}</dt><dd>{`${t.topics.sizes[p.size].label}, ${t.topics.sizes[p.size].means}`}</dd></>}
           </dl>
+          {/* The next step in words: start it, finish it, or take a finished one back up. */}
+          {!readOnly && (
+            <Button variant={sv === 'done' ? 'outline' : 'default'} onClick={() => setStatus(NEXT[sv])}>{NEXT_LABEL[sv]}</Button>
+          )}
         </div>
       )}
     </div>
