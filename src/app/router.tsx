@@ -1,6 +1,6 @@
 import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
 import { BarProvider } from '@/shared/ui'
-import { TopicIndex, Topics } from '@/pages/topics'
+import { ProjectPage, TopicIndex, Topics } from '@/pages/topics'
 import { Wellbeing } from '@/pages/wellbeing'
 import { ListPage, Lists } from '@/pages/lists'
 import { Notebook } from '@/pages/notebook'
@@ -26,6 +26,7 @@ const routeTree = root.addChildren([
   page('/today', Today),
   page('/topics', TopicIndex),
   page('/topics/$ch', Topics),
+  page('/topics/$ch/projects/$project', ProjectPage),
   page('/notebook', Notebook),
   page('/lists', Lists),
   page('/lists/$id', ListPage),

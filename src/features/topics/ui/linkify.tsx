@@ -50,7 +50,7 @@ export function Linkify({ text }: { text: string }) {
       {parts.map((p, i) => {
         if (i % 2 === 0 || !p) return <Fragment key={i}>{p}</Fragment>
         const pch = ix.projects.get(p)
-        if (pch) return <InnerLink key={i} ch={pch} to="/topics/$ch" params={{ ch: pch }} hash={p}>{p}</InnerLink>
+        if (pch) return <InnerLink key={i} ch={pch} to="/topics/$ch/projects/$project" params={{ ch: pch, project: p }}>{p}</InnerLink>
         const m = /^Topic ([1-9])$/.exec(p)
         const nch = m ? ix.numbered[Number(m[1]) - 1] : undefined
         if (nch) return <InnerLink key={i} ch={nch} to="/topics/$ch" params={{ ch: nch }}>{p}</InnerLink>

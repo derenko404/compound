@@ -18,7 +18,7 @@ export function useOpenHit() {
       case 'task':
         return nav({ to: '/topics/$ch', params: { ch: hit.topicId! }, hash: 'tasks' })
       case 'project':
-        return nav({ to: '/topics/$ch', params: { ch: hit.topicId! }, hash: hit.code })
+        return nav({ to: '/topics/$ch/projects/$project', params: { ch: hit.topicId!, project: hit.code || hit.id } })
       case 'list':
         return nav({ to: '/lists/$id', params: { id: hit.listId! } })
       case 'listItem':

@@ -79,8 +79,7 @@ export const topics = {
   },
   project: {
     status: { todo: 'Not started', doing: 'In progress', done: 'Done' },
-    // The button inside an open project: the next step from where it stands.
-    next: { todo: 'Start project', doing: 'Mark as done', done: 'Back in progress' },
+    statusLabel: 'Status',
     doneWhen: 'Done when',
     trains: 'Trains',
     size: 'Size',

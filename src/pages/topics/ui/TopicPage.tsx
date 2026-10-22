@@ -13,7 +13,7 @@ import { lockOn } from '@/shared/lib/celebrate'
 import { playFocus } from '@/shared/lib/sound'
 import { t } from '@/shared/i18n'
 import {
-  ProjectCard, ResourceGroups, SkillFolds, TaskRows, TopicSheet, SkillSheet, ProjectSheet, ResourceSheet, TaskSheet,
+  ProjectRow, ResourceGroups, SkillFolds, TaskRows, TopicSheet, SkillSheet, ProjectSheet, ResourceSheet, TaskSheet,
   blankSkill, blankProject, blankResource, blankTask, useTopicSave,
 } from '@/features/topics'
 import { NoteSheet } from '@/features/notes'
@@ -47,9 +47,9 @@ function TopicPage({ c }: { c: Topic }) {
   const [sharing, setSharing] = useState(false)
   const { hash } = useLocation()
   const empty0 = !c.projects.length && !c.resources.length && !c.skills.length && !c.tasks.length
-  // A fresh topic opens in edit mode, ready to fill. A link to a project (#T1) opens the Projects tab, #resources and #tasks those tabs.
+  // A fresh topic opens in edit mode, ready to fill. A link to a project (#T1) or #projects opens the Projects tab, #resources and #tasks those tabs.
   const [edit, setEdit] = useState(empty0)
-  const [tab, setTab] = useState<Tab>(hash === 'resources' || hash === 'tasks' ? hash : c.projects.some((p) => p.code && p.code === hash) ? 'projects' : 'learn')
+  const [tab, setTab] = useState<Tab>(hash === 'resources' || hash === 'tasks' ? hash : hash === 'projects' || c.projects.some((p) => p.code && p.code === hash) ? 'projects' : 'learn')
   const sheet = useSheet<Editing>()
   const [noting, setNoting] = useState<{ note?: Note } | null>(null)
   const [about, setAbout] = useState(false)
@@ -146,7 +146,7 @@ function TopicPage({ c }: { c: Topic }) {
               ))}
             </SortList>
           ) : (
-            <List empty={t.topics.empty.projects}>{c.projects.map((p) => <ProjectCard key={p.id} ch={c.id} p={p} />)}</List>
+            <List empty={t.topics.empty.projects}>{c.projects.map((p) => <ProjectRow key={p.id} ch={c.id} p={p} />)}</List>
           )}
         </Section>
       )}

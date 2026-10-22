@@ -15,7 +15,7 @@ export function TopicPreview({ c }: { c: Topic }) {
       {c.resources.length > 0 && <Section title={t.topics.tabs.resources}><ResourceGroups resources={c.resources} readOnly /></Section>}
       {c.projects.length > 0 && (
         <Section title={t.topics.tabs.projects}>
-          <List>{c.projects.map((p) => <ProjectCard key={p.id} p={p} readOnly />)}</List>
+          <List>{c.projects.map((p) => <ProjectCard key={p.id} p={p} />)}</List>
         </Section>
       )}
     </div>
