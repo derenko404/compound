@@ -78,7 +78,7 @@ export const topics: typeof en['topics'] = {
   project: {
     status: { todo: 'Не розпочато', doing: 'У роботі', done: 'Готово' },
     next: { todo: 'Почати проєкт', doing: 'Позначити готовим', done: 'Повернути в роботу' },
-    unstart: 'Ще не почато',
+    unstart: 'Скасувати старт',
     doneWhen: 'Готово, коли',
     trains: 'Тренує',
     size: 'Розмір',
