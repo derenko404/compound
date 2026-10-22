@@ -1,7 +1,7 @@
 // Pure functions that turn stored state into what the views show.
 import type { Topic, TopicId, Habit, Project, Routine, State, Task, When } from '@core/domain/types'
 import { habitRows } from '@/features/habits'
-import { topicOf, topics, matchesWhen, program } from '@core/domain/content'
+import { topicOf, topics, matchesWhen, program, projectStatus } from '@core/domain/content'
 import { dates } from '@/shared/lib/dates'
 import { currentLocale, t } from '@/shared/i18n'
 
@@ -62,7 +62,7 @@ export function nextUp(s: State, c: Topic) {
 }
 
 // The project being worked on: the first one set to In progress. Today shows nothing for a topic without one.
-export const currentProject = (s: State, c: Topic) => c.projects.find((p) => s.projects[p.id] === 'doing')
+export const currentProject = (s: State, c: Topic) => c.projects.find((p) => projectStatus(s, p) === 'doing')
 
 // A project's step for today: the first still open, or one ticked today, so the row stays done for the rest of the day.
 export const projectStep = (s: State, p: Project, k: string) => p.steps?.find((x) => !s.plan[x.id] || dates.keyOf(new Date(s.plan[x.id])) === k)

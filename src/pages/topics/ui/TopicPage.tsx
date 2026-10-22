@@ -4,7 +4,7 @@ import { Share2, Trash2 } from 'lucide-react'
 import {
   usePageBar, Chip, ChipsList, Header, List, Dial, Row, SearchField, Section, SortList, Tabs, cvar, FocusMark, Kind, empty, ConfirmSheet, RemoveButton, moveTo, useSheet,
 } from '@/shared/ui'
-import { RESOURCE_KINDS, topicOf, program, topicSnapshot } from '@core/domain/content'
+import { RESOURCE_KINDS, projectStatus, topicOf, program, topicSnapshot } from '@core/domain/content'
 import { ShareSheet } from '@/features/share-link'
 import { SLOT_UI, describeWhen, focusOf, nextUp, skillProgress, topicProgress } from '@/features/today'
 import type { Topic, Note, Project, Resource, ResourceKind, Skill, Task } from '@core/domain/types'
@@ -57,7 +57,7 @@ function TopicPage({ c }: { c: Topic }) {
   const { done, total } = topicProgress(state, c)
   const skills = skillProgress(state, c)
   const next = nextUp(state, c)
-  const active = c.projects.filter((p) => state.projects[p.id] === 'doing')
+  const active = c.projects.filter((p) => projectStatus(state, p) === 'doing')
   const [query, setQuery] = useState('')
   const [kind, setKind] = useState<ResourceKind | null>(null)
   const q = query.trim().toLowerCase()

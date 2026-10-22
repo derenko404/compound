@@ -79,7 +79,7 @@ export const topics = {
   },
   project: {
     status: { todo: 'Not started', doing: 'In progress', done: 'Done' },
-    statusLabel: 'Status',
+    next: { todo: 'Start project', doing: 'Mark as done', done: 'Back in progress' },
     doneWhen: 'Done when',
     trains: 'Trains',
     size: 'Size',

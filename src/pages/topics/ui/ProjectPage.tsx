@@ -1,18 +1,20 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Pencil, Trash2 } from 'lucide-react'
-import { Check, ConfirmSheet, Header, List, Row, Section, Segmented, cvar, usePageBar } from '@/shared/ui'
+import { Badge, Check, ConfirmSheet, Header, List, Row, Section, cvar, usePageBar } from '@/shared/ui'
+import { Button } from '@/shared/ui/primitives/button'
+import { celebrate } from '@/shared/lib/celebrate'
 import { topicOf } from '@core/domain/content'
 import type { Project, Topic } from '@core/domain/types'
 import { useStore } from '@/shared/store/StoreProvider'
 import { t } from '@/shared/i18n'
-import { Linkify, PROJECT_STATUSES, PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, ProjectSheet, useProjectStatus, useTick, useTopicSave } from '@/features/topics'
+import { Linkify, PROJECT_NEXT, PROJECT_NEXT_LABEL, PROJECT_STATUS_LABEL, PROJECT_STATUS_TONE, ProjectSheet, useProjectStatus, useTick, useTopicSave } from '@/features/topics'
 
 const route = getRouteApi('/topics/$ch/projects/$project')
 
 /**
- * A project's own page, pushed from its topic's Projects tab (as iOS lists open a detail page): its status as a
- * segmented control, the goal, the steps to tick, and when it counts as done. Edit and Delete are in the ⋯ menu.
+ * A project's own page, pushed from its topic's Projects tab (as iOS lists open a detail page): the goal, the steps to
+ * tick (they set its status), and when it counts as done. Edit and Delete are in the ⋯ menu.
  */
 export function ProjectPage() {
   const { ch, project } = route.useParams()
@@ -45,24 +47,31 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
   const { status, set } = useProjectStatus(p)
   const steps = p.steps ?? []
   const done = steps.filter((x) => tick.on(x.id)).length
+  // Ticking the last step finishes the project: confetti, as when a day is done.
+  const toggle = (id: string, on: boolean) => {
+    tick.set(id, on)
+    if (on && done + 1 === steps.length) setTimeout(celebrate, 250)
+  }
   // Above the name: its code as a badge, then what it trains and its size.
   const facts = [p.trains?.join(', '), p.size ? t.topics.sizes[p.size].label : null].filter((x): x is string => !!x)
   return (
     <div style={cvar(ch)}>
-      <Header title={p.name} kicker={(p.code || facts.length > 0) && <span className="title-row">{p.code && <span className="project-code">{p.code}</span>}{facts.join(' · ')}</span>} />
+      <Header title={p.name} kicker={
+        <span className="title-row">
+          {p.code && <span className="project-code">{p.code}</span>}
+          {/* Where it stands, as a badge in its colour: grey, amber in progress, green when done. */}
+          <Badge color={PROJECT_STATUS_TONE[status]}>{PROJECT_STATUS_LABEL[status]}</Badge>
+          {facts.join(' · ')}
+        </span>} />
       {/* The goal is what the page is about: normal text, not a muted lead. */}
       {p.goal && <p className="page-intro"><Linkify text={p.goal} /></p>}
-      <div className="page-control">
-        <Segmented label={t.topics.project.statusLabel} value={status} onChange={set}
-          options={PROJECT_STATUSES.map((v) => ({ value: v, label: PROJECT_STATUS_LABEL[v], color: PROJECT_STATUS_TONE[v] }))} />
-      </div>
       {steps.length > 0 && (
         <Section group title={t.topics.form.steps} aside={`${done}/${steps.length}`}>
           {/* Ticked like a skill's steps; the one My day shows is the first still open. */}
           <List>
             {steps.map((x) => (
               <Row key={x.id} ch={ch} done={tick.on(x.id)} title={<span className="font-normal"><Linkify text={x.text} /></span>}
-                check={<Check on={tick.on(x.id)} label={x.text} onToggle={(v) => tick.set(x.id, v)} />} />
+                check={<Check on={tick.on(x.id)} label={x.text} onToggle={(v) => toggle(x.id, v)} />} />
             ))}
           </List>
         </Section>
@@ -71,6 +80,12 @@ function ProjectView({ topic, p, editing, setEditing, deleting, setDeleting, onD
         <Section group title={t.topics.project.doneWhen}>
           <List><p className="list-text"><Linkify text={p.done} /></p></List>
         </Section>
+      )}
+      {/* By hand only what the steps can't say: starting, and for a project without steps, finishing and back. */}
+      {(!steps.length || status === 'todo') && (
+        <Button variant="tint" style={{ '--tint': `var(${PROJECT_STATUS_TONE[PROJECT_NEXT[status]]})` } as CSSProperties} onClick={() => set(PROJECT_NEXT[status])}>
+          {PROJECT_NEXT_LABEL[status]}
+        </Button>
       )}
       {editing && <ProjectSheet open onOpenChange={setEditing} topic={topic} project={p} />}
       <ConfirmSheet open={deleting} onOpenChange={setDeleting} title={t.topics.page.deleteProject(p.code, p.name)} description={t.common.cantUndo}

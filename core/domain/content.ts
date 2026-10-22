@@ -1,5 +1,5 @@
 // Helpers over the editable content in State. Shared with the Telegram worker, so keep it free of DOM and app imports.
-import type { ListDef, Note, Program, ProjectSize, ResourceKind, State, Step, Topic, TopicId, TopicKind, When } from './types'
+import type { ListDef, Note, Program, Project, ProjectSize, ProjectStatus, ResourceKind, State, Step, Topic, TopicId, TopicKind, When } from './types'
 
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -18,6 +18,20 @@ export const RESOURCE_KINDS: { id: ResourceKind; label: string }[] = [
   { id: 'practice', label: 'Practice' },
   { id: 'other', label: 'Other' },
 ]
+
+/**
+ * Where a project stands. With steps the ticks decide: all ticked is done, some is in progress, none is what was set
+ * (Start puts it in progress before the first tick). Without steps, only what was set.
+ */
+export function projectStatus(s: State, p: Project): ProjectStatus {
+  const set = s.projects[p.id] ?? 'todo'
+  const steps = p.steps ?? []
+  if (!steps.length) return set
+  const ticked = steps.filter((x) => s.plan[x.id]).length
+  if (ticked === steps.length) return 'done'
+  if (ticked > 0) return 'doing'
+  return set === 'done' ? 'todo' : set
+}
 
 export const program = (s: State): Program => ({ focus: null, ...s.settings.program })
 
